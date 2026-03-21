@@ -1,22 +1,19 @@
-import { getCategoryLabel } from '../constants/categories'
-
-export default function FilterBar({ sortBy, onSort, activeCategory, onClearCategory, totalCount }) {
-  const hasFilter = activeCategory && activeCategory !== 'all'
-  const label = hasFilter ? getCategoryLabel(activeCategory) : 'All Listings'
+export default function FilterBar({ sortBy, onSort, activeFilter, onClearFilter, totalCount, label }) {
+  const hasFilter = activeFilter && activeFilter !== 'all'
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 flex-wrap">
       <div className="flex items-center gap-2">
-        <span className="font-semibold text-gray-900 text-base">{label}</span>
+        <span className="font-semibold text-gray-900 text-base">{label ?? 'All Listings'}</span>
         {totalCount !== undefined && (
           <span className="text-sm text-gray-400">{totalCount} listings</span>
         )}
         {hasFilter && (
           <button
-            onClick={onClearCategory}
+            onClick={onClearFilter}
             className="flex items-center gap-1 bg-school-primary/10 text-school-primary text-xs font-medium px-2 py-0.5 rounded-full hover:bg-school-primary/20 transition-colors"
           >
-            {getCategoryLabel(activeCategory)} ×
+            {label} ×
           </button>
         )}
       </div>
