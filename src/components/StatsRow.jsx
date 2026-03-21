@@ -15,7 +15,7 @@ export default function StatsRow({ onFilter }) {
         .eq('school_id', school.id)
         .eq('sold', false)
       if (!data) return
-      const MARKETPLACE_CATS = ['textbooks','furniture','electronics','clothing','appliances','sports','misc']
+      const MARKETPLACE_CATS = ['textbooks','furniture','electronics','clothing','sports','misc']
       const housing    = data.filter((l) => l.category === 'housing' || l.category === 'sublease').length
       const looking    = data.filter((l) => l.category === 'looking_for').length
       const marketplace = data.filter((l) => MARKETPLACE_CATS.includes(l.category)).length

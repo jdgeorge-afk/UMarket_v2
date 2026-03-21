@@ -15,7 +15,7 @@ function filterToCategory(activeFilter) {
   if (!activeFilter || activeFilter === 'all') return 'all'
   if (activeFilter === 'housing') return 'housing'
   if (activeFilter === 'housing:sublease') return 'sublease'
-  if (activeFilter === 'housing:looking_for') return 'looking_for'
+  if (activeFilter === 'housing:looking_for') return 'looking_housing'
   if (activeFilter === 'looking_for') return 'looking_for'
   if (activeFilter === 'marketplace') return 'all'
   if (activeFilter.startsWith('marketplace:')) return activeFilter.split(':')[1]
@@ -37,7 +37,7 @@ function filterToLabel(activeFilter) {
     'marketplace:textbooks': 'Textbooks',
     'marketplace:furniture': 'Furniture',
     'marketplace:electronics': 'Electronics',
-    'marketplace:appliances': 'Appliances',
+    'housing:looking_for': 'Looking for Housing',
   }
   return map[activeFilter] ?? 'Listings'
 }

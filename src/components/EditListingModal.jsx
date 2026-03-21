@@ -9,8 +9,9 @@ const MAX_IMAGES = 6
 export default function EditListingModal({ listing, onClose, onSaved }) {
   const { user } = useAuth()
 
-  const isHousing = listing.category === 'housing' || listing.category === 'sublease'
-  const isLooking = listing.category === 'looking_for'
+  const isHousing        = listing.category === 'housing' || listing.category === 'sublease'
+  const isLooking        = listing.category === 'looking_for'
+  const isLookingHousing = listing.category === 'looking_housing'
 
   const [title, setTitle]           = useState(listing.title ?? '')
   const [price, setPrice]           = useState(listing.price ?? '')
@@ -78,12 +79,12 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
         description: description.trim(),
         location:    location.trim(),
         images:      allImages,
-        price:       isLooking ? null : (Number(price) || 0),
-        budget:      isLooking ? (Number(budget) || null) : null,
-        condition:   isLooking || isHousing ? null : condition,
-        beds:        isHousing ? (Number(beds) || null) : null,
+        price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
+        budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
+        condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
+        beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
         size:        isHousing ? size.trim() : null,
-        avail:       isHousing ? avail.trim() : null,
+        avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
       }
       const { error: updateErr } = await supabase
         .from('listings')
@@ -147,9 +148,9 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
         />
 
         {/* Price / Budget */}
-        {isLooking ? (
+        {(isLooking || isLookingHousing) ? (
           <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
-            placeholder="Max Budget ($)" min={0}
+            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'} min={0}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
         ) : !isHousing && (
           <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
@@ -158,20 +159,23 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
         )}
 
         {/* Housing fields */}
-        {isHousing && (
-          <div className="grid grid-cols-3 gap-2 mb-3">
+        {(isHousing || isLookingHousing) && (
+          <div className={`grid gap-2 mb-3 ${isHousing ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <input type="number" value={beds} onChange={(e) => setBeds(e.target.value)}
               placeholder="# Beds" min={0}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
-            <input value={size} onChange={(e) => setSize(e.target.value)} placeholder="Size (1BR/1BA)"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
-            <input value={avail} onChange={(e) => setAvail(e.target.value)} placeholder="Available"
+            {isHousing && (
+              <input value={size} onChange={(e) => setSize(e.target.value)} placeholder="Size (1BR/1BA)"
+                className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+            )}
+            <input value={avail} onChange={(e) => setAvail(e.target.value)}
+              placeholder={isLookingHousing ? 'Move-in Date' : 'Available'}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
           </div>
         )}
 
         {/* Condition */}
-        {!isLooking && !isHousing && (
+        {!isLooking && !isLookingHousing && !isHousing && (
           <select value={condition} onChange={(e) => setCondition(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary bg-white">
             <option value="">Condition (optional)</option>
