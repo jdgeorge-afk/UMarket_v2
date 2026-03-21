@@ -58,6 +58,7 @@ function AppInner() {
     setCurrentView('feed')
     setSelectedListing(null)
     setViewedUserId(null)
+    setActiveFilter('all')
   }
 
   const openFavorites = () => { setCurrentView('favorites'); setActiveFilter('all') }
