@@ -46,9 +46,9 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
       <NavItem icon="🔑" label="Sublease"        value="housing:sublease"      activeFilter={activeFilter} onFilter={onFilter} indent />
       <NavItem icon="🔍" label="Looking For Housing" value="housing:looking_for" activeFilter={activeFilter} onFilter={onFilter} indent />
 
-      {/* ── Looking For section (standalone "for you") ─────────────────────── */}
+      {/* ── Looking For ───────────────────────────────────────────────────── */}
       <SectionLabel>Looking For</SectionLabel>
-      <NavItem icon="✨" label="For You"         value="looking_for"  activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="🔍" label="Looking For"     value="looking_for"  activeFilter={activeFilter} onFilter={onFilter} />
 
       {/* ── Marketplace section ───────────────────────────────────────────── */}
       <SectionLabel>Marketplace</SectionLabel>

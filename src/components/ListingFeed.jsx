@@ -29,7 +29,7 @@ function filterToLabel(activeFilter) {
     housing: 'Housing',
     'housing:sublease': 'Subleases',
     'housing:looking_for': 'Looking For Housing',
-    looking_for: 'For You — Looking For',
+    looking_for: 'Looking For',
     marketplace: 'Marketplace',
     'marketplace:misc': 'Misc',
     'marketplace:clothing': 'Clothing',
@@ -79,7 +79,7 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">✨ For You</h2>
+          <h2 className="text-xl font-bold text-gray-900">🔍 Looking For</h2>
           <p className="text-sm text-gray-400 mt-0.5">What students near you are searching for</p>
         </div>
         <button
