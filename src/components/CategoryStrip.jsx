@@ -1,15 +1,20 @@
-// Mobile-only horizontal scroll strip of category chips (hidden on lg+)
-import { CATEGORIES } from '../constants/categories'
+// Mobile-only horizontal scroll strip of main section chips (hidden on lg+)
+const SECTIONS = [
+  { value: 'all',          label: 'All',         icon: '🏷️' },
+  { value: 'housing',      label: 'Housing',      icon: '🏠' },
+  { value: 'looking_for',  label: 'Looking For',  icon: '✨' },
+  { value: 'marketplace',  label: 'Marketplace',  icon: '🛍️' },
+]
 
-export default function CategoryStrip({ activeCategory, onCategory }) {
+export default function CategoryStrip({ activeFilter, onFilter }) {
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-1 lg:hidden">
-      {CATEGORIES.map((cat) => {
-        const active = activeCategory === cat.id
+      {SECTIONS.map((s) => {
+        const active = activeFilter === s.value || activeFilter?.startsWith(s.value + ':')
         return (
           <button
-            key={cat.id}
-            onClick={() => onCategory(cat.id)}
+            key={s.value}
+            onClick={() => onFilter(s.value)}
             className={[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap shrink-0 transition-colors border',
               active
@@ -17,8 +22,8 @@ export default function CategoryStrip({ activeCategory, onCategory }) {
                 : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300',
             ].join(' ')}
           >
-            <span className="text-base leading-none">{cat.icon}</span>
-            {cat.label}
+            <span className="text-base leading-none">{s.icon}</span>
+            {s.label}
           </button>
         )
       })}

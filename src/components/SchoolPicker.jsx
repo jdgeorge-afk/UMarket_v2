@@ -1,20 +1,54 @@
+import { useState } from 'react'
 import { useSchool } from '../context/SchoolContext'
 import { SCHOOLS } from '../constants/schools'
 
 export default function SchoolPicker() {
   const { selectSchool } = useSchool()
+  const [search, setSearch] = useState('')
+
+  const filtered = SCHOOLS.filter(
+    (s) =>
+      !search ||
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.shortName.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
       {/* Logo */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <h1 className="text-5xl font-extrabold text-white tracking-tight">UMarket</h1>
         <p className="text-gray-400 mt-2 text-lg">The college student marketplace</p>
       </div>
 
+      {/* Search bar */}
+      <div className="relative w-full max-w-sm mb-6">
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search your school..."
+          className="w-full h-10 pl-9 pr-4 rounded-xl bg-gray-800 text-white placeholder:text-gray-500 text-sm outline-none focus:ring-2 focus:ring-white/20"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-lg"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       {/* School cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-2xl">
-        {SCHOOLS.map((school) => (
+        {filtered.map((school) => (
           <button
             key={school.id}
             onClick={() => school.live && selectSchool(school.id)}

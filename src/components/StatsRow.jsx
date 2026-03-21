@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
 
-export default function StatsRow({ onCategory }) {
+export default function StatsRow({ onFilter }) {
   const { school } = useSchool()
   const [stats, setStats] = useState({ housing: 0, sublease: 0, looking: 0 })
 
@@ -24,9 +24,9 @@ export default function StatsRow({ onCategory }) {
   }, [school])
 
   const items = [
-    { icon: '🏠', label: 'Listings',  count: stats.housing,  cat: 'housing' },
-    { icon: '🔑', label: 'Subleases', count: stats.sublease, cat: 'sublease' },
-    { icon: '🔍', label: 'Looking',   count: stats.looking,  cat: 'looking_for' },
+    { icon: '🏠', label: 'Listings',  count: stats.housing,  filter: 'housing' },
+    { icon: '🔑', label: 'Subleases', count: stats.sublease, filter: 'housing:sublease' },
+    { icon: '🔍', label: 'Looking',   count: stats.looking,  filter: 'looking_for' },
   ]
 
   return (
@@ -34,7 +34,7 @@ export default function StatsRow({ onCategory }) {
       {items.map((item) => (
         <button
           key={item.cat}
-          onClick={() => onCategory(item.cat)}
+          onClick={() => onFilter(item.filter)}
           className="bg-white rounded-xl border border-gray-100 px-3 py-3 flex items-center gap-2 hover:border-school-primary/30 hover:bg-school-primary/5 transition-colors text-left shadow-sm"
         >
           <span className="text-xl">{item.icon}</span>

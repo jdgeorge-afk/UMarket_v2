@@ -31,7 +31,10 @@ function AppInner() {
   const [viewedUserId, setViewedUserId] = useState(null)
 
   // ── Feed filter state ─────────────────────────────────────────────────────
-  const [activeCategory, setActiveCategory] = useState('all')
+  // activeFilter encodes section + sub-filter:
+  //   'all' | 'housing' | 'housing:sublease' | 'housing:looking_for'
+  //   'looking_for' | 'marketplace' | 'marketplace:misc' | etc.
+  const [activeFilter, setActiveFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -57,7 +60,7 @@ function AppInner() {
     setViewedUserId(null)
   }
 
-  const openFavorites = () => setCurrentView('favorites')
+  const openFavorites = () => { setCurrentView('favorites'); setActiveFilter('all') }
 
   // ── Auth gate: run callback if authed, else open sign-in modal ───────────
   const requireAuth = (callback) => {
@@ -96,8 +99,8 @@ function AppInner() {
         {/* Desktop sidebar — hidden on mobile */}
         <aside className="hidden lg:block w-64 shrink-0">
           <Sidebar
-            activeCategory={activeCategory}
-            onCategory={setActiveCategory}
+            activeFilter={activeFilter}
+            onFilter={setActiveFilter}
             onPostOpen={openPost}
           />
         </aside>
@@ -107,8 +110,8 @@ function AppInner() {
           {(currentView === 'feed' || currentView === 'favorites') && (
             <ListingFeed
               favoritesOnly={currentView === 'favorites'}
-              activeCategory={activeCategory}
-              onCategory={setActiveCategory}
+              activeFilter={activeFilter}
+              onFilter={setActiveFilter}
               sortBy={sortBy}
               onSort={setSortBy}
               searchQuery={searchQuery}

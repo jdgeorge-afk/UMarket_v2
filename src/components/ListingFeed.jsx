@@ -10,6 +10,38 @@ import LookingForStrip from './LookingForStrip'
 
 const AD_INTERVAL = 8
 
+// Map the encoded activeFilter to what useListings expects
+function filterToCategory(activeFilter) {
+  if (!activeFilter || activeFilter === 'all') return 'all'
+  if (activeFilter === 'housing') return 'housing'
+  if (activeFilter === 'housing:sublease') return 'sublease'
+  if (activeFilter === 'housing:looking_for') return 'looking_for'
+  if (activeFilter === 'looking_for') return 'looking_for'
+  if (activeFilter === 'marketplace') return 'all'
+  if (activeFilter.startsWith('marketplace:')) return activeFilter.split(':')[1]
+  return 'all'
+}
+
+// Section title shown in the filter bar / heading
+function filterToLabel(activeFilter) {
+  const map = {
+    all: 'All Listings',
+    housing: 'Housing',
+    'housing:sublease': 'Subleases',
+    'housing:looking_for': 'Looking For Housing',
+    looking_for: 'For You — Looking For',
+    marketplace: 'Marketplace',
+    'marketplace:misc': 'Misc',
+    'marketplace:clothing': 'Clothing',
+    'marketplace:sports': 'Sports',
+    'marketplace:textbooks': 'Textbooks',
+    'marketplace:furniture': 'Furniture',
+    'marketplace:electronics': 'Electronics',
+    'marketplace:appliances': 'Appliances',
+  }
+  return map[activeFilter] ?? 'Listings'
+}
+
 function injectAds(listings) {
   const result = []
   let adCount = 0
@@ -38,10 +70,96 @@ function FeedSkeleton() {
   )
 }
 
+// ── Looking For page — "For You" feed ─────────────────────────────────────────
+function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
+  const { listings, loading, error } = useListings({ category: 'looking_for' })
+
+  return (
+    <div className="p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">✨ For You</h2>
+          <p className="text-sm text-gray-400 mt-0.5">What students near you are searching for</p>
+        </div>
+        <button
+          onClick={() => onRequireAuth(() => onPostOpen?.())}
+          className="bg-school-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90"
+        >
+          + Post a Need
+        </button>
+      </div>
+
+      {loading && (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 animate-pulse border border-gray-100">
+              <div className="h-4 bg-gray-200 rounded w-3/5 mb-2" />
+              <div className="h-3 bg-gray-200 rounded w-2/5" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-12 text-red-400">
+          <p className="text-3xl mb-2">⚠️</p>
+          <p className="font-medium">Failed to load</p>
+          <p className="text-sm opacity-70">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && listings.length === 0 && (
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-5xl mb-3">🔍</p>
+          <p className="font-semibold text-gray-600 text-lg">No requests yet</p>
+          <p className="text-sm mt-1">Be the first to post what you're looking for!</p>
+          <button
+            onClick={() => onRequireAuth(() => onPostOpen?.())}
+            className="mt-4 bg-school-primary text-white font-semibold px-5 py-2.5 rounded-xl hover:opacity-90"
+          >
+            Post a Need
+          </button>
+        </div>
+      )}
+
+      {!loading && listings.length > 0 && (
+        <div className="space-y-3">
+          {listings.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onOpenListing(item)}
+              className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-shadow text-left"
+            >
+              <span className="text-2xl shrink-0">🔍</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">{item.title}</p>
+                <p className="text-sm text-gray-400 mt-0.5">
+                  {item.profiles?.name?.split(' ')[0] ?? 'Someone'}
+                  {item.budget ? ` · Budget $${Number(item.budget).toLocaleString()}` : ''}
+                </p>
+              </div>
+              {item.budget && (
+                <span className="shrink-0 bg-school-primary/10 text-school-primary text-sm font-semibold px-3 py-1 rounded-full">
+                  ${Number(item.budget).toLocaleString()}
+                </span>
+              )}
+              <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main feed ─────────────────────────────────────────────────────────────────
 export default function ListingFeed({
   favoritesOnly = false,
-  activeCategory,
-  onCategory,
+  activeFilter = 'all',
+  onFilter,
   sortBy,
   onSort,
   searchQuery,
@@ -50,8 +168,21 @@ export default function ListingFeed({
   onPostOpen,
 }) {
   const { user } = useAuth()
+
+  // "For You" / Looking For tab gets its own full-page component
+  if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
+    return (
+      <LookingForPage
+        onOpenListing={onOpenListing}
+        onRequireAuth={onRequireAuth}
+        onPostOpen={onPostOpen}
+      />
+    )
+  }
+
+  const category = filterToCategory(activeFilter)
   const { listings, loading, error } = useListings({
-    category: activeCategory,
+    category,
     sortBy,
     searchQuery,
     favoritesOnly,
@@ -59,24 +190,25 @@ export default function ListingFeed({
   })
 
   const items = injectAds(listings)
-  const showHero = !favoritesOnly && !searchQuery && activeCategory === 'all'
+  const isAllTab = !favoritesOnly && !searchQuery && activeFilter === 'all'
+  const isHousingTab = !favoritesOnly && !searchQuery && activeFilter === 'housing'
 
   return (
     <div>
-      {/* Mobile category chips */}
-      <CategoryStrip activeCategory={activeCategory} onCategory={onCategory} />
+      {/* Mobile category chips — only on All tab */}
+      {isAllTab && <CategoryStrip activeFilter={activeFilter} onFilter={onFilter} />}
 
-      {/* Hero + stats — only on the default "All" feed */}
-      {showHero && (
+      {/* Hero + stats — only on the main All tab */}
+      {isAllTab && (
         <>
           <HeroBanner
-            onBrowseHousing={() => onCategory('housing')}
+            onBrowseHousing={() => onFilter('housing')}
             onPostNeed={() => onRequireAuth(() => onPostOpen?.())}
           />
-          <StatsRow onCategory={onCategory} />
+          <StatsRow onFilter={onFilter} />
           <LookingForStrip
             onOpenListing={onOpenListing}
-            onCategory={onCategory}
+            onFilter={onFilter}
             onPostOpen={() => onRequireAuth(() => onPostOpen?.())}
           />
         </>
@@ -86,9 +218,10 @@ export default function ListingFeed({
       <FilterBar
         sortBy={sortBy}
         onSort={onSort}
-        activeCategory={activeCategory}
-        onClearCategory={() => onCategory('all')}
+        activeFilter={activeFilter}
+        onClearFilter={() => onFilter('all')}
         totalCount={listings.length}
+        label={filterToLabel(activeFilter)}
       />
 
       {/* Feed content */}

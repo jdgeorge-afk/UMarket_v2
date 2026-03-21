@@ -15,7 +15,7 @@ function timeAgo(dateStr) {
   return `${Math.floor(days / 30)}mo ago`
 }
 
-export default function LookingForStrip({ onOpenListing, onCategory, onPostOpen }) {
+export default function LookingForStrip({ onOpenListing, onFilter, onPostOpen }) {
   const { school } = useSchool()
   const [items, setItems] = useState([])
 
@@ -44,7 +44,7 @@ export default function LookingForStrip({ onOpenListing, onCategory, onPostOpen 
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onCategory('looking_for')}
+            onClick={() => onFilter('looking_for')}
             className="text-xs text-gray-500 border border-gray-200 px-2.5 py-1 rounded-full hover:bg-gray-50"
           >
             All

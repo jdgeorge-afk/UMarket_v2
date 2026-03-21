@@ -7,6 +7,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
   const { school, selectSchool, clearSchool } = useSchool()
   const { user, profile, signOut } = useAuth()
   const [schoolDropOpen, setSchoolDropOpen] = useState(false)
+  const [schoolSearch, setSchoolSearch] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
@@ -38,11 +39,26 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           </button>
 
           {schoolDropOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[200px] z-50">
-              {SCHOOLS.filter((s) => s.live).map((s) => (
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50">
+              {/* Search */}
+              <div className="px-2 pt-1 pb-1">
+                <input
+                  autoFocus
+                  type="text"
+                  value={schoolSearch}
+                  onChange={(e) => setSchoolSearch(e.target.value)}
+                  placeholder="Search schools..."
+                  className="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:border-school-primary text-gray-700 placeholder:text-gray-400"
+                />
+              </div>
+              {SCHOOLS.filter((s) => s.live && (
+                !schoolSearch ||
+                s.name.toLowerCase().includes(schoolSearch.toLowerCase()) ||
+                s.shortName.toLowerCase().includes(schoolSearch.toLowerCase())
+              )).map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => { selectSchool(s.id); setSchoolDropOpen(false) }}
+                  onClick={() => { selectSchool(s.id); setSchoolDropOpen(false); setSchoolSearch('') }}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 ${
                     school?.id === s.id ? 'font-semibold text-school-primary' : 'text-gray-700'
                   }`}
@@ -177,7 +193,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
       {(schoolDropOpen || userMenuOpen) && (
         <div
           className="fixed inset-0 z-30"
-          onClick={() => { setSchoolDropOpen(false); setUserMenuOpen(false) }}
+          onClick={() => { setSchoolDropOpen(false); setSchoolSearch(''); setUserMenuOpen(false) }}
         />
       )}
     </header>
