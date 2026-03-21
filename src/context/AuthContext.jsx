@@ -39,11 +39,11 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [fetchProfile])
 
-  const signUp = async ({ email, password, name }) => {
+  const signUp = async ({ email, password, name, schoolId }) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, school_id: schoolId } },
     })
     return { error }
   }
