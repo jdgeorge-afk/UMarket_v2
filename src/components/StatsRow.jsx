@@ -4,7 +4,7 @@ import { useSchool } from '../context/SchoolContext'
 
 export default function StatsRow({ onFilter }) {
   const { school } = useSchool()
-  const [stats, setStats] = useState({ housing: 0, sublease: 0, looking: 0 })
+  const [stats, setStats] = useState({ housing: 0, looking: 0, marketplace: 0 })
 
   useEffect(() => {
     if (!school) return
@@ -15,18 +15,19 @@ export default function StatsRow({ onFilter }) {
         .eq('school_id', school.id)
         .eq('sold', false)
       if (!data) return
-      const housing  = data.filter((l) => l.category === 'housing').length
-      const sublease = data.filter((l) => l.category === 'sublease').length
-      const looking  = data.filter((l) => l.category === 'looking_for').length
-      setStats({ housing, sublease, looking })
+      const MARKETPLACE_CATS = ['textbooks','furniture','electronics','clothing','appliances','sports','misc']
+      const housing    = data.filter((l) => l.category === 'housing' || l.category === 'sublease').length
+      const looking    = data.filter((l) => l.category === 'looking_for').length
+      const marketplace = data.filter((l) => MARKETPLACE_CATS.includes(l.category)).length
+      setStats({ housing, looking, marketplace })
     }
     fetchStats()
   }, [school])
 
   const items = [
-    { icon: '🏠', label: 'Listings',  count: stats.housing,  filter: 'housing' },
-    { icon: '🔑', label: 'Subleases', count: stats.sublease, filter: 'housing:sublease' },
-    { icon: '🔍', label: 'Looking',   count: stats.looking,  filter: 'looking_for' },
+    { icon: '🏠', label: 'Housing',     count: stats.housing,     filter: 'housing' },
+    { icon: '🔍', label: 'Looking For', count: stats.looking,     filter: 'looking_for' },
+    { icon: '🛒', label: 'Marketplace', count: stats.marketplace, filter: 'marketplace' },
   ]
 
   return (
