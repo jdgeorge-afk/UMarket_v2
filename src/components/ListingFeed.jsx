@@ -80,7 +80,7 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">🔍 Looking For</h2>
-          <p className="text-sm text-gray-400 mt-0.5">What students near you are searching for</p>
+          <p className="text-sm text-gray-400 mt-0.5">See What People Are Looking For</p>
         </div>
         <button
           onClick={() => onRequireAuth(() => onPostOpen?.())}
