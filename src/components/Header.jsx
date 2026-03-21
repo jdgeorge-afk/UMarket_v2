@@ -106,7 +106,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
         </div>
 
         {/* Desktop auth / post actions */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
+        <div className="hidden sm:flex items-center gap-2 shrink-0 ml-auto">
           {user ? (
             <>
               {/* Saved */}
