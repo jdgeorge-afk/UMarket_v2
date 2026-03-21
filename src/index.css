@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Default CSS custom properties — overridden at runtime by SchoolContext */
+:root {
+  --school-primary: #4f46e5;
+  --school-light: #818cf8;
+  --school-dark: #3730a3;
+  --school-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+
+/* Hide scrollbars on horizontal scroll strips */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* iPhone safe area padding for the bottom nav */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Smooth image fade-in */
+img {
+  transition: opacity 0.2s ease;
+}
