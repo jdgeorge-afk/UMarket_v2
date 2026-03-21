@@ -9,4 +9,7 @@ if (!url || !key) {
   )
 }
 
-export const supabase = createClient(url ?? '', key ?? '')
+export const supabase = createClient(
+  url || 'https://placeholder.supabase.co',
+  key || 'placeholder-anon-key'
+)
