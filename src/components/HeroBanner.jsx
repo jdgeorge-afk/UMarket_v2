@@ -12,7 +12,7 @@ export default function HeroBanner({ onBrowseHousing, onPostNeed }) {
       <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10" />
       <div className="absolute -right-4 top-12 w-24 h-24 rounded-full bg-white/5" />
 
-      <p className="relative text-3xl sm:text-4xl font-extrabold leading-tight whitespace-nowrap">
+      <p className="relative text-2xl sm:text-4xl font-extrabold leading-tight">
         Find your place near campus.
       </p>
       <p className="relative text-white/70 text-sm mt-1 mb-5">

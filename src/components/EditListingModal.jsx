@@ -102,9 +102,9 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
   }
 
   return (
-    <Modal onClose={onClose} fullHeight wide>
+    <Modal onClose={onClose} fullHeight wide title="Edit Listing">
       <form onSubmit={handleSubmit}>
-        <h2 className="text-xl font-bold text-gray-900 mb-5">Edit Listing</h2>
+        <h2 className="hidden sm:block text-xl font-bold text-gray-900 mb-5">Edit Listing</h2>
 
         {/* Photos */}
         <div className="mb-4">

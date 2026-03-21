@@ -105,9 +105,9 @@ export default function PostListingModal({ onClose }) {
   }
 
   return (
-    <Modal onClose={onClose} fullHeight wide>
+    <Modal onClose={onClose} fullHeight wide title="Post a Listing">
       <form onSubmit={handleSubmit}>
-        <h2 className="text-xl font-bold text-gray-900 mb-5">Post a Listing</h2>
+        <h2 className="hidden sm:block text-xl font-bold text-gray-900 mb-5">Post a Listing</h2>
 
         {/* ── Image upload ─────────────────────────────────────────────────── */}
         <div className="mb-4">
