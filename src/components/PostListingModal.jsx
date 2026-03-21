@@ -31,8 +31,9 @@ export default function PostListingModal({ onClose }) {
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
 
-  const isHousing = category === 'housing' || category === 'sublease'
-  const isLooking = category === 'looking_for'
+  const isHousing       = category === 'housing' || category === 'sublease'
+  const isLooking       = category === 'looking_for'
+  const isLookingHousing = category === 'looking_housing'
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
@@ -83,13 +84,13 @@ export default function PostListingModal({ onClose }) {
         seller_id:   user.id,
         school_id:   school.id,
         is_housing:  isHousing,
-        is_looking:  isLooking,
-        price:       isLooking ? null : (Number(price) || 0),
-        condition:   isLooking || isHousing ? null : condition,
-        budget:      isLooking ? (Number(budget) || null) : null,
-        beds:        isHousing ? (Number(beds) || null) : null,
+        is_looking:  isLooking || isLookingHousing,
+        price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
+        condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
+        budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
+        beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
         size:        isHousing ? size.trim() : null,
-        avail:       isHousing ? avail.trim() : null,
+        avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
       })
       if (insertErr) throw insertErr
       onClose()
@@ -166,10 +167,10 @@ export default function PostListingModal({ onClose }) {
         />
 
         {/* ── Price or Budget ───────────────────────────────────────────────── */}
-        {isLooking ? (
+        {(isLooking || isLookingHousing) ? (
           <input
             type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
-            placeholder="Max Budget ($)" min={0}
+            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'} min={0}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
           />
         ) : (
@@ -181,28 +182,30 @@ export default function PostListingModal({ onClose }) {
         )}
 
         {/* ── Housing fields ────────────────────────────────────────────────── */}
-        {isHousing && (
-          <div className="grid grid-cols-3 gap-2 mb-3">
+        {(isHousing || isLookingHousing) && (
+          <div className={`grid gap-2 mb-3 ${isHousing ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <input
               type="number" value={beds} onChange={(e) => setBeds(e.target.value)}
               placeholder="# Beds" min={0}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
             />
-            <input
-              value={size} onChange={(e) => setSize(e.target.value)}
-              placeholder="Size (e.g. 1BR/1BA)"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
-            />
+            {isHousing && (
+              <input
+                value={size} onChange={(e) => setSize(e.target.value)}
+                placeholder="Size (e.g. 1BR/1BA)"
+                className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+              />
+            )}
             <input
               value={avail} onChange={(e) => setAvail(e.target.value)}
-              placeholder="Available (Aug 2025)"
+              placeholder={isLookingHousing ? 'Move-in Date' : 'Available (Aug 2025)'}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
             />
           </div>
         )}
 
         {/* ── Condition ─────────────────────────────────────────────────────── */}
-        {!isLooking && !isHousing && (
+        {!isLooking && !isLookingHousing && !isHousing && (
           <select
             value={condition} onChange={(e) => setCondition(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary bg-white"
