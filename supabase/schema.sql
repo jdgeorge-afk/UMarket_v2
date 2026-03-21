@@ -113,7 +113,11 @@ begin
     new.id,
     new.raw_user_meta_data ->> 'name',  -- passed from signUp({ options: { data: { name } } })
     new.email like '%.edu'              -- auto-verify .edu email addresses
-  );
+  )
+  on conflict (id) do nothing;          -- safe to re-run / retry
+  return new;
+exception when others then
+  -- Never let a profile-creation failure block the auth user from being created
   return new;
 end;
 $$;

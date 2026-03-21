@@ -3,7 +3,7 @@ import { useSchool } from '../context/SchoolContext'
 import { useAuth } from '../context/AuthContext'
 import { SCHOOLS } from '../constants/schools'
 
-export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites }) {
+export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile }) {
   const { school, selectSchool, clearSchool } = useSchool()
   const { user, profile, signOut } = useAuth()
   const [schoolDropOpen, setSchoolDropOpen] = useState(false)
@@ -140,6 +140,12 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                       <p className="text-sm font-semibold text-gray-900">{profile?.name ?? 'Account'}</p>
                       <p className="text-xs text-gray-400 truncate">{profile?.grade ?? ''}</p>
                     </div>
+                    <button
+                      onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }}
+                      className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                    >
+                      My Profile
+                    </button>
                     <button
                       onClick={() => { setUserMenuOpen(false); onFavorites() }}
                       className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"

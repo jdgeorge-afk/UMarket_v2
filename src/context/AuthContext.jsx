@@ -32,8 +32,15 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (u) fetchProfile(u.id)
-      else setProfile(null)
+      if (u) {
+        fetchProfile(u.id)
+        // Clean up the token hash from the URL after email confirmation redirect
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState(null, '', window.location.pathname)
+        }
+      } else {
+        setProfile(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -43,7 +50,10 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, school_id: schoolId } },
+      options: {
+        data: { name, school_id: schoolId },
+        emailRedirectTo: window.location.origin,
+      },
     })
     return { error }
   }
