@@ -74,6 +74,9 @@ export default function PostListingModal({ onClose }) {
     setUploading(true)
     setError('')
     try {
+      // Refresh session token in case it has expired
+      await supabase.auth.refreshSession()
+
       const imageUrls = files.length ? await uploadImages() : []
       const { error: insertErr } = await supabase.from('listings').insert({
         title:       title.trim(),

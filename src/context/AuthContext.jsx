@@ -14,7 +14,18 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data ?? null)
+    if (data) {
+      setProfile(data)
+      return
+    }
+    // Profile missing — trigger may have failed silently on sign-up.
+    // Upsert to ensure the FK target exists before any listing inserts.
+    const { data: created } = await supabase
+      .from('profiles')
+      .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true })
+      .select()
+      .single()
+    setProfile(created ?? null)
   }, [])
 
   useEffect(() => {
