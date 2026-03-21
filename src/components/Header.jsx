@@ -12,7 +12,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
 
   return (
     <header className="sticky top-0 z-40 shadow-md" style={{ background: school?.gradient ?? 'var(--school-gradient)' }}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center gap-2 sm:gap-3">
+      <div className="w-full px-3 sm:px-4 h-14 flex items-center gap-2 sm:gap-3">
 
         {/* Logo */}
         <button
@@ -80,8 +80,8 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           )}
         </div>
 
-        {/* Search bar */}
-        <div className="flex-1 relative">
+        {/* Search bar — fixed width, left-anchored */}
+        <div className="relative w-64 sm:w-80">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none"
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
