@@ -59,7 +59,6 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
       <NavItem icon="📚" label="Textbooks"       value="marketplace:textbooks"   activeFilter={activeFilter} onFilter={onFilter} />
       <NavItem icon="🛋️" label="Furniture"       value="marketplace:furniture"   activeFilter={activeFilter} onFilter={onFilter} />
       <NavItem icon="💻" label="Electronics"     value="marketplace:electronics" activeFilter={activeFilter} onFilter={onFilter} />
-      <NavItem icon="🍳" label="Appliances"      value="marketplace:appliances"  activeFilter={activeFilter} onFilter={onFilter} />
 
       {/* ── Boost upsell ──────────────────────────────────────────────────── */}
       <div
