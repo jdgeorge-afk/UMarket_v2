@@ -92,7 +92,7 @@ function AppInner() {
         onFavorites={openFavorites}
       />
 
-      <div className="flex max-w-7xl mx-auto">
+      <div className="flex w-full">
         {/* Desktop sidebar — hidden on mobile */}
         <aside className="hidden lg:block w-64 shrink-0">
           <Sidebar

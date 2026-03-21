@@ -23,7 +23,7 @@ export default function LookingForStrip({ onOpenListing, onCategory, onPostOpen 
     if (!school) return
     supabase
       .from('listings')
-      .select('*, profiles(name, verified)')
+      .select('*, profiles!seller_id(name, verified)')
       .eq('school_id', school.id)
       .eq('category', 'looking_for')
       .eq('sold', false)
