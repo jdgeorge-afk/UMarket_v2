@@ -94,6 +94,7 @@ function AppInner() {
         onPostOpen={openPost}
         onGoHome={goHome}
         onFavorites={openFavorites}
+        onOpenProfile={() => user && openProfile(user.id)}
       />
 
       <div className="flex w-full">
@@ -136,6 +137,7 @@ function AppInner() {
               onBack={() => window.history.length > 1 ? setCurrentView(selectedListing ? 'detail' : 'feed') : goHome()}
               onOpenListing={openListing}
               onRequireAuth={requireAuth}
+              onPostOpen={openPost}
             />
           )}
         </main>
