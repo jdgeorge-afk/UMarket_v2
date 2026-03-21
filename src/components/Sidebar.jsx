@@ -1,12 +1,12 @@
 import { useSchool } from '../context/SchoolContext'
 import { CATEGORIES } from '../constants/categories'
 
-// Split categories into two groups to match the screenshot layout
-const HOUSING_CATS = ['all', 'housing', 'sublease', 'looking_for']
-const MARKET_CATS  = ['textbooks', 'furniture', 'electronics', 'clothing', 'appliances', 'sports', 'misc']
+const ALL_CAT      = CATEGORIES.find((c) => c.id === 'all')
+const HOUSING_CATS = ['housing', 'sublease', 'looking_for']
+const MARKET_CATS  = ['clothing', 'sports', 'misc', 'textbooks', 'furniture', 'electronics', 'appliances']
 
-const housing  = CATEGORIES.filter((c) => HOUSING_CATS.includes(c.id))
-const market   = CATEGORIES.filter((c) => MARKET_CATS.includes(c.id))
+const housing = CATEGORIES.filter((c) => HOUSING_CATS.includes(c.id))
+const market  = MARKET_CATS.map((id) => CATEGORIES.find((c) => c.id === id))
 
 function CatButton({ cat, active, onClick }) {
   return (
@@ -34,8 +34,11 @@ export default function Sidebar({ activeCategory, onCategory, onPostOpen }) {
   return (
     <div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-4 px-3 flex flex-col gap-1">
 
+      {/* All — above any section */}
+      <CatButton cat={ALL_CAT} active={activeCategory === 'all'} onClick={onCategory} />
+
       {/* Housing section */}
-      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1">
+      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-2 mt-3 mb-1">
         Housing
       </p>
       {housing.map((cat) => (

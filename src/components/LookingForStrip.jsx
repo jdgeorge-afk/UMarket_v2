@@ -32,8 +32,6 @@ export default function LookingForStrip({ onOpenListing, onCategory, onPostOpen 
       .then(({ data }) => setItems(data ?? []))
   }, [school])
 
-  if (!items.length) return null
-
   return (
     <div className="mx-4 mt-3 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Header */}
@@ -62,6 +60,11 @@ export default function LookingForStrip({ onOpenListing, onCategory, onPostOpen 
 
       {/* Items list */}
       <div className="divide-y divide-gray-50">
+        {items.length === 0 && (
+          <p className="px-4 py-3 text-sm text-gray-400 italic">
+            No requests yet — be the first to post a need!
+          </p>
+        )}
         {items.map((item) => (
           <button
             key={item.id}
