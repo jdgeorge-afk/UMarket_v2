@@ -23,7 +23,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
     if (mode === 'signup') {
       if (name.trim().length < 2) { setError('Please enter your name.'); setLoading(false); return }
-      const { error: err } = await signUp({ email, password, name: name.trim() })
+      const { error: err } = await signUp({ email, password, name: name.trim(), schoolId: school?.id })
       if (err) setError(err.message)
       else setStep('verify')
     } else {
