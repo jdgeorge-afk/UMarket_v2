@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 // Layout
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
+import Sidebar from './components/Sidebar'
 
 // Views
 import SchoolPicker from './components/SchoolPicker'
@@ -84,6 +85,8 @@ function AppInner() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
+        searchQuery={searchQuery}
+        onSearch={setSearchQuery}
         onAuthOpen={(mode = 'signin') => {
           setAuthMode(mode)
           setAuthModalOpen(true)
@@ -95,8 +98,17 @@ function AppInner() {
       />
 
       <div className="flex w-full">
-        {/* Main content area — full width, no sidebar */}
-        <main className="flex-1 min-w-0 pb-24 lg:pb-8 max-w-7xl mx-auto w-full">
+        {/* Desktop sidebar — hidden on mobile */}
+        <aside className="hidden lg:block w-64 shrink-0">
+          <Sidebar
+            activeFilter={activeFilter}
+            onFilter={setActiveFilter}
+            onPostOpen={openPost}
+          />
+        </aside>
+
+        {/* Main content area */}
+        <main className="flex-1 min-w-0 pb-24 lg:pb-8">
           {(currentView === 'feed' || currentView === 'favorites') && (
             <ListingFeed
               favoritesOnly={currentView === 'favorites'}
@@ -105,7 +117,6 @@ function AppInner() {
               sortBy={sortBy}
               onSort={setSortBy}
               searchQuery={searchQuery}
-              onSearch={setSearchQuery}
               onOpenListing={openListing}
               onRequireAuth={requireAuth}
               onPostOpen={openPost}
