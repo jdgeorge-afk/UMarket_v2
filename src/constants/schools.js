@@ -1,5 +1,5 @@
 export const SCHOOLS = [
-  // ── Already live ──────────────────────────────────────────────────────────
+  // ── Priority schools ───────────────────────────────────────────────────────
   {
     id: 'utah',
     name: 'University of Utah',
@@ -20,18 +20,38 @@ export const SCHOOLS = [
     gradient: 'linear-gradient(135deg, #4D1979, #7c3aed)',
     live: true,
   },
-
-  // ── Top 25 launch schools ─────────────────────────────────────────────────
   {
-    id: 'osu',
-    name: 'Ohio State University',
-    shortName: 'Ohio State',
-    primary: '#BB0000',
-    light: '#e53e3e',
-    dark: '#7a0000',
-    gradient: 'linear-gradient(135deg, #BB0000, #e53e3e)',
+    id: 'ucla',
+    name: 'University of California, Los Angeles',
+    shortName: 'UCLA',
+    primary: '#2774AE',
+    light: '#4a9dd4',
+    dark: '#1a5480',
+    gradient: 'linear-gradient(135deg, #2774AE, #FFD100)',
     live: true,
   },
+  {
+    id: 'usc',
+    name: 'University of Southern California',
+    shortName: 'USC',
+    primary: '#990000',
+    light: '#cc0000',
+    dark: '#660000',
+    gradient: 'linear-gradient(135deg, #990000, #FFCC00)',
+    live: true,
+  },
+  {
+    id: 'michigan',
+    name: 'University of Michigan',
+    shortName: 'U of M',
+    primary: '#00274C',
+    light: '#004f9a',
+    dark: '#00152a',
+    gradient: 'linear-gradient(135deg, #00274C, #FFCB05)',
+    live: true,
+  },
+
+  // ── Other launch schools ───────────────────────────────────────────────────
   {
     id: 'ut-austin',
     name: 'University of Texas at Austin',
@@ -50,16 +70,6 @@ export const SCHOOLS = [
     light: '#003882',
     dark: '#00112a',
     gradient: 'linear-gradient(135deg, #001E44, #1f4f8a)',
-    live: true,
-  },
-  {
-    id: 'michigan',
-    name: 'University of Michigan',
-    shortName: 'U of M',
-    primary: '#00274C',
-    light: '#004f9a',
-    dark: '#00152a',
-    gradient: 'linear-gradient(135deg, #00274C, #FFCB05)',
     live: true,
   },
   {
@@ -143,16 +153,6 @@ export const SCHOOLS = [
     live: true,
   },
   {
-    id: 'ucla',
-    name: 'University of California, Los Angeles',
-    shortName: 'UCLA',
-    primary: '#2774AE',
-    light: '#4a9dd4',
-    dark: '#1a5480',
-    gradient: 'linear-gradient(135deg, #2774AE, #FFD100)',
-    live: true,
-  },
-  {
     id: 'indiana',
     name: 'Indiana University',
     shortName: 'IU',
@@ -223,16 +223,6 @@ export const SCHOOLS = [
     live: true,
   },
   {
-    id: 'usc',
-    name: 'University of Southern California',
-    shortName: 'USC',
-    primary: '#990000',
-    light: '#cc0000',
-    dark: '#660000',
-    gradient: 'linear-gradient(135deg, #990000, #FFCC00)',
-    live: true,
-  },
-  {
     id: 'byu',
     name: 'Brigham Young University',
     shortName: 'BYU',
@@ -250,6 +240,18 @@ export const SCHOOLS = [
     light: '#7ab8e8',
     dark: '#2272a5',
     gradient: 'linear-gradient(135deg, #4B9CD3, #13294B)',
+    live: true,
+  },
+
+  // ── Moved to bottom ────────────────────────────────────────────────────────
+  {
+    id: 'osu',
+    name: 'Ohio State University',
+    shortName: 'Ohio State',
+    primary: '#BB0000',
+    light: '#e53e3e',
+    dark: '#7a0000',
+    gradient: 'linear-gradient(135deg, #BB0000, #e53e3e)',
     live: true,
   },
 ]
