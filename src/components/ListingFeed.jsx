@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import { useSchool } from '../context/SchoolContext'
 import { useListings } from '../hooks/useListings'
 import CategoryStrip from './CategoryStrip'
 import FilterBar from './FilterBar'
@@ -71,15 +72,36 @@ function FeedSkeleton() {
 
 // ── Looking For page — "For You" feed ─────────────────────────────────────────
 function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
+  const { school } = useSchool()
   const { listings, loading, error } = useListings({ category: 'looking_for' })
 
   return (
-    <div className="p-4">
+    <div>
+      {/* Hero banner */}
+      <div
+        className="relative mx-4 mt-3 rounded-2xl overflow-hidden text-white p-6 sm:p-8"
+        style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
+      >
+        <div className="absolute w-44 h-44 rounded-full bg-white/10 -right-8 -top-8" />
+        <div className="absolute w-24 h-24 rounded-full bg-white/5 right-10 top-14" />
+        <p className="relative text-xl sm:text-3xl font-extrabold leading-tight">
+          Post what you need.{'\n'}Let your campus come to you.
+        </p>
+        <p className="relative text-white/70 text-sm mt-1.5 mb-5">
+          Tell students what you're searching for — housing, textbooks, gear, and more.
+        </p>
+        <button
+          onClick={() => onRequireAuth(() => onPostOpen?.())}
+          className="relative flex items-center gap-1.5 bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-xl hover:bg-white/90 transition-colors shadow-md"
+        >
+          🔍 Post a Need
+        </button>
+      </div>
+
+      <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">🔍 See What People Are Looking For</h2>
-        </div>
+        <h2 className="text-xl font-bold text-gray-900">See What People Are Looking For</h2>
         <button
           onClick={() => onRequireAuth(() => onPostOpen?.())}
           className="bg-school-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90"
@@ -149,6 +171,58 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
           ))}
         </div>
       )}
+      </div>
+    </div>
+  )
+}
+
+// ── Section hero banners (Housing / Marketplace / Looking For) ────────────────
+function SectionHero({ activeFilter, onPostOpen, onRequireAuth }) {
+  const { school } = useSchool()
+
+  const config = {
+    housing: {
+      headline: 'Find roommates, subleases,\nand your next place near campus.',
+      sub: 'Browse real listings posted by real students at your school.',
+      cta: '🏠 Post a Housing Listing',
+      deco1: 'w-48 h-48 -right-10 -top-10',
+      deco2: 'w-28 h-28 -right-2 top-16',
+    },
+    marketplace: {
+      headline: 'Buy and sell textbooks, furniture,\nelectronics, and more.',
+      sub: 'Your campus secondhand market — fast, local, and free to list.',
+      cta: '🛍️ Post a Listing',
+      deco1: 'w-44 h-44 -right-8 -top-8',
+      deco2: 'w-24 h-24 right-12 top-14',
+    },
+  }
+
+  const section =
+    activeFilter === 'housing' || activeFilter?.startsWith('housing:') ? 'housing'
+    : activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:') ? 'marketplace'
+    : null
+
+  if (!section) return null
+
+  const { headline, sub, cta, deco1, deco2 } = config[section]
+
+  return (
+    <div
+      className="relative mx-4 mt-3 rounded-2xl overflow-hidden text-white p-6 sm:p-8"
+      style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
+    >
+      <div className={`absolute rounded-full bg-white/10 ${deco1}`} />
+      <div className={`absolute rounded-full bg-white/5 ${deco2}`} />
+      <p className="relative text-xl sm:text-3xl font-extrabold leading-tight whitespace-pre-line">
+        {headline}
+      </p>
+      <p className="relative text-white/70 text-sm mt-1.5 mb-5">{sub}</p>
+      <button
+        onClick={() => onRequireAuth(() => onPostOpen?.())}
+        className="relative flex items-center gap-1.5 bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-xl hover:bg-white/90 transition-colors shadow-md"
+      >
+        {cta}
+      </button>
     </div>
   )
 }
@@ -255,6 +329,15 @@ export default function ListingFeed({
             onPostOpen={() => onRequireAuth(() => onPostOpen?.())}
           />
         </>
+      )}
+
+      {/* ── Section hero — Housing / Marketplace tabs ────────────────────────── */}
+      {!favoritesOnly && !searchQuery && (
+        <SectionHero
+          activeFilter={activeFilter}
+          onPostOpen={onPostOpen}
+          onRequireAuth={onRequireAuth}
+        />
       )}
 
       {/* ── Filter bar ───────────────────────────────────────────────────────── */}
