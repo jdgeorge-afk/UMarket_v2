@@ -16,6 +16,7 @@ const DAY_OPTIONS = [
 export default function BoostModal({ listing, onClose }) {
   const { user } = useAuth()
   const [selectedDays, setSelectedDays] = useState(3)
+  const [email, setEmail] = useState('')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -26,6 +27,10 @@ export default function BoostModal({ listing, onClose }) {
 
   const handleSubmit = async () => {
     if (!user) return
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Please enter a valid email address so we can send your invoice.')
+      return
+    }
     setSubmitting(true)
     setError('')
     const { error: err } = await supabase.from('boosts').insert({
@@ -33,7 +38,7 @@ export default function BoostModal({ listing, onClose }) {
       seller_id:   user.id,
       days:        selectedDays,
       total_price: totalPrice,
-      note:        note.trim() || null,
+      note:        `[Invoice email: ${email.trim()}]${note.trim() ? ' ' + note.trim() : ''}`,
       status:      'pending',
     })
     if (err) { setError(err.message); setSubmitting(false); return }
@@ -158,6 +163,22 @@ export default function BoostModal({ listing, onClose }) {
               <p className="text-xs text-gray-400 mt-0.5">We'll invoice you via email</p>
             </div>
             <p className="text-3xl font-extrabold text-school-primary">${totalPrice}</p>
+          </div>
+
+          {/* Required email */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              Invoice Email <span className="text-red-400">*</span>
+            </p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              required
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">We'll send your payment invoice here.</p>
           </div>
 
           {/* Optional note */}
