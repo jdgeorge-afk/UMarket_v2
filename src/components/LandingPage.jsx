@@ -55,8 +55,11 @@ function HousingCard({ listing }) {
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden w-full max-w-xs mx-auto">
-      <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-        <span className="text-7xl">🏠</span>
+      <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+        {l.images?.[0]
+          ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
+          : <span className="text-7xl">🏠</span>
+        }
       </div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-1">
@@ -204,7 +207,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       const [housingRes, marketRes, lookingRes] = await Promise.all([
         supabase
           .from('listings')
-          .select('id, title, price, category, beds, avail, created_at, profiles!seller_id(name)')
+          .select('id, title, price, category, beds, avail, images, created_at, profiles!seller_id(name)')
           .eq('school_id', school.id).eq('sold', false)
           .in('category', ['housing', 'sublease'])
           .order('created_at', { ascending: false })
