@@ -159,6 +159,13 @@ function AppInner() {
         </main>
       </div>
 
+      {/* Legal disclaimer footer */}
+      <footer className="border-t border-gray-100 bg-white px-6 py-8 pb-28 lg:pb-10 text-center">
+        <p className="text-[11px] text-gray-400 leading-relaxed max-w-2xl mx-auto">
+          UMarket is an independent platform and is not affiliated with, endorsed by, sponsored by, or officially connected to any university, college, or educational institution referenced on this site. All university names, colors, and identifiers are used solely for the purpose of helping students identify their campus community. UMarket makes no claim of association with any academic institution. Use of any university name does not imply any relationship or endorsement. UMarket is a student-to-student marketplace platform operated independently. All transactions are between individual users. UMarket is not responsible for the accuracy of listings, the conduct of users, or the outcome of any transaction. Use this platform at your own risk.
+        </p>
+      </footer>
+
       {/* Mobile bottom navigation */}
       <BottomNav
         currentView={currentView}

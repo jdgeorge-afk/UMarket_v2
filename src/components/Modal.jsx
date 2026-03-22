@@ -5,7 +5,7 @@ import { useEffect } from 'react'
  * - Mobile: full-screen overlay with sticky header (title + back button)
  * - Desktop (sm+): centered dialog with max height
  */
-export default function Modal({ children, onClose, fullHeight = false, wide = false, title }) {
+export default function Modal({ children, onClose, fullHeight = false, wide = false, title, footer }) {
   // Lock background scroll without breaking touch-scroll inside the modal
   useEffect(() => {
     const scrollY = window.scrollY
@@ -65,7 +65,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
         {/* ── Scrollable content ──────────────────────────────────────────── */}
         <div
           className={[
-            'p-6',
+            'p-6 pb-4',
             'overflow-y-auto flex-1',
             fullHeight ? 'sm:overflow-y-auto' : '',
           ].join(' ')}
@@ -75,6 +75,16 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
           <div className="hidden sm:block w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5" />
           {children}
         </div>
+
+        {/* ── Sticky footer (action buttons) ──────────────────────────────── */}
+        {footer && (
+          <div
+            className="shrink-0 px-6 pt-3 pb-6 border-t border-gray-100 bg-white"
+            style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -80,6 +80,11 @@ export default function PostListingModal({ onClose }) {
         throw new Error('Your session has expired. Please sign out and sign back in.')
       }
 
+      // Ensure a profile row exists (FK target for seller_id)
+      await supabase
+        .from('profiles')
+        .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true })
+
       const imageUrls = files.length ? await uploadImages() : []
       const { error: insertErr } = await supabase.from('listings').insert({
         title:       title.trim(),
@@ -89,6 +94,7 @@ export default function PostListingModal({ onClose }) {
         images:      imageUrls,
         seller_id:   user.id,
         school_id:   school.id,
+        sold:        false,
         is_housing:  isHousing,
         is_looking:  isLooking || isLookingHousing,
         price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
@@ -98,18 +104,38 @@ export default function PostListingModal({ onClose }) {
         size:        isHousing ? size.trim() : null,
         avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
       })
-      if (insertErr) throw insertErr
+      if (insertErr) {
+        console.error('Listing insert error:', insertErr)
+        throw new Error(insertErr.message + (insertErr.hint ? ` — ${insertErr.hint}` : '') + (insertErr.details ? ` (${insertErr.details})` : ''))
+      }
       onClose()
     } catch (err) {
+      console.error('Post listing error:', err)
       setError(err.message)
     } finally {
       setUploading(false)
     }
   }
 
+  const footer = (
+    <>
+      {error && (
+        <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2 mb-3">{error}</p>
+      )}
+      <button
+        type="submit"
+        form="post-listing-form"
+        disabled={uploading}
+        className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-base disabled:opacity-40 hover:opacity-90 transition-opacity"
+      >
+        {uploading ? 'Uploading & Posting…' : '🚀 Post Listing'}
+      </button>
+    </>
+  )
+
   return (
-    <Modal onClose={onClose} fullHeight wide title="Post a Listing">
-      <form onSubmit={handleSubmit}>
+    <Modal onClose={onClose} fullHeight wide title="Post a Listing" footer={footer}>
+      <form id="post-listing-form" onSubmit={handleSubmit}>
         <h2 className="hidden sm:block text-xl font-bold text-gray-900 mb-5">Post a Listing</h2>
 
         {/* ── Image upload ─────────────────────────────────────────────────── */}
@@ -235,16 +261,6 @@ export default function PostListingModal({ onClose }) {
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-school-primary"
         />
 
-        {error && (
-          <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2 mb-3">{error}</p>
-        )}
-
-        <button
-          type="submit" disabled={uploading}
-          className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-base disabled:opacity-40 hover:opacity-90 transition-opacity"
-        >
-          {uploading ? 'Uploading & Posting…' : '🚀 Post Listing'}
-        </button>
       </form>
     </Modal>
   )
