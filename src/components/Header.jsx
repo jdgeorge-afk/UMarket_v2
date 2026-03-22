@@ -3,7 +3,7 @@ import { useSchool } from '../context/SchoolContext'
 import { useAuth } from '../context/AuthContext'
 import { SCHOOLS } from '../constants/schools'
 
-export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile }) {
+export default function Header({ onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile }) {
   const { school, selectSchool, clearSchool } = useSchool()
   const { user, profile, signOut } = useAuth()
   const [schoolDropOpen, setSchoolDropOpen] = useState(false)
@@ -11,27 +11,31 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 shadow-md" style={{ background: school?.gradient ?? 'var(--school-gradient)' }}>
-      <div className="w-full px-3 sm:px-4 h-14 flex items-center gap-2 sm:gap-3">
+    <header className="sticky top-0 z-40 shadow-sm" style={{ background: school?.gradient ?? 'var(--school-gradient)' }}>
+      <div className="w-full px-4 sm:px-6 h-14 flex items-center gap-3">
 
         {/* Logo */}
-        <button
-          onClick={onGoHome}
-          className="flex items-center gap-1.5 shrink-0 text-white font-extrabold text-lg leading-none"
-        >
-          UMarket
-          <span className="text-[10px] font-semibold bg-white/25 text-white px-1.5 py-0.5 rounded-full tracking-wide">
-            BETA
+        <button onClick={onGoHome} className="flex items-center gap-2 shrink-0">
+          <span className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center text-white font-extrabold text-base">
+            U
           </span>
+          <div className="hidden sm:block text-left">
+            <p className="text-white font-extrabold text-sm leading-tight">U Marketplace</p>
+            <p className="text-white/70 text-[11px] leading-tight">Student housing + marketplace</p>
+          </div>
+          <p className="sm:hidden text-white font-extrabold text-base leading-none">UMarket</p>
         </button>
 
-        {/* School switcher pill */}
-        <div className="relative shrink-0">
+        {/* School switcher pill — centered */}
+        <div className="relative mx-auto">
           <button
             onClick={() => setSchoolDropOpen((p) => !p)}
-            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-2.5 py-1 rounded-full transition-colors"
+            className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-3 py-1.5 rounded-full transition-colors border border-white/30"
           >
-            <span className="w-2 h-2 rounded-full bg-white/80 inline-block" />
+            <svg className="w-3.5 h-3.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             {school?.shortName ?? 'Select School'}
             <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -39,8 +43,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           </button>
 
           {schoolDropOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50">
-              {/* Search */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50">
               <div className="px-2 pt-1 pb-1">
                 <input
                   autoFocus
@@ -63,7 +66,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                     school?.id === s.id ? 'font-semibold text-school-primary' : 'text-gray-700'
                   }`}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.primary }} />
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.primary }} />
                   {s.shortName}
                   <span className="text-gray-400 text-xs ml-1">{s.name}</span>
                 </button>
@@ -80,52 +83,22 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           )}
         </div>
 
-        {/* Search bar — fixed width, left-anchored */}
-        <div className="relative w-64 sm:w-80">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder={`Search listings, housing, textbooks...`}
-            className="w-full h-9 pl-9 pr-3 rounded-lg bg-white/20 text-white placeholder:text-white/60 text-sm outline-none focus:bg-white/30 transition-colors"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-base"
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Desktop auth / post actions */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0 ml-auto">
+        {/* Right — auth / post actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {user ? (
             <>
-              {/* Saved */}
               <button
                 onClick={onFavorites}
-                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                className="hidden sm:block text-white/80 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
               >
                 Saved
               </button>
-
-              {/* Post button */}
               <button
                 onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors shadow-sm"
+                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-3 py-1.5 rounded-full hover:bg-white/90 transition-colors shadow-sm"
               >
                 + Post
               </button>
-
-              {/* User avatar + dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((p) => !p)}
@@ -133,31 +106,15 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                 >
                   {profile?.name?.[0]?.toUpperCase() ?? 'U'}
                 </button>
-
                 {userMenuOpen && (
                   <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[160px] z-50">
                     <div className="px-3 py-2 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-900">{profile?.name ?? 'Account'}</p>
                       <p className="text-xs text-gray-400 truncate">{profile?.grade ?? ''}</p>
                     </div>
-                    <button
-                      onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }}
-                      className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                    >
-                      My Profile
-                    </button>
-                    <button
-                      onClick={() => { setUserMenuOpen(false); onFavorites() }}
-                      className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                    >
-                      Saved Listings
-                    </button>
-                    <button
-                      onClick={() => { setUserMenuOpen(false); signOut() }}
-                      className="w-full px-3 py-2 text-sm text-red-500 hover:bg-gray-50 text-left"
-                    >
-                      Sign Out
-                    </button>
+                    <button onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }} className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left">My Profile</button>
+                    <button onClick={() => { setUserMenuOpen(false); onFavorites() }} className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left">Saved Listings</button>
+                    <button onClick={() => { setUserMenuOpen(false); signOut() }} className="w-full px-3 py-2 text-sm text-red-500 hover:bg-gray-50 text-left">Sign Out</button>
                   </div>
                 )}
               </div>
@@ -166,41 +123,23 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
             <>
               <button
                 onClick={() => onAuthOpen('signin')}
-                className="text-white font-medium text-sm px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+                className="text-white font-semibold text-sm px-4 py-1.5 rounded-full border border-white/60 hover:bg-white/10 transition-colors"
               >
                 Log In
               </button>
               <button
                 onClick={() => onAuthOpen('signup')}
-                className="text-white font-medium text-sm px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+                className="text-school-primary font-bold text-sm px-4 py-1.5 rounded-full bg-white hover:bg-white/90 transition-colors shadow-sm"
               >
                 Sign Up
-              </button>
-              <button
-                onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors shadow-sm"
-              >
-                + Post
               </button>
             </>
           )}
         </div>
-
-        {/* Mobile post button */}
-        <button
-          onClick={onPostOpen}
-          className="sm:hidden bg-white text-school-primary font-bold text-sm px-2.5 py-1.5 rounded-lg shrink-0"
-        >
-          + Post
-        </button>
       </div>
 
-      {/* Close dropdowns when clicking outside */}
       {(schoolDropOpen || userMenuOpen) && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => { setSchoolDropOpen(false); setSchoolSearch(''); setUserMenuOpen(false) }}
-        />
+        <div className="fixed inset-0 z-30" onClick={() => { setSchoolDropOpen(false); setSchoolSearch(''); setUserMenuOpen(false) }} />
       )}
     </header>
   )
