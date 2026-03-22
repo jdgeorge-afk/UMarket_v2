@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
@@ -10,6 +10,7 @@ const MAX_IMAGES = 6
 export default function PostListingModal({ onClose }) {
   const { user } = useAuth()
   const { school } = useSchool()
+  const formRef = useRef(null)
 
   // Base fields
   const [title, setTitle]           = useState('')
@@ -123,9 +124,9 @@ export default function PostListingModal({ onClose }) {
         <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2 mb-3">{error}</p>
       )}
       <button
-        type="submit"
-        form="post-listing-form"
+        type="button"
         disabled={uploading}
+        onClick={() => formRef.current?.requestSubmit()}
         className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-base disabled:opacity-40 hover:opacity-90 transition-opacity"
       >
         {uploading ? 'Uploading & Posting…' : '🚀 Post Listing'}
@@ -135,7 +136,7 @@ export default function PostListingModal({ onClose }) {
 
   return (
     <Modal onClose={onClose} fullHeight wide title="Post a Listing" footer={footer}>
-      <form id="post-listing-form" onSubmit={handleSubmit}>
+      <form id="post-listing-form" ref={formRef} onSubmit={handleSubmit}>
         <h2 className="hidden sm:block text-xl font-bold text-gray-900 mb-5">Post a Listing</h2>
 
         {/* ── Image upload ─────────────────────────────────────────────────── */}
