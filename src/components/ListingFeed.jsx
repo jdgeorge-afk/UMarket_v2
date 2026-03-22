@@ -77,22 +77,19 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
 
   return (
     <div>
-      {/* Hero banner */}
-      <div
-        className="relative mx-4 mt-3 rounded-2xl overflow-hidden text-white p-6 sm:p-8"
-        style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
-      >
-        <div className="absolute w-44 h-44 rounded-full bg-white/10 -right-8 -top-8" />
-        <div className="absolute w-24 h-24 rounded-full bg-white/5 right-10 top-14" />
-        <p className="relative text-xl sm:text-3xl font-extrabold leading-tight">
-          Post what you need.{'\n'}Let your campus come to you.
-        </p>
-        <p className="relative text-white/70 text-sm mt-1.5 mb-5">
+      {/* Hero */}
+      <div className="px-4 sm:px-8 pt-10 pb-6 text-center">
+        <p className="text-xs font-semibold tracking-widest uppercase text-school-primary mb-3">Looking For</p>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 leading-tight max-w-xl mx-auto">
+          Post what you need.<br />
+          <span className="text-school-primary">Let your campus</span> come to you.
+        </h1>
+        <p className="text-gray-400 text-base mt-4 max-w-md mx-auto">
           Tell students what you're searching for — housing, textbooks, gear, and more.
         </p>
         <button
           onClick={() => onRequireAuth(() => onPostOpen?.())}
-          className="relative flex items-center gap-1.5 bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-xl hover:bg-white/90 transition-colors shadow-md"
+          className="mt-6 inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity shadow-sm"
         >
           🔍 Post a Need
         </button>
@@ -176,24 +173,22 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
   )
 }
 
-// ── Section hero banners (Housing / Marketplace / Looking For) ────────────────
+// ── Section hero banners (Housing / Marketplace) ──────────────────────────────
 function SectionHero({ activeFilter, onPostOpen, onRequireAuth }) {
-  const { school } = useSchool()
-
   const config = {
     housing: {
-      headline: 'Find roommates, subleases,\nand your next place near campus.',
-      sub: 'Browse real listings posted by real students at your school.',
+      eyebrow: 'Housing',
+      headline: ['Find roommates, subleases,', 'and your next place near campus.'],
+      highlight: 1, // which line gets the school color
+      sub: 'Real listings posted by real students at your school.',
       cta: '🏠 Post a Housing Listing',
-      deco1: 'w-48 h-48 -right-10 -top-10',
-      deco2: 'w-28 h-28 -right-2 top-16',
     },
     marketplace: {
-      headline: 'Buy and sell textbooks, furniture,\nelectronics, and more.',
+      eyebrow: 'Marketplace',
+      headline: ['Buy and sell textbooks,', 'furniture, electronics, and more.'],
+      highlight: 0,
       sub: 'Your campus secondhand market — fast, local, and free to list.',
       cta: '🛍️ Post a Listing',
-      deco1: 'w-44 h-44 -right-8 -top-8',
-      deco2: 'w-24 h-24 right-12 top-14',
     },
   }
 
@@ -204,22 +199,22 @@ function SectionHero({ activeFilter, onPostOpen, onRequireAuth }) {
 
   if (!section) return null
 
-  const { headline, sub, cta, deco1, deco2 } = config[section]
+  const { eyebrow, headline, highlight, sub, cta } = config[section]
 
   return (
-    <div
-      className="relative mx-4 mt-3 rounded-2xl overflow-hidden text-white p-6 sm:p-8"
-      style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
-    >
-      <div className={`absolute rounded-full bg-white/10 ${deco1}`} />
-      <div className={`absolute rounded-full bg-white/5 ${deco2}`} />
-      <p className="relative text-xl sm:text-3xl font-extrabold leading-tight whitespace-pre-line">
-        {headline}
-      </p>
-      <p className="relative text-white/70 text-sm mt-1.5 mb-5">{sub}</p>
+    <div className="px-4 sm:px-8 pt-10 pb-6 text-center">
+      <p className="text-xs font-semibold tracking-widest uppercase text-school-primary mb-3">{eyebrow}</p>
+      <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 leading-tight max-w-xl mx-auto">
+        {headline.map((line, i) => (
+          <span key={i} className={i === highlight ? 'text-school-primary' : ''}>
+            {line}{i < headline.length - 1 && <br />}
+          </span>
+        ))}
+      </h1>
+      <p className="text-gray-400 text-base mt-4 max-w-md mx-auto">{sub}</p>
       <button
         onClick={() => onRequireAuth(() => onPostOpen?.())}
-        className="relative flex items-center gap-1.5 bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-xl hover:bg-white/90 transition-colors shadow-md"
+        className="mt-6 inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity shadow-sm"
       >
         {cta}
       </button>
