@@ -39,9 +39,9 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           </button>
 
           {schoolDropOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50">
-              {/* Search */}
-              <div className="px-2 pt-1 pb-1">
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50 flex flex-col max-h-72">
+              {/* Search — fixed at top */}
+              <div className="px-2 pt-1 pb-1 shrink-0">
                 <input
                   autoFocus
                   type="text"
@@ -51,24 +51,28 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                   className="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:border-school-primary text-gray-700 placeholder:text-gray-400"
                 />
               </div>
-              {SCHOOLS.filter((s) => s.live && (
-                !schoolSearch ||
-                s.name.toLowerCase().includes(schoolSearch.toLowerCase()) ||
-                s.shortName.toLowerCase().includes(schoolSearch.toLowerCase())
-              )).map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => { selectSchool(s.id); setSchoolDropOpen(false); setSchoolSearch('') }}
-                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 ${
-                    school?.id === s.id ? 'font-semibold text-school-primary' : 'text-gray-700'
-                  }`}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.primary }} />
-                  {s.shortName}
-                  <span className="text-gray-400 text-xs ml-1">{s.name}</span>
-                </button>
-              ))}
-              <div className="border-t border-gray-100 mt-1 pt-1">
+              {/* Scrollable school list */}
+              <div className="overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {SCHOOLS.filter((s) => s.live && (
+                  !schoolSearch ||
+                  s.name.toLowerCase().includes(schoolSearch.toLowerCase()) ||
+                  s.shortName.toLowerCase().includes(schoolSearch.toLowerCase())
+                )).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { selectSchool(s.id); setSchoolDropOpen(false); setSchoolSearch('') }}
+                    className={`flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 ${
+                      school?.id === s.id ? 'font-semibold text-school-primary' : 'text-gray-700'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.primary }} />
+                    {s.shortName}
+                    <span className="text-gray-400 text-xs ml-1 truncate">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Switch school — fixed at bottom */}
+              <div className="border-t border-gray-100 pt-1 shrink-0">
                 <button
                   onClick={() => { clearSchool(); setSchoolDropOpen(false) }}
                   className="w-full px-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 text-left"
