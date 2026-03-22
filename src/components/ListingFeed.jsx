@@ -9,32 +9,48 @@ import SectionTabs from './SectionTabs'
 
 const AD_INTERVAL = 8
 
-// Map the encoded activeFilter to what useListings expects
-function filterToCategory(activeFilter) {
-  if (!activeFilter || activeFilter === 'all') return 'all'
-  if (activeFilter === 'housing') return 'housing'
-  if (activeFilter === 'housing:sublease') return 'sublease'
-  if (activeFilter === 'housing:looking_for') return 'looking_housing'
-  if (activeFilter === 'looking_for') return 'looking_for'
-  if (activeFilter === 'marketplace') return 'all'
-  if (activeFilter.startsWith('marketplace:')) return activeFilter.split(':')[1]
-  return 'all'
+/**
+ * Translate the encoded activeFilter into useListings params.
+ *
+ * - All tab:           no filter → shows everything
+ * - Housing section:  only housing/sublease categories
+ * - Marketplace:      exclude housing AND looking_for rows
+ * - Looking For:      only looking_for category (handled by LookingForPage)
+ */
+function resolveListingFilter(activeFilter) {
+  if (!activeFilter || activeFilter === 'all') return {}
+
+  // Housing section: top-level shows housing + sublease; sub-tabs drill down
+  if (activeFilter === 'housing')            return { categoryIn: ['housing', 'sublease'] }
+  if (activeFilter === 'housing:sublease')   return { category: 'sublease' }
+  if (activeFilter === 'housing:looking_for') return { category: 'looking_housing' }
+
+  // Looking For section: exact category match
+  if (activeFilter === 'looking_for')        return { category: 'looking_for' }
+
+  // Marketplace section: exclude housing rows AND looking_for rows
+  if (activeFilter === 'marketplace')        return { noHousing: true, noLooking: true }
+  if (activeFilter.startsWith('marketplace:')) {
+    return { category: activeFilter.split(':')[1], noHousing: true, noLooking: true }
+  }
+
+  return {}
 }
 
 // Section title shown in the filter bar / heading
 function filterToLabel(activeFilter) {
   const map = {
-    all: 'All Listings',
-    housing: 'Housing',
-    'housing:sublease': 'Subleases',
-    'housing:looking_for': 'Looking for Housing',
-    looking_for: 'Looking For',
-    marketplace: 'Marketplace',
-    'marketplace:misc': 'Misc',
-    'marketplace:clothing': 'Clothing',
-    'marketplace:sports': 'Sports',
-    'marketplace:textbooks': 'Textbooks',
-    'marketplace:furniture': 'Furniture',
+    all:                       'All Listings',
+    housing:                   'Housing & Subleases',
+    'housing:sublease':        'Subleases',
+    'housing:looking_for':     'Looking for Housing',
+    looking_for:               'Looking For',
+    marketplace:               'Marketplace',
+    'marketplace:misc':        'Misc',
+    'marketplace:clothing':    'Clothing',
+    'marketplace:sports':      'Sports',
+    'marketplace:textbooks':   'Textbooks',
+    'marketplace:furniture':   'Furniture',
     'marketplace:electronics': 'Electronics',
   }
   return map[activeFilter] ?? 'Listings'
@@ -248,9 +264,9 @@ export default function ListingFeed({
     )
   }
 
-  const category = filterToCategory(activeFilter)
+  const listingFilter = resolveListingFilter(activeFilter)
   const { listings, loading, error } = useListings({
-    category,
+    ...listingFilter,
     sortBy,
     searchQuery,
     favoritesOnly,
