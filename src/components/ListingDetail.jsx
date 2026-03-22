@@ -135,7 +135,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       </div>
 
       {/* Chips */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
+      <div className="flex flex-wrap gap-1.5 mb-2">
         <Chip>{getCategoryLabel(listing.category)}</Chip>
         {listing.condition && <Chip>{listing.condition}</Chip>}
         {listing.location && <Chip>📍 {listing.location}</Chip>}
@@ -145,6 +145,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         {listing.boosted && <Chip accent>⚡ Featured</Chip>}
         <Chip>{timeAgo(listing.created_at)}</Chip>
       </div>
+
+      {/* Post ID — for reporting & boost requests */}
+      <p className="text-xs text-gray-400 font-mono mb-4 select-all">
+        Post ID: {listing.id.slice(0, 8).toUpperCase()}
+      </p>
 
       {/* Description */}
       {listing.description && (
@@ -160,8 +165,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
           onClick={() => onOpenProfile(listing.seller_id)}
           className="w-full flex items-center gap-3 border border-gray-200 rounded-2xl p-4 mb-4 hover:bg-gray-50 transition-colors text-left group"
         >
-          <div className="w-12 h-12 rounded-full bg-school-primary flex items-center justify-center text-white font-bold text-lg shrink-0">
-            {seller.name?.[0]?.toUpperCase() ?? '?'}
+          <div className="w-12 h-12 rounded-full bg-school-primary flex items-center justify-center text-white font-bold text-lg shrink-0 overflow-hidden">
+            {seller.avatar_url
+              ? <img src={seller.avatar_url} className="w-full h-full object-cover" alt={seller.name} />
+              : (seller.name?.[0]?.toUpperCase() ?? '?')
+            }
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-900 flex items-center gap-1.5">

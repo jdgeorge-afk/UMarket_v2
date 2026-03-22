@@ -21,9 +21,13 @@ create table if not exists profiles (
   sold_count    int default 0,
   contact       text,           -- the actual value (phone number, email, IG handle)
   contact_type  text,           -- 'phone' | 'email' | 'instagram'
+  avatar_url    text,           -- public URL of uploaded profile photo
   verified      boolean default false,
   created_at    timestamptz default now()
 );
+
+-- Migration: run this if profiles table already exists
+-- alter table profiles add column if not exists avatar_url text;
 
 -- listings: items for sale, housing posts, and "looking for" requests
 create table if not exists listings (
@@ -130,13 +134,14 @@ create trigger on_auth_user_created
   for each row execute procedure handle_new_user();
 
 -- ============================================================
--- STORAGE BUCKET (reminder — do this manually in the dashboard)
+-- STORAGE BUCKETS (reminder — do this manually in the dashboard)
 -- ============================================================
+-- Bucket 1: listing-images
 -- 1. Go to Storage in your Supabase dashboard
--- 2. Click "New bucket"
--- 3. Name: listing-images
--- 4. Toggle "Public bucket" ON
--- 5. Click "Create bucket"
+-- 2. Click "New bucket", Name: listing-images, toggle Public ON
+--
+-- Bucket 2: avatars (for profile photos)
+-- 1. Click "New bucket", Name: avatars, toggle Public ON
 --
 -- The INSERT below is shown for reference but may conflict with
 -- existing data if run twice. Use the dashboard UI instead.

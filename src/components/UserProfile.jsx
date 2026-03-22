@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
@@ -12,40 +12,45 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete }) {
   const [toggling, setToggling] = useState(false)
 
   return (
-    <div className="flex gap-1.5 mt-1.5">
-      <button
-        onClick={() => onEdit(listing)}
-        className="flex-1 text-xs font-semibold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-      >
-        ✏️ Edit
-      </button>
-      <button
-        disabled={toggling}
-        onClick={async () => {
-          setToggling(true)
-          await onToggleSold(listing)
-          setToggling(false)
-        }}
-        className={[
-          'flex-1 text-xs font-semibold py-1.5 rounded-lg border transition-colors disabled:opacity-40',
-          listing.sold
-            ? 'border-green-200 text-green-600 hover:bg-green-50'
-            : 'border-orange-200 text-orange-600 hover:bg-orange-50',
-        ].join(' ')}
-      >
-        {toggling ? '…' : listing.sold ? '↩ Unmark Sold' : '✓ Mark Sold'}
-      </button>
-      <button
-        disabled={deleting}
-        onClick={async () => {
-          if (!window.confirm('Delete this listing? This cannot be undone.')) return
-          setDeleting(true)
-          await onDelete(listing.id)
-        }}
-        className="px-3 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
-      >
-        🗑️
-      </button>
+    <div className="mt-1.5">
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => onEdit(listing)}
+          className="flex-1 text-xs font-semibold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          ✏️ Edit
+        </button>
+        <button
+          disabled={toggling}
+          onClick={async () => {
+            setToggling(true)
+            await onToggleSold(listing)
+            setToggling(false)
+          }}
+          className={[
+            'flex-1 text-xs font-semibold py-1.5 rounded-lg border transition-colors disabled:opacity-40',
+            listing.sold
+              ? 'border-green-200 text-green-600 hover:bg-green-50'
+              : 'border-orange-200 text-orange-600 hover:bg-orange-50',
+          ].join(' ')}
+        >
+          {toggling ? '…' : listing.sold ? '↩ Unmark Sold' : '✓ Mark Sold'}
+        </button>
+        <button
+          disabled={deleting}
+          onClick={async () => {
+            if (!window.confirm('Delete this listing? This cannot be undone.')) return
+            setDeleting(true)
+            await onDelete(listing.id)
+          }}
+          className="px-3 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+        >
+          🗑️
+        </button>
+      </div>
+      <p className="text-[10px] text-gray-300 font-mono mt-1 px-0.5 select-all">
+        ID: {listing.id.slice(0, 8).toUpperCase()}
+      </p>
     </div>
   )
 }
@@ -71,6 +76,8 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [saveError, setSaveError]   = useState('')
 
   const [editingListing, setEditingListing] = useState(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef(null)
 
   const isOwn = user?.id === userId
 
@@ -109,6 +116,22 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     setEditContactType(profile?.contact_type ?? 'phone')
     setSaveError('')
     setEditing(true)
+  }
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setAvatarUploading(true)
+    const ext = file.name.split('.').pop().toLowerCase()
+    const path = `${user.id}/avatar.${ext}`
+    const { error: uploadErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (uploadErr) { setAvatarUploading(false); setSaveError('Photo upload failed'); return }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    await updateProfile({ avatar_url: publicUrl })
+    setProfile((p) => ({ ...p, avatar_url: publicUrl }))
+    setAvatarUploading(false)
   }
 
   const saveEdit = async () => {
@@ -193,12 +216,34 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       {/* Profile header */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
         <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center text-white font-extrabold text-3xl shrink-0"
-            style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
-          >
-            {profile.name?.[0]?.toUpperCase() ?? '?'}
+          {/* Avatar — clickable to upload when in edit mode */}
+          <div className="relative shrink-0 w-20 h-20">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden text-white font-extrabold text-3xl"
+              style={{ background: profile.avatar_url ? '#e5e7eb' : (school?.gradient ?? 'var(--school-gradient)') }}
+            >
+              {profile.avatar_url
+                ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt={profile.name} />
+                : (profile.name?.[0]?.toUpperCase() ?? '?')
+              }
+            </div>
+            {isOwn && editing && (
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 rounded-full bg-black/45 flex items-center justify-center hover:bg-black/55 transition-colors"
+                aria-label="Upload profile photo"
+              >
+                {avatarUploading
+                  ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                }
+              </button>
+            )}
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </div>
 
           <div className="flex-1 min-w-0">
