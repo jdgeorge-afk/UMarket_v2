@@ -186,14 +186,16 @@ function AppInner() {
         </p>
       </footer>
 
-      {/* Mobile bottom navigation */}
-      <BottomNav
-        currentView={currentView}
-        onFeed={goHome}
-        onFavorites={openFavorites}
-        onPost={openPost}
-        onProfile={() => (user ? openProfile(user.id) : setAuthModalOpen(true))}
-      />
+      {/* Mobile bottom navigation — hidden when any modal is open */}
+      {!postModalOpen && !authModalOpen && (
+        <BottomNav
+          currentView={currentView}
+          onFeed={goHome}
+          onFavorites={openFavorites}
+          onPost={openPost}
+          onProfile={() => (user ? openProfile(user.id) : setAuthModalOpen(true))}
+        />
+      )}
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {authModalOpen && (
