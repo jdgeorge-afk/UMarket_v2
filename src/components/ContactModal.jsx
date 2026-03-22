@@ -1,31 +1,40 @@
 import Modal from './Modal'
 
-export default function ContactModal({ seller, onClose }) {
-  if (!seller) return null
+export default function ContactModal({ listing, seller, onClose }) {
+  if (!seller && !listing) return null
 
   const getContact = () => {
-    if (!seller.contact || !seller.contact_type) return null
-    switch (seller.contact_type) {
+    const type  = listing?.contact_type  || seller?.contact_type
+    const value = listing?.contact_value || seller?.contact
+    if (!type || !value) return null
+    switch (type) {
       case 'phone':
         return {
           label: 'Phone / Text',
-          display: seller.contact,
-          href: `tel:${seller.contact}`,
+          display: value,
+          href: `tel:${value}`,
           icon: '📱',
         }
       case 'email':
         return {
           label: 'Email',
-          display: seller.contact,
-          href: `mailto:${seller.contact}`,
+          display: value,
+          href: `mailto:${value}`,
           icon: '✉️',
         }
       case 'instagram':
         return {
           label: 'Instagram',
-          display: `@${seller.contact}`,
-          href: `https://instagram.com/${seller.contact}`,
+          display: `@${value}`,
+          href: `https://instagram.com/${value}`,
           icon: '📸',
+        }
+      case 'snapchat':
+        return {
+          label: 'Snapchat',
+          display: '@' + value,
+          href: 'https://snapchat.com/add/' + value,
+          icon: '👻',
         }
       default:
         return null
@@ -37,7 +46,7 @@ export default function ContactModal({ seller, onClose }) {
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-900 mb-1">
-        Contact {seller.name}
+        Contact {seller?.name ?? 'Seller'}
       </h2>
       <p className="text-sm text-gray-400 mb-6">Seller's preferred contact method</p>
 

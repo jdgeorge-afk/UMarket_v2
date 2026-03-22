@@ -25,6 +25,9 @@ export default function PostListingModal({ onClose }) {
   const [avail, setAvail]           = useState('')
   // Looking-for
   const [budget, setBudget]         = useState('')
+  // Contact
+  const [contactType, setContactType] = useState('phone')
+  const [contactValue, setContactValue] = useState('')
   // Images
   const [files, setFiles]           = useState([])
   const [previews, setPreviews]     = useState([])
@@ -72,6 +75,7 @@ export default function PostListingModal({ onClose }) {
     e.preventDefault()
     if (!category) { setError('Please select a category.'); return }
     if (!title.trim()) { setError('Please add a title.'); return }
+    if (!contactValue.trim()) { setError('Please add contact info so buyers can reach you.'); return }
     setUploading(true)
     setError('')
     try {
@@ -104,6 +108,8 @@ export default function PostListingModal({ onClose }) {
         beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
         size:        isHousing ? size.trim() : null,
         avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
+        contact_type: contactType,
+        contact_value: contactValue.trim(),
       })
       if (insertErr) {
         console.error('Listing insert error:', insertErr)
@@ -261,6 +267,36 @@ export default function PostListingModal({ onClose }) {
           placeholder="Location (e.g. near Rice-Eccles Stadium)" maxLength={100}
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-school-primary"
         />
+
+        {/* ── Contact Info ──────────────────────────────────────────────────── */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            How can buyers reach you? *
+          </p>
+          <p className="text-xs text-gray-400 mb-2">(only shown when someone clicks Contact Seller)</p>
+          <div className="flex gap-2">
+            <select
+              value={contactType}
+              onChange={(e) => setContactType(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary"
+            >
+              <option value="phone">📱 Phone</option>
+              <option value="email">✉️ Email</option>
+              <option value="instagram">📸 Instagram</option>
+              <option value="snapchat">👻 Snapchat</option>
+            </select>
+            <input
+              value={contactValue}
+              onChange={(e) => setContactValue(e.target.value)}
+              placeholder={
+                contactType === 'phone' ? '(555) 000-0000'
+                : contactType === 'email' ? 'you@example.com'
+                : 'username (no @)'
+              }
+              className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+            />
+          </div>
+        </div>
 
       </form>
     </Modal>

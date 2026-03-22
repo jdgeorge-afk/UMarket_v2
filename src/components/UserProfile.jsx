@@ -82,7 +82,13 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [savedListings, setSavedListings] = useState([])
   const [loading, setLoading]       = useState(true)
   const [loadingSaved, setLoadingSaved] = useState(false)
-  const [activeTab, setActiveTab]   = useState('listings') // 'listings' | 'saved'
+  const [activeTab, setActiveTab]   = useState('listings') // 'listings' | 'saved' | 'contacted' | 'notifications'
+
+  const [contactedListings, setContactedListings] = useState([])
+  const [loadingContacted, setLoadingContacted]   = useState(false)
+  const [notifItems, setNotifItems]               = useState([])
+  const [loadingNotifs, setLoadingNotifs]         = useState(false)
+  const [unreadCount, setUnreadCount]             = useState(0)
 
   const [editing, setEditing]       = useState(false)
   const [editName, setEditName]     = useState('')
@@ -124,6 +130,48 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       .then(({ data }) => {
         setSavedListings((data ?? []).map((f) => f.listings).filter(Boolean))
         setLoadingSaved(false)
+      })
+  }, [isOwn, activeTab, user])
+
+  // Fetch unread notification count when own profile loads
+  useEffect(() => {
+    if (!isOwn || !user) return
+    supabase.from('notifications').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).eq('read', false)
+      .then(({ count }) => setUnreadCount(count ?? 0))
+  }, [isOwn, user])
+
+  // Fetch contacted listings
+  useEffect(() => {
+    if (!isOwn || activeTab !== 'contacted' || !user) return
+    setLoadingContacted(true)
+    supabase.from('contact_requests')
+      .select('listing_id, listings(*)')
+      .eq('buyer_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setContactedListings((data ?? []).map((r) => r.listings).filter(Boolean))
+        setLoadingContacted(false)
+      })
+  }, [isOwn, activeTab, user])
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!isOwn || activeTab !== 'notifications' || !user) return
+    setLoadingNotifs(true)
+    supabase.from('notifications')
+      .select('*, listing:listing_id(id, title, images), buyer:buyer_id(name, avatar_url)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        setNotifItems(data ?? [])
+        setLoadingNotifs(false)
+        setUnreadCount(0)
+        if ((data ?? []).some((n) => !n.read)) {
+          supabase.from('notifications').update({ read: true })
+            .eq('user_id', user.id).eq('read', false)
+        }
       })
   }, [isOwn, activeTab, user])
 
@@ -351,6 +399,8 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             {[
               { id: 'listings', label: `My Listings (${listings.length})` },
               { id: 'saved',    label: 'Saved' },
+              { id: 'contacted', label: 'Contacted' },
+              { id: 'notifications', label: unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -457,6 +507,69 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
               <p className="text-4xl mb-3">💔</p>
               <p className="font-semibold">No saved listings yet</p>
               <p className="text-sm mt-1">Tap the heart on any listing to save it.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Contacted tab ───────────────────────────────────────────────────── */}
+      {isOwn && activeTab === 'contacted' && (
+        <>
+          <h2 className="font-bold text-gray-900 mb-3">Listings You've Contacted</h2>
+          {loadingContacted ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-44 animate-pulse" />)}
+            </div>
+          ) : contactedListings.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {contactedListings.map((l) => (
+                <ListingCard key={l.id} listing={l} onOpen={onOpenListing} onRequireAuth={onRequireAuth ?? ((cb) => cb())} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-gray-400">
+              <p className="text-4xl mb-3">📬</p>
+              <p className="font-semibold">No contacted listings yet</p>
+              <p className="text-sm mt-1">Listings you contact will appear here.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Notifications tab ───────────────────────────────────────────────── */}
+      {isOwn && activeTab === 'notifications' && (
+        <>
+          <h2 className="font-bold text-gray-900 mb-3">Notifications</h2>
+          {loadingNotifs ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-16 animate-pulse" />)}
+            </div>
+          ) : notifItems.length > 0 ? (
+            <div className="space-y-2">
+              {notifItems.map((n) => (
+                <div key={n.id} className={`flex items-center gap-3 p-3 rounded-2xl border ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
+                  <div className="w-10 h-10 rounded-full bg-school-primary flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
+                    {n.buyer?.avatar_url
+                      ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" />
+                      : (n.buyer?.name?.[0]?.toUpperCase() ?? '?')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900">
+                      <span className="font-semibold">{n.buyer?.name ?? 'Someone'}</span>
+                      {' '}wants to buy{' '}
+                      <span className="font-semibold">{n.listing?.title ?? 'your listing'}</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                  {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0" />}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-gray-400">
+              <p className="text-4xl mb-3">🔔</p>
+              <p className="font-semibold">No notifications yet</p>
+              <p className="text-sm mt-1">You'll be notified when someone contacts you.</p>
             </div>
           )}
         </>
