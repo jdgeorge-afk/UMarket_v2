@@ -110,7 +110,7 @@ function AppInner() {
           <aside className="hidden lg:block w-64 shrink-0">
             <Sidebar
               activeFilter={activeFilter}
-              onFilter={setActiveFilter}
+              onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
               onPostOpen={openPost}
             />
           </aside>
