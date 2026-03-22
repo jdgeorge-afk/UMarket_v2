@@ -39,60 +39,35 @@ const SECTIONS = [
   },
 ]
 
+// Only renders subcategory chips — top-level tabs are handled by SectionTabs
 export default function CategoryStrip({ activeFilter, onFilter }) {
-  // Determine which top-level section is active
   const activeSection = SECTIONS.find(
     (s) => activeFilter === s.value || activeFilter?.startsWith(s.value + ':')
   )
   const subs = activeSection?.subs ?? []
 
-  return (
-    <div className="lg:hidden">
-      {/* ── Top-level section chips ────────────────────────────────────────── */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-1">
-        {SECTIONS.map((s) => {
-          const active = activeFilter === s.value || activeFilter?.startsWith(s.value + ':')
-          return (
-            <button
-              key={s.value}
-              onClick={() => onFilter(s.value)}
-              className={[
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap shrink-0 transition-colors border',
-                active
-                  ? 'bg-school-primary text-white border-school-primary font-medium'
-                  : 'bg-white text-gray-600 border-gray-200',
-              ].join(' ')}
-            >
-              <span className="text-base leading-none">{s.icon}</span>
-              {s.label}
-            </button>
-          )
-        })}
-      </div>
+  if (subs.length === 0) return null
 
-      {/* ── Subcategory chips (only shown when section has subs) ──────────── */}
-      {subs.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-1 pb-2">
-          {subs.map((sub) => {
-            const active = activeFilter === sub.value
-            return (
-              <button
-                key={sub.value}
-                onClick={() => onFilter(sub.value)}
-                className={[
-                  'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs whitespace-nowrap shrink-0 transition-colors border',
-                  active
-                    ? 'bg-school-primary/15 text-school-primary border-school-primary/30 font-semibold'
-                    : 'bg-gray-50 text-gray-500 border-gray-200',
-                ].join(' ')}
-              >
-                <span className="leading-none">{sub.icon}</span>
-                {sub.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
+  return (
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-1 pb-2 lg:hidden">
+      {subs.map((sub) => {
+        const active = activeFilter === sub.value
+        return (
+          <button
+            key={sub.value}
+            onClick={() => onFilter(sub.value)}
+            className={[
+              'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs whitespace-nowrap shrink-0 transition-colors border',
+              active
+                ? 'bg-school-primary/15 text-school-primary border-school-primary/30 font-semibold'
+                : 'bg-gray-50 text-gray-500 border-gray-200',
+            ].join(' ')}
+          >
+            <span className="leading-none">{sub.icon}</span>
+            {sub.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
