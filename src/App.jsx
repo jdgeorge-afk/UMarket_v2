@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar'
 
 // Views
 import SchoolPicker from './components/SchoolPicker'
+import LandingPage from './components/LandingPage'
 import ListingFeed from './components/ListingFeed'
 import ListingDetail from './components/ListingDetail'
 import UserProfile from './components/UserProfile'
@@ -75,6 +76,9 @@ function AppInner() {
 
   const openPost = () => requireAuth(() => setPostModalOpen(true))
 
+  // Landing page: All tab, no search, not in favorites/detail/profile
+  const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
+
   // ── Prevent flash of SchoolPicker while localStorage is being read ────────
   if (!mounted) return null
 
@@ -98,18 +102,29 @@ function AppInner() {
       />
 
       <div className="flex w-full">
-        {/* Desktop sidebar — hidden on mobile */}
-        <aside className="hidden lg:block w-64 shrink-0">
-          <Sidebar
-            activeFilter={activeFilter}
-            onFilter={setActiveFilter}
-            onPostOpen={openPost}
-          />
-        </aside>
+        {/* Desktop sidebar — only on Housing / Marketplace / Looking For */}
+        {!isLanding && (
+          <aside className="hidden lg:block w-64 shrink-0">
+            <Sidebar
+              activeFilter={activeFilter}
+              onFilter={setActiveFilter}
+              onPostOpen={openPost}
+            />
+          </aside>
+        )}
 
         {/* Main content area */}
         <main className="flex-1 min-w-0 pb-24 lg:pb-8">
-          {(currentView === 'feed' || currentView === 'favorites') && (
+          {/* Scrollable landing page — All tab, no search */}
+          {isLanding && (
+            <LandingPage
+              onFilter={setActiveFilter}
+              onPostOpen={openPost}
+              onRequireAuth={requireAuth}
+            />
+          )}
+
+          {!isLanding && (currentView === 'feed' || currentView === 'favorites') && (
             <ListingFeed
               favoritesOnly={currentView === 'favorites'}
               activeFilter={activeFilter}
