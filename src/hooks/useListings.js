@@ -71,7 +71,7 @@ export function useListings({
       // ── Build main query ──────────────────────────────────────────────────
       let query = supabase
         .from('listings')
-        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)')
+        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count)')
         .eq('school_id', school.id)
         .eq('sold', false)
 
