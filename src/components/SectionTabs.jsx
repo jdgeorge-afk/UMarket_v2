@@ -1,6 +1,6 @@
 export default function SectionTabs({ activeFilter, onFilter }) {
   const tabs = [
-    { label: 'All',         value: 'all'         },
+    { label: 'Home',        value: 'all'         },
     { label: 'Housing',     value: 'housing'     },
     { label: 'Marketplace', value: 'marketplace' },
     { label: 'Looking For', value: 'looking_for' },
