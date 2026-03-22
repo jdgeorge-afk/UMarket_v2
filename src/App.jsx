@@ -13,6 +13,7 @@ import LandingPage from './components/LandingPage'
 import ListingFeed from './components/ListingFeed'
 import ListingDetail from './components/ListingDetail'
 import UserProfile from './components/UserProfile'
+import AdminDashboard from './components/AdminDashboard'
 
 // Modals
 import AuthModal from './components/AuthModal'
@@ -23,10 +24,10 @@ import PostListingModal from './components/PostListingModal'
 // ─────────────────────────────────────────────────────────────────────────────
 function AppInner() {
   const { school, mounted } = useSchool()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   // ── Navigation state ──────────────────────────────────────────────────────
-  // 'feed' | 'favorites' | 'detail' | 'profile'
+  // 'feed' | 'favorites' | 'detail' | 'profile' | 'admin'
   const [currentView, setCurrentView] = useState('feed')
   const [selectedListing, setSelectedListing] = useState(null)
   const [viewedUserId, setViewedUserId] = useState(null)
@@ -74,7 +75,8 @@ function AppInner() {
     callback()
   }
 
-  const openPost = () => requireAuth(() => setPostModalOpen(true))
+  const openPost  = () => requireAuth(() => setPostModalOpen(true))
+  const openAdmin = () => { if (profile?.is_admin) setCurrentView('admin') }
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
@@ -99,6 +101,7 @@ function AppInner() {
         onGoHome={goHome}
         onFavorites={openFavorites}
         onOpenProfile={() => user && openProfile(user.id)}
+        onAdminOpen={profile?.is_admin ? openAdmin : null}
       />
 
       <div className="flex w-full">
@@ -155,6 +158,10 @@ function AppInner() {
               onRequireAuth={requireAuth}
               onPostOpen={openPost}
             />
+          )}
+
+          {currentView === 'admin' && (
+            <AdminDashboard onBack={goHome} />
           )}
         </main>
       </div>

@@ -3,7 +3,7 @@ import { useSchool } from '../context/SchoolContext'
 import { useAuth } from '../context/AuthContext'
 import { SCHOOLS } from '../constants/schools'
 
-export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile }) {
+export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile, onAdminOpen }) {
   const { school, selectSchool, clearSchool } = useSchool()
   const { user, profile, signOut } = useAuth()
   const [schoolDropOpen, setSchoolDropOpen] = useState(false)
@@ -17,10 +17,10 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
         {/* Logo */}
         <button
           onClick={onGoHome}
-          className="flex items-center gap-1.5 shrink-0 text-white font-extrabold text-lg leading-none"
+          className="flex items-center gap-2 shrink-0 text-white font-extrabold text-2xl sm:text-3xl leading-none tracking-tight"
         >
           UMarket
-          <span className="text-[10px] font-semibold bg-white/25 text-white px-1.5 py-0.5 rounded-full tracking-wide">
+          <span className="text-[10px] font-semibold bg-white/25 text-white px-1.5 py-0.5 rounded-full tracking-wide self-center">
             BETA
           </span>
         </button>
@@ -156,6 +156,14 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                     >
                       Saved Listings
                     </button>
+                    {onAdminOpen && (
+                      <button
+                        onClick={() => { setUserMenuOpen(false); onAdminOpen() }}
+                        className="w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-50 text-left font-semibold"
+                      >
+                        Admin Dashboard
+                      </button>
+                    )}
                     <button
                       onClick={() => { setUserMenuOpen(false); signOut() }}
                       className="w-full px-3 py-2 text-sm text-red-500 hover:bg-gray-50 text-left"

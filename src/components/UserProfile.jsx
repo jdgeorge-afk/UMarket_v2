@@ -5,11 +5,14 @@ import { useSchool } from '../context/SchoolContext'
 import { GRADES } from '../constants/categories'
 import ListingCard from './ListingCard'
 import EditListingModal from './EditListingModal'
+import BoostModal from './BoostModal'
 
 // ── Owner action bar shown below each of the user's own listings ─────────────
-function OwnerActions({ listing, onEdit, onToggleSold, onDelete }) {
+function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState(false)
+
+  const isActiveBoosted = listing.boosted && listing.boost_expires_at && new Date(listing.boost_expires_at) > new Date()
 
   return (
     <div className="mt-1.5">
@@ -48,6 +51,20 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete }) {
           🗑️
         </button>
       </div>
+      {/* Boost button — only for active (non-sold) listings */}
+      {!listing.sold && (
+        <button
+          onClick={() => onBoost(listing)}
+          className={[
+            'w-full mt-1.5 text-xs font-semibold py-1.5 rounded-lg border transition-colors',
+            isActiveBoosted
+              ? 'border-yellow-300 text-yellow-600 bg-yellow-50'
+              : 'border-school-primary/30 text-school-primary hover:bg-school-primary/5',
+          ].join(' ')}
+        >
+          {isActiveBoosted ? `⚡ Boosted · expires ${new Date(listing.boost_expires_at).toLocaleDateString()}` : '⚡ Boost this listing · $3/day'}
+        </button>
+      )}
       <p className="text-[10px] text-gray-300 font-mono mt-1 px-0.5 select-all">
         ID: {listing.id.slice(0, 8).toUpperCase()}
       </p>
@@ -76,6 +93,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [saveError, setSaveError]   = useState('')
 
   const [editingListing, setEditingListing] = useState(null)
+  const [boostingListing, setBoostingListing] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef(null)
 
@@ -375,6 +393,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                       onEdit={setEditingListing}
                       onToggleSold={handleToggleSold}
                       onDelete={handleDelete}
+                      onBoost={setBoostingListing}
                     />
                   )}
                 </div>
@@ -449,6 +468,14 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
           listing={editingListing}
           onClose={() => setEditingListing(null)}
           onSaved={handleListingSaved}
+        />
+      )}
+
+      {/* Boost listing modal */}
+      {boostingListing && (
+        <BoostModal
+          listing={boostingListing}
+          onClose={() => setBoostingListing(null)}
         />
       )}
     </div>
