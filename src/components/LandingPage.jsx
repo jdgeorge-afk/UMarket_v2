@@ -154,19 +154,22 @@ function LookingForList({ listings }) {
 // ── Alternating feature section ───────────────────────────────────────────────
 function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, ctaLabel, onCta, visual, bg = 'white' }) {
   const headParts = accentWord ? headline.split(accentWord) : [headline]
+  const isGray = bg === 'gray'
 
   const textBlock = (
-    <div className="flex flex-col justify-center gap-5">
-      <p className="text-xs font-bold tracking-widest uppercase text-school-primary">{eyebrow}</p>
-      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
+    <div className="flex flex-col justify-center gap-6">
+      <span className="self-start bg-school-primary/10 text-school-primary text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full">
+        {eyebrow}
+      </span>
+      <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
         {headParts.length > 1
           ? <>{headParts[0]}<span className="text-school-primary">{accentWord}</span>{headParts[1]}</>
           : headline}
       </h2>
-      <p className="text-gray-500 text-base leading-relaxed max-w-sm">{body}</p>
+      <p className="text-gray-500 text-lg leading-relaxed max-w-sm">{body}</p>
       <button
         onClick={onCta}
-        className="self-start inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity shadow-sm"
+        className="self-start inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-7 py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-md"
       >
         {ctaLabel}
       </button>
@@ -176,9 +179,13 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
   const visualBlock = <div className="flex items-center justify-center">{visual}</div>
 
   return (
-    <section className={bg === 'gray' ? 'bg-gray-50' : 'bg-white'}>
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 lg:px-16 py-16 sm:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <section className={`relative overflow-hidden min-h-screen flex items-center ${isGray ? 'bg-gray-50' : 'bg-white'}`}>
+      {/* Decorative background blobs */}
+      <div className={`pointer-events-none absolute -top-24 ${flip ? '-left-24' : '-right-24'} w-96 h-96 rounded-full blur-3xl opacity-10 bg-school-primary`} />
+      <div className={`pointer-events-none absolute -bottom-24 ${flip ? '-right-24' : '-left-24'} w-64 h-64 rounded-full blur-3xl opacity-[0.07] bg-school-primary`} />
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-8 lg:px-16 py-20 sm:py-28 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           {flip ? <>{visualBlock}{textBlock}</> : <>{textBlock}{visualBlock}</>}
         </div>
       </div>
@@ -235,44 +242,56 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       </div>
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="bg-white px-4 sm:px-8 pt-16 pb-12 text-center">
-        <p className="text-xs font-bold tracking-widest uppercase text-school-primary mb-4">
-          University Marketplace
-        </p>
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.05] max-w-3xl mx-auto">
-          Your campus.<br />
-          <span className="text-school-primary">Your marketplace.</span>
-        </h1>
-        <p className="text-gray-400 text-lg mt-5 max-w-lg mx-auto leading-relaxed">
-          Housing, subleases, roommates, and student deals — all in one place.
-        </p>
-        <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
-          <button
-            onClick={() => onFilter('housing')}
-            className="inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-md"
-          >
-            Browse Housing →
-          </button>
-          <button
-            onClick={() => onFilter('marketplace')}
-            className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:border-gray-300 hover:bg-gray-50 transition-colors"
-          >
-            Browse Marketplace
-          </button>
+      <section className="relative overflow-hidden bg-white min-h-screen flex flex-col items-center justify-center px-4 sm:px-8 text-center">
+        {/* Background decoration */}
+        <div className="pointer-events-none absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-[0.08] bg-school-primary" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full blur-3xl opacity-[0.06] bg-school-primary" />
+
+        <div className="relative">
+          <p className="text-xs font-bold tracking-widest uppercase text-school-primary mb-4">
+            University Marketplace
+          </p>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.05] max-w-3xl mx-auto">
+            Your campus.<br />
+            <span className="text-school-primary">Your marketplace.</span>
+          </h1>
+          <p className="text-gray-400 text-lg mt-5 max-w-lg mx-auto leading-relaxed">
+            Housing, subleases, roommates, and student deals — all in one place.
+          </p>
+          <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
+            <button
+              onClick={() => onFilter('housing')}
+              className="inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-md"
+            >
+              Browse Housing →
+            </button>
+            <button
+              onClick={() => onFilter('marketplace')}
+              className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              Browse Marketplace
+            </button>
+          </div>
+
+          {/* Stats inline in hero */}
+          <div className="mt-14">
+            <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">
+              We're live at your university now!
+            </p>
+            <div className="max-w-2xl mx-auto">
+              <StatsRow onFilter={onFilter} />
+            </div>
+          </div>
+
+          {/* Scroll nudge */}
+          <div className="mt-12 flex flex-col items-center gap-1 text-gray-300">
+            <span className="text-xs font-semibold tracking-widest uppercase">Explore</span>
+            <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </section>
-
-      {/* ── Live stats ──────────────────────────────────────────────────── */}
-      <section className="bg-white pb-12">
-        <p className="text-center text-xs font-bold tracking-widest uppercase text-gray-400 mb-4 px-4">
-          We're live at your university now!
-        </p>
-        <div className="max-w-2xl mx-auto">
-          <StatsRow onFilter={onFilter} />
-        </div>
-      </section>
-
-      <div className="h-px bg-gray-100" />
 
       {/* ── Housing ─────────────────────────────────────────────────────── */}
       <FeatureSection
@@ -315,9 +334,12 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
 
       {/* ── CTA banner ──────────────────────────────────────────────────── */}
       <section
-        className="px-4 sm:px-8 py-16 sm:py-20 text-center text-white"
+        className="relative overflow-hidden min-h-[60vh] flex items-center justify-center px-4 sm:px-8 py-20 text-center text-white"
         style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
       >
+        <div className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
+        <div className="relative">
         <h2 className="text-3xl sm:text-5xl font-extrabold mb-4 leading-tight">
           Ready to get started?
         </h2>
@@ -337,6 +359,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
           >
             Browse Listings
           </button>
+        </div>
         </div>
       </section>
 
