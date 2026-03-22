@@ -28,7 +28,10 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center sm:p-4">
+    <div
+      className="fixed inset-x-0 top-0 z-50 flex flex-col sm:items-center sm:justify-center sm:p-4"
+      style={{ height: '100dvh' }}
+    >
       {/* Backdrop — tapping closes on desktop; hidden behind full-screen sheet on mobile */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
