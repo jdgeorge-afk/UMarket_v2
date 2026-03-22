@@ -265,7 +265,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       {/* ── Live stats ──────────────────────────────────────────────────── */}
       <section className="bg-white pb-12">
         <p className="text-center text-xs font-bold tracking-widest uppercase text-gray-400 mb-4 px-4">
-          We're live at your university right now
+          We're live at your university now!
         </p>
         <div className="max-w-2xl mx-auto">
           <StatsRow onFilter={onFilter} />
