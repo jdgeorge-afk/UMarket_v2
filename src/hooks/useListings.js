@@ -65,7 +65,7 @@ export function useListings({
       // ── Build main query ──────────────────────────────────────────────────
       let query = supabase
         .from('listings')
-        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count)')
+        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)')
         .eq('school_id', school.id)
         .eq('sold', false)
 
@@ -85,21 +85,35 @@ export function useListings({
         query = query.eq('seller_id', sellerId)
       }
 
-      // Boosted listings always appear first, then sorted by user's choice
-      query = query.order('boosted', { ascending: false })
-
+      // Sort by user's choice (boosted posts get pulled out and shuffled client-side)
       if (sortBy === 'price_asc') {
         query = query.order('price', { ascending: true, nullsFirst: false })
       } else if (sortBy === 'price_desc') {
         query = query.order('price', { ascending: false, nullsFirst: false })
       } else {
-        // default: newest first
         query = query.order('created_at', { ascending: false })
       }
 
       const { data, error: qErr } = await query
       if (qErr) throw qErr
-      setListings(data ?? [])
+
+      // ── Boost algorithm (Facebook Marketplace-style) ──────────────────────
+      // Active boosted posts (not expired) are separated, randomly shuffled for
+      // equal visibility across all boosted sellers, then placed at the top.
+      // Regular posts keep their sort order below.
+      const now = Date.now()
+      const activeBoosted = (data ?? []).filter(
+        (l) => l.boosted && (!l.boost_expires_at || new Date(l.boost_expires_at).getTime() > now)
+      )
+      const rest = (data ?? []).filter(
+        (l) => !l.boosted || (l.boost_expires_at && new Date(l.boost_expires_at).getTime() <= now)
+      )
+      // Fisher-Yates shuffle so every boosted seller gets equal top-page time
+      for (let i = activeBoosted.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
+      }
+      setListings([...activeBoosted, ...rest])
     } catch (err) {
       setError(err.message)
     } finally {
