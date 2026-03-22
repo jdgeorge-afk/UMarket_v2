@@ -237,7 +237,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="bg-white px-4 sm:px-8 pt-16 pb-12 text-center">
         <p className="text-xs font-bold tracking-widest uppercase text-school-primary mb-4">
-          {school?.shortName ?? 'Your campus'} · Student marketplace
+          University Marketplace
         </p>
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.05] max-w-3xl mx-auto">
           Your campus.<br />
@@ -265,7 +265,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       {/* ── Live stats ──────────────────────────────────────────────────── */}
       <section className="bg-white pb-12">
         <p className="text-center text-xs font-bold tracking-widest uppercase text-gray-400 mb-4 px-4">
-          Live at {school?.shortName ?? 'your school'} right now
+          We're live at your university right now
         </p>
         <div className="max-w-2xl mx-auto">
           <StatsRow onFilter={onFilter} />
