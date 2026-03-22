@@ -155,30 +155,14 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
       )}
 
       {!loading && listings.length > 0 && (
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {listings.map((item) => (
-            <button
+            <ListingCard
               key={item.id}
-              onClick={() => onOpenListing(item)}
-              className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-shadow text-left"
-            >
-              <span className="text-2xl shrink-0">🔍</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{item.title}</p>
-                <p className="text-sm text-gray-400 mt-0.5">
-                  {item.profiles?.name?.split(' ')[0] ?? 'Someone'}
-                  {item.budget ? ` · Budget $${Number(item.budget).toLocaleString()}` : ''}
-                </p>
-              </div>
-              {item.budget && (
-                <span className="shrink-0 bg-school-primary/10 text-school-primary text-sm font-semibold px-3 py-1 rounded-full">
-                  ${Number(item.budget).toLocaleString()}
-                </span>
-              )}
-              <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              listing={item}
+              onOpen={onOpenListing}
+              onRequireAuth={onRequireAuth}
+            />
           ))}
         </div>
       )}
