@@ -6,15 +6,21 @@ import { useSchool } from '../context/SchoolContext'
  * Fetches listings for the current school with optional filters.
  *
  * @param {object} opts
- * @param {string}  opts.category      - category filter ('all' means no filter)
- * @param {string}  opts.sortBy        - 'newest' | 'price_asc' | 'price_desc'
- * @param {string}  opts.searchQuery   - ilike filter on title
- * @param {boolean} opts.favoritesOnly - only show listings saved by `userId`
- * @param {string}  opts.userId        - current user's id (needed for favoritesOnly)
- * @param {string}  opts.sellerId      - only show listings from this seller (UserProfile)
+ * @param {string}   opts.category      - exact category eq filter (null = no filter)
+ * @param {string[]} opts.categoryIn    - filter by multiple categories (OR)
+ * @param {boolean}  opts.noHousing     - exclude is_housing listings (Marketplace section)
+ * @param {boolean}  opts.noLooking     - exclude is_looking listings (Marketplace section)
+ * @param {string}   opts.sortBy        - 'newest' | 'price_asc' | 'price_desc'
+ * @param {string}   opts.searchQuery   - ilike filter on title
+ * @param {boolean}  opts.favoritesOnly - only show listings saved by `userId`
+ * @param {string}   opts.userId        - current user's id (needed for favoritesOnly)
+ * @param {string}   opts.sellerId      - only show listings from this seller (UserProfile)
  */
 export function useListings({
-  category = 'all',
+  category = null,
+  categoryIn = null,
+  noHousing = false,
+  noLooking = false,
   sortBy = 'newest',
   searchQuery = '',
   favoritesOnly = false,
@@ -40,7 +46,7 @@ export function useListings({
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.id, category, sortBy, searchQuery, favoritesOnly, userId, sellerId])
+  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId])
 
   const fetchListings = async () => {
     setLoading(true)
@@ -69,9 +75,16 @@ export function useListings({
         .eq('school_id', school.id)
         .eq('sold', false)
 
-      if (category && category !== 'all') {
+      // Category filters — categoryIn takes precedence over single category
+      if (categoryIn && categoryIn.length > 0) {
+        query = query.in('category', categoryIn)
+      } else if (category) {
         query = query.eq('category', category)
       }
+
+      // Section-level exclusions (Marketplace must not include housing or looking_for)
+      if (noHousing) query = query.eq('is_housing', false)
+      if (noLooking) query = query.eq('is_looking', false)
 
       if (searchQuery.trim()) {
         query = query.ilike('title', `%${searchQuery.trim()}%`)
