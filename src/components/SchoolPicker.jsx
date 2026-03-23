@@ -19,6 +19,7 @@ export default function SchoolPicker() {
       <div className="text-center mb-8">
         <h1 className="text-5xl font-extrabold text-white tracking-tight">UMarket</h1>
         <p className="text-gray-400 mt-2 text-lg">The college student marketplace</p>
+        <p className="text-gray-600 text-xs mt-2">UMarket is not affiliated with or endorsed by any university.</p>
       </div>
 
       {/* Search bar */}
@@ -89,9 +90,6 @@ export default function SchoolPicker() {
 
       <p className="text-gray-600 text-xs mt-10">
         More schools coming soon — request yours at umarket.co
-      </p>
-      <p className="text-gray-700 text-xs mt-3">
-        UMarket is not affiliated with or endorsed by any university.
       </p>
     </div>
   )
