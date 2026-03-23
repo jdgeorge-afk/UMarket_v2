@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
 import SectionTabs from './SectionTabs'
 import StatsRow from './StatsRow'
+import ListingCard from './ListingCard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
@@ -23,10 +24,6 @@ const FALLBACK_HOUSING = {
   title: '2BR Near Campus — May',
   price: 850, beds: 2, avail: 'May', category: 'sublease',
   profiles: { name: 'Jordan S.' },
-  created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-}
-const FALLBACK_MARKET = {
-  title: 'Fender Stratocaster', price: 280, category: 'misc',
   created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
 }
 const FALLBACK_LOOKING = [
@@ -86,36 +83,20 @@ function HousingCard({ listing }) {
   )
 }
 
-// ── Marketplace category grid + recent listing ────────────────────────────────
-function MarketplaceCard({ recentListing }) {
-  const l = recentListing ?? FALLBACK_MARKET
-  const cats = [
-    { label: 'Textbooks' },
-    { label: 'Electronics' },
-    { label: 'Furniture' },
-    { label: 'Clothing' },
-    { label: 'Sports' },
-    { label: 'Misc' },
-  ]
+// ── Marketplace listing grid ──────────────────────────────────────────────────
+function MarketplaceGrid({ listings, onOpen, onRequireAuth }) {
+  const items = listings?.length ? listings : []
+  if (!items.length) return null
   return (
-    <div className="w-full max-w-xs mx-auto">
-      <div className="grid grid-cols-3 gap-3 mb-3">
-        {cats.map((c) => (
-          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center py-4 gap-1.5">
-            <p className="text-[11px] font-semibold text-gray-500">{c.label}</p>
-          </div>
-        ))}
-      </div>
-      {/* Most recent real listing */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm text-gray-900 truncate">{l.title}</p>
-          <p className="text-xs text-gray-400">{timeAgo(l.created_at)}</p>
-        </div>
-        <p className="font-extrabold text-school-primary text-sm shrink-0">
-          ${Number(l.price).toLocaleString()}
-        </p>
-      </div>
+    <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">
+      {items.slice(0, 4).map((l) => (
+        <ListingCard
+          key={l.id}
+          listing={l}
+          onOpen={onOpen}
+          onRequireAuth={onRequireAuth}
+        />
+      ))}
     </div>
   )
 }
@@ -185,9 +166,9 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
 }
 
 // ── Landing page ──────────────────────────────────────────────────────────────
-export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
+export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing }) {
   const { school } = useSchool()
-  const [previews, setPreviews] = useState({ housing: null, marketplace: null, looking: [] })
+  const [previews, setPreviews] = useState({ housing: null, marketplace: [], looking: [] })
 
   useEffect(() => {
     if (!school) return
@@ -202,11 +183,11 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
           .limit(1),
         supabase
           .from('listings')
-          .select('id, title, price, category, created_at')
+          .select('id, title, price, budget, category, condition, images, is_looking, is_housing, beds, avail, boosted, sold, created_at, profiles!seller_id(verified)')
           .eq('school_id', school.id).eq('sold', false)
           .in('category', MARKETPLACE_CATS)
           .order('created_at', { ascending: false })
-          .limit(1),
+          .limit(4),
         supabase
           .from('listings')
           .select('id, title, budget, created_at, profiles!seller_id(name)')
@@ -217,7 +198,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
       ])
       setPreviews({
         housing:     housingRes.data?.[0]  ?? null,
-        marketplace: marketRes.data?.[0]   ?? null,
+        marketplace: marketRes.data         ?? [],
         looking:     lookingRes.data       ?? [],
       })
     }
@@ -242,7 +223,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
           <p className="text-sm font-bold tracking-widest uppercase text-school-primary mb-6">
             University Marketplace
           </p>
-          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
             Your campus.<br />
             <span className="text-school-primary">Your marketplace.</span>
           </h1>
@@ -306,7 +287,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
         body="Textbooks, furniture, electronics, clothing, and more — all from students nearby. Local pickup, no fees, no hassle."
         ctaLabel="Browse Marketplace →"
         onCta={() => onFilter('marketplace')}
-        visual={<MarketplaceCard recentListing={previews.marketplace} />}
+        visual={<MarketplaceGrid listings={previews.marketplace} onOpen={onOpenListing ?? (() => {})} onRequireAuth={onRequireAuth} />}
         bg="gray"
       />
 
