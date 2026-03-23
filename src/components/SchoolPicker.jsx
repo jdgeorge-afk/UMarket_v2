@@ -89,7 +89,7 @@ export default function SchoolPicker() {
       </div>
 
       <p className="text-gray-600 text-xs mt-10">
-        More schools coming soon — request yours at umarket.co
+        More schools coming soon — request yours at umarket.jr@gmail.com
       </p>
     </div>
   )
