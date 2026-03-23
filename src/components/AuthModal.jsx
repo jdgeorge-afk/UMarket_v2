@@ -3,6 +3,57 @@ import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import Modal from './Modal'
 
+const TERMS_SECTIONS = [
+  {
+    title: '1. About UMarket',
+    body: 'UMarket is an independent, student-to-student online marketplace platform. UMarket is not affiliated with, endorsed by, sponsored by, or officially connected to any university, college, or educational institution referenced on this Platform, including but not limited to the University of Utah and Texas Christian University. All university names are used solely to help students identify their campus community.',
+  },
+  {
+    title: '2. Eligibility',
+    body: 'You must be at least 13 years of age to use this Platform. By creating an account, you confirm that you meet this requirement. Users under 18 must have parental or guardian consent.',
+  },
+  {
+    title: '3. No Involvement in Transactions',
+    body: 'UMarket is not a party to any transaction between users. All purchases, sales, rentals, subleases, and exchanges are solely between the individual users involved. UMarket does not verify the accuracy, legality, quality, or safety of any listing. You transact entirely at your own risk.',
+  },
+  {
+    title: '4. Your Responsibilities',
+    body: 'You agree that all listings you post are accurate, lawful, and your own to sell or transfer. You agree not to post fraudulent, misleading, stolen, illegal, prohibited, or dangerous items or services. You are solely responsible for any listing you create and any transaction you enter into through this Platform.',
+  },
+  {
+    title: '5. Prohibited Content',
+    body: 'You may not post listings involving: illegal goods or substances, weapons or firearms, counterfeit items, stolen property, adult content, personal information of others, or any content that violates applicable law. UMarket reserves the right to remove any listing and suspend or terminate any account at its sole discretion, with or without notice, for any reason.',
+  },
+  {
+    title: '6. No Safety Guarantee',
+    body: 'UMarket does not screen, verify, or background-check any user. We do not guarantee the identity, trustworthiness, or conduct of any person you meet through this Platform. Always meet in public places. Never send payment before receiving an item. UMarket is not responsible for any harm, loss, injury, fraud, or dispute arising from interactions between users.',
+  },
+  {
+    title: '7. Limitation of Liability',
+    body: 'To the fullest extent permitted by law, UMarket, its founders, employees, and affiliates shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising out of or related to your use of this Platform, including but not limited to losses from fraudulent listings, failed transactions, personal injury, or property damage. Your sole remedy for dissatisfaction with this Platform is to stop using it.',
+  },
+  {
+    title: '8. Intellectual Property',
+    body: "All UMarket branding, logos, and original Platform content are the property of UMarket. You retain ownership of content you post but grant UMarket a non-exclusive, royalty-free license to display that content on the Platform. You may not use UMarket's name, logo, or branding without written permission.",
+  },
+  {
+    title: '9. Privacy',
+    body: 'By creating an account, you consent to the collection and use of your information as described in our Privacy Policy. We do not sell your personal data to third parties.',
+  },
+  {
+    title: '10. Dispute Resolution',
+    body: 'Any dispute arising from your use of this Platform shall be resolved through binding individual arbitration under the rules of the American Arbitration Association, governed by the laws of the State of Utah. You waive your right to participate in any class action lawsuit against UMarket.',
+  },
+  {
+    title: '11. Changes to These Terms',
+    body: 'UMarket may update these Terms at any time. Continued use of the Platform after changes are posted constitutes your acceptance of the updated Terms.',
+  },
+  {
+    title: '12. Contact',
+    body: 'For questions about these Terms, contact us through the Platform.',
+  },
+]
+
 export default function AuthModal({ mode, onModeChange, onClose }) {
   const { signIn, signUp, resetPassword } = useAuth()
   const { school } = useSchool()
@@ -12,24 +63,36 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const [name, setName]         = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
-  const [step, setStep]         = useState('form') // 'form' | 'verify' | 'reset'
+  const [step, setStep]         = useState('form') // 'form' | 'terms' | 'verify' | 'reset' | 'forgot'
 
   const isEdu = email.toLowerCase().endsWith('.edu')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
 
     if (mode === 'signup') {
-      if (name.trim().length < 2) { setError('Please enter your name.'); setLoading(false); return }
-      const { error: err } = await signUp({ email, password, name: name.trim(), schoolId: school?.id })
-      if (err) setError(err.message)
-      else setStep('verify')
+      if (name.trim().length < 2) { setError('Please enter your name.'); return }
+      // Show Terms of Use before creating the account
+      setStep('terms')
     } else {
+      setLoading(true)
       const { error: err } = await signIn({ email, password })
       if (err) setError(err.message.includes('Invalid') ? 'Incorrect email or password.' : err.message)
       else onClose()
+      setLoading(false)
+    }
+  }
+
+  const handleAcceptTerms = async () => {
+    setLoading(true)
+    setError('')
+    const { error: err } = await signUp({ email, password, name: name.trim(), schoolId: school?.id })
+    if (err) {
+      setError(err.message)
+      setStep('form')
+    } else {
+      setStep('verify')
     }
     setLoading(false)
   }
@@ -42,6 +105,59 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     if (err) setError(err.message)
     else setStep('reset')
     setLoading(false)
+  }
+
+  // ── Terms of Use screen ───────────────────────────────────────────────────
+  if (step === 'terms') {
+    return (
+      <Modal
+        onClose={onClose}
+        title="Terms of Use"
+        fullHeight
+        footer={
+          <div className="space-y-2">
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <button
+              onClick={handleAcceptTerms}
+              disabled={loading}
+              className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
+            >
+              {loading ? 'Creating account…' : 'I Accept — Create My Account'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('form')}
+              disabled={loading}
+              className="w-full text-gray-400 text-sm py-1"
+            >
+              ← Go Back
+            </button>
+          </div>
+        }
+      >
+        <div>
+          <p className="text-xs text-gray-400 mb-1">Last updated: March 2026</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Terms of Use</h2>
+          <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+            By creating an account on UMarket ("Platform"), you agree to the following Terms of Use.
+            Please read them carefully. If you do not agree, do not create an account.
+          </p>
+
+          <div className="space-y-5">
+            {TERMS_SECTIONS.map((section) => (
+              <div key={section.title}>
+                <h3 className="font-semibold text-gray-900 text-sm mb-1">{section.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{section.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-400 mt-6 text-center">
+            Scroll up to review all terms before accepting.
+          </p>
+        </div>
+      </Modal>
+    )
   }
 
   // ── Verify email screen ────────────────────────────────────────────────────
@@ -188,7 +304,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
       {mode === 'signup' && (
         <p className="text-xs text-gray-400 text-center mt-4">
-          By signing up you agree to our Terms of Service.
+          You will be asked to review and accept our Terms of Use before your account is created.
         </p>
       )}
     </Modal>
