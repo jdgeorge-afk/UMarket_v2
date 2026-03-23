@@ -152,12 +152,12 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
       <span className="self-start bg-school-primary/10 text-school-primary text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full">
         {eyebrow}
       </span>
-      <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+      <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-tight">
         {headParts.length > 1
           ? <>{headParts[0]}<span className="text-school-primary">{accentWord}</span>{headParts[1]}</>
           : headline}
       </h2>
-      <p className="text-gray-500 text-lg leading-relaxed max-w-sm">{body}</p>
+      <p className="text-gray-500 text-xl leading-relaxed max-w-sm">{body}</p>
       <button
         onClick={onCta}
         className="self-start inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-7 py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-md"
@@ -239,14 +239,14 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
         <div className="pointer-events-none absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full blur-3xl opacity-20 bg-school-primary" />
 
         <div className="relative">
-          <p className="text-xs font-bold tracking-widest uppercase text-school-primary mb-4">
+          <p className="text-sm font-bold tracking-widest uppercase text-school-primary mb-6">
             University Marketplace
           </p>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.05] max-w-3xl mx-auto">
+          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
             Your campus.<br />
             <span className="text-school-primary">Your marketplace.</span>
           </h1>
-          <p className="text-gray-400 text-lg mt-5 max-w-lg mx-auto leading-relaxed">
+          <p className="text-gray-400 text-xl sm:text-2xl mt-8 max-w-2xl mx-auto leading-relaxed">
             Housing, subleases, roommates, and student deals — all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
