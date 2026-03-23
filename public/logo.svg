@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#CC0000"/>
-  <text x="256" y="340" font-family="Arial, sans-serif" font-weight="900" font-size="280" text-anchor="middle" fill="white">U</text>
+  <defs>
+    <clipPath id="r">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
+  </defs>
+  <!-- Blue base -->
+  <rect width="512" height="512" rx="112" fill="#2B5CE6"/>
+  <!-- Red diagonal half (top-left) -->
+  <polygon points="0,0 512,0 0,512" fill="#CC0000" clip-path="url(#r)"/>
+  <!-- White U -->
+  <text x="256" y="360" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="290" text-anchor="middle" fill="white">U</text>
 </svg>

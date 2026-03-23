@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import { useListings } from '../hooks/useListings'
@@ -232,6 +233,15 @@ export default function ListingFeed({
   onPostOpen,
 }) {
   const { user } = useAuth()
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [conditions, setConditions] = useState([])
+
+  const toggleCondition = (c) =>
+    setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
+
+  const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]) }
+  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0
 
   // "For You" / Looking For tab gets its own full-page component
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
@@ -254,6 +264,9 @@ export default function ListingFeed({
     searchQuery,
     favoritesOnly,
     userId: user?.id,
+    minPrice: minPrice !== '' ? Number(minPrice) : null,
+    maxPrice: maxPrice !== '' ? Number(maxPrice) : null,
+    conditions: conditions.length > 0 ? conditions : null,
   })
 
   const items = injectAds(listings)
@@ -284,9 +297,17 @@ export default function ListingFeed({
         sortBy={sortBy}
         onSort={onSort}
         activeFilter={activeFilter}
-        onClearFilter={() => onFilter('all')}
+        onClearFilter={() => { onFilter('all'); clearExtraFilters() }}
         totalCount={listings.length}
         label={filterToLabel(activeFilter)}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        conditions={conditions}
+        onMinPrice={setMinPrice}
+        onMaxPrice={setMaxPrice}
+        onToggleCondition={toggleCondition}
+        onClearExtraFilters={clearExtraFilters}
+        hasExtraFilters={hasExtraFilters}
       />
 
       {/* ── Feed content ─────────────────────────────────────────────────────── */}

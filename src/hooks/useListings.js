@@ -26,6 +26,9 @@ export function useListings({
   favoritesOnly = false,
   userId = null,
   sellerId = null,
+  minPrice = null,
+  maxPrice = null,
+  conditions = null,
 } = {}) {
   const { school } = useSchool()
   const [listings, setListings] = useState([])
@@ -46,7 +49,7 @@ export function useListings({
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId])
+  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(',')])
 
   const fetchListings = async () => {
     setLoading(true)
@@ -89,6 +92,10 @@ export function useListings({
       if (searchQuery.trim()) {
         query = query.ilike('title', `%${searchQuery.trim()}%`)
       }
+
+      if (minPrice !== null && minPrice !== '') query = query.gte('price', minPrice)
+      if (maxPrice !== null && maxPrice !== '') query = query.lte('price', maxPrice)
+      if (conditions && conditions.length > 0) query = query.in('condition', conditions)
 
       if (favoriteIds) {
         query = query.in('id', favoriteIds)

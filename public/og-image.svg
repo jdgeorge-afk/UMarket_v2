@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#ffffff"/>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="8" height="630" fill="#CC0000"/>
+
+  <!-- Logo mark — rounded square with diagonal split -->
+  <g transform="translate(100, 165)">
+    <!-- Blue half (bottom-right) -->
+    <clipPath id="squareClip">
+      <rect width="300" height="300" rx="60"/>
+    </clipPath>
+    <rect width="300" height="300" rx="60" fill="#2B5CE6"/>
+    <!-- Red half (top-left diagonal) -->
+    <polygon points="0,0 300,0 0,300" fill="#CC0000" clip-path="url(#squareClip)"/>
+    <!-- White U letter -->
+    <text x="150" y="225" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="190" text-anchor="middle" fill="white">U</text>
+  </g>
+
+  <!-- UMarket wordmark -->
+  <text x="460" y="310" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="112" fill="#111111">UMarket</text>
+
+  <!-- Tagline -->
+  <text x="462" y="390" font-family="Arial, sans-serif" font-weight="400" font-size="46" fill="#6B7280">Your Campus Marketplace</text>
+
+  <!-- Divider -->
+  <line x1="462" y1="430" x2="1120" y2="430" stroke="#E5E7EB" stroke-width="2"/>
+
+  <!-- Description -->
+  <text x="462" y="480" font-family="Arial, sans-serif" font-weight="400" font-size="36" fill="#9CA3AF">Housing · Marketplace · Looking For</text>
+
+  <!-- URL pill -->
+  <rect x="462" y="520" width="240" height="52" rx="26" fill="#F3F4F6"/>
+  <text x="582" y="553" font-family="Arial, sans-serif" font-weight="600" font-size="28" text-anchor="middle" fill="#6B7280">u-market.app</text>
+</svg>
