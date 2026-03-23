@@ -36,13 +36,16 @@ const FALLBACK_LOOKING = [
 const MARKETPLACE_CATS = ['textbooks', 'furniture', 'electronics', 'clothing', 'sports', 'misc']
 
 // ── Housing listing card ───────────────────────────────────────────────────────
-function HousingCard({ listing }) {
+function HousingCard({ listing, onOpen }) {
   const l = listing ?? FALLBACK_HOUSING
   const sellerInitial = (l.profiles?.name ?? 'U')[0].toUpperCase()
   const categoryLabel = l.category === 'sublease' ? 'Sublease' : 'Housing'
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden w-full max-w-xs mx-auto">
+    <div
+      onClick={() => listing && onOpen?.(listing)}
+      className={`bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden w-full max-w-xs mx-auto ${listing && onOpen ? 'cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-150' : ''}`}
+    >
       <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
         {l.images?.[0]
           ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
@@ -274,7 +277,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
         body={`Real listings posted by students and landlords at ${school?.shortName ?? 'your school'}. Filter by distance, price, and availability — then connect directly.`}
         ctaLabel="Browse Housing →"
         onCta={() => onFilter('housing')}
-        visual={<HousingCard listing={previews.housing} />}
+        visual={<HousingCard listing={previews.housing} onOpen={onOpenListing} />}
         bg="white"
       />
 
