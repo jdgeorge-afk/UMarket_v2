@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#CC0000"/>
-  <text x="256" y="360" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="300" text-anchor="middle" fill="white">U</text>
+  <defs>
+    <clipPath id="roundedClip">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
+  </defs>
+  <!-- Blue background (bottom-right half) -->
+  <rect width="512" height="512" rx="112" fill="#2255CC"/>
+  <!-- Red triangle (top-left diagonal) -->
+  <polygon points="0,0 512,0 0,512" fill="#CC1111" clip-path="url(#roundedClip)"/>
+  <!-- White U -->
+  <text x="256" y="370" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="310" text-anchor="middle" fill="white">U</text>
 </svg>
