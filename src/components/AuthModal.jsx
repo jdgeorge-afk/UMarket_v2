@@ -63,7 +63,8 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const [name, setName]         = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
-  const [step, setStep]         = useState('form') // 'form' | 'terms' | 'verify' | 'reset' | 'forgot'
+  const [step, setStep]         = useState('form') // 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
+  const [termsFromSignup, setTermsFromSignup] = useState(false)
 
   const isEdu = email.toLowerCase().endsWith('.edu')
 
@@ -74,6 +75,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     if (mode === 'signup') {
       if (name.trim().length < 2) { setError('Please enter your name.'); return }
       // Show Terms of Use before creating the account
+      setTermsFromSignup(true)
       setStep('terms')
     } else {
       setLoading(true)
@@ -107,6 +109,42 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     setLoading(false)
   }
 
+  // ── Contact info screen ───────────────────────────────────────────────────
+  if (step === 'contact') {
+    return (
+      <Modal onClose={onClose} title="Contact Us">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Us</h2>
+          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+            Have a question, concern, or need to report an issue? We're here to help.
+          </p>
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-xl px-4 py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
+              <p className="text-sm font-medium text-gray-900">umarket.jr@gmail.com</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-4 py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Response Time</p>
+              <p className="text-sm text-gray-600">We typically respond within 1–2 business days.</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-4 py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">For Legal Inquiries</p>
+              <p className="text-sm text-gray-600">
+                For questions about our Terms of Use, privacy practices, or legal matters, include "Legal" in your subject line.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setStep('form')}
+            className="mt-6 w-full text-gray-400 text-sm py-1"
+          >
+            ← Back
+          </button>
+        </div>
+      </Modal>
+    )
+  }
+
   // ── Terms of Use screen ───────────────────────────────────────────────────
   if (step === 'terms') {
     return (
@@ -117,13 +155,15 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
         footer={
           <div className="space-y-2">
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            <button
-              onClick={handleAcceptTerms}
-              disabled={loading}
-              className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
-            >
-              {loading ? 'Creating account…' : 'I Accept — Create My Account'}
-            </button>
+            {termsFromSignup && (
+              <button
+                onClick={handleAcceptTerms}
+                disabled={loading}
+                className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
+              >
+                {loading ? 'Creating account…' : 'I Accept — Create My Account'}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setStep('form')}
@@ -303,9 +343,27 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
       </form>
 
       {mode === 'signup' && (
-        <p className="text-xs text-gray-400 text-center mt-4">
-          You will be asked to review and accept our Terms of Use before your account is created.
-        </p>
+        <div className="mt-4 text-center space-y-2">
+          <p className="text-xs text-gray-400">
+            You will be asked to review and accept our Terms of Use before your account is created.
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => { setTermsFromSignup(false); setStep('terms') }}
+              className="text-xs text-school-primary font-medium underline underline-offset-2"
+            >
+              Terms of Use
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('contact')}
+              className="text-xs text-school-primary font-medium underline underline-offset-2"
+            >
+              Contact Us
+            </button>
+          </div>
+        </div>
       )}
     </Modal>
   )
