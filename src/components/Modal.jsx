@@ -29,7 +29,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 flex flex-col sm:items-center sm:justify-center sm:p-4"
+      className="fixed inset-x-0 top-0 z-50 flex flex-col h-screen sm:items-center sm:justify-center sm:p-4"
       style={{ height: '100dvh' }}
     >
       {/* Backdrop — tapping closes on desktop; hidden behind full-screen sheet on mobile */}
@@ -41,7 +41,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
       {/* Sheet / Dialog */}
       <div
         className={[
-          'relative bg-white z-10 w-full',
+          'relative bg-white z-10 w-full overflow-hidden',
           // Mobile: fill the entire remaining viewport so nothing is clipped
           'flex-1 flex flex-col',
           // Desktop: revert to a centered dialog
