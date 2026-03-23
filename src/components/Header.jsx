@@ -88,6 +88,9 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                 >
                   Switch school
                 </button>
+                <p className="px-3 pb-2 text-[10px] text-gray-300 leading-snug">
+                  UMarket is not affiliated with or endorsed by any university.
+                </p>
               </div>
             </div>
           )}
