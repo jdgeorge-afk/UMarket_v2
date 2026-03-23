@@ -32,6 +32,9 @@ function AppInner() {
   const [selectedListing, setSelectedListing] = useState(null)
   const [viewedUserId, setViewedUserId] = useState(null)
 
+  // History stack — each entry: { view, listing, userId }
+  const [navHistory, setNavHistory] = useState([])
+
   // ── Feed filter state ─────────────────────────────────────────────────────
   // activeFilter encodes section + sub-filter:
   //   'all' | 'housing' | 'housing:sublease' | 'housing:looking_for'
@@ -46,24 +49,37 @@ function AppInner() {
   const [postModalOpen, setPostModalOpen] = useState(false)
 
   // ── Navigation helpers ────────────────────────────────────────────────────
-  const openListing = (listing) => {
-    setSelectedListing(listing)
-    setCurrentView('detail')
+  const pushNav = (newView, listing = null, userId = null) => {
+    setNavHistory(h => [...h, { view: currentView, listing: selectedListing, userId: viewedUserId }])
+    setCurrentView(newView)
+    if (listing !== null) setSelectedListing(listing)
+    if (userId !== null) setViewedUserId(userId)
   }
 
-  const openProfile = (userId) => {
-    setViewedUserId(userId)
-    setCurrentView('profile')
+  const goBack = () => {
+    setNavHistory(h => {
+      const prev = h[h.length - 1]
+      if (!prev) return h
+      setCurrentView(prev.view)
+      setSelectedListing(prev.listing)
+      setViewedUserId(prev.userId)
+      return h.slice(0, -1)
+    })
   }
+
+  const openListing = (listing) => pushNav('detail', listing, null)
+
+  const openProfile = (userId) => pushNav('profile', null, userId)
 
   const goHome = () => {
+    setNavHistory([])
     setCurrentView('feed')
     setSelectedListing(null)
     setViewedUserId(null)
     setActiveFilter('all')
   }
 
-  const openFavorites = () => { setCurrentView('favorites'); setActiveFilter('all') }
+  const openFavorites = () => { setNavHistory([]); setCurrentView('favorites'); setActiveFilter('all') }
 
   // ── Auth gate: run callback if authed, else open sign-in modal ───────────
   const requireAuth = (callback) => {
@@ -144,7 +160,7 @@ function AppInner() {
           {currentView === 'detail' && selectedListing && (
             <ListingDetail
               listing={selectedListing}
-              onBack={goHome}
+              onBack={goBack}
               onOpenProfile={openProfile}
               onRequireAuth={requireAuth}
             />
@@ -153,7 +169,7 @@ function AppInner() {
           {currentView === 'profile' && (
             <UserProfile
               userId={viewedUserId}
-              onBack={() => window.history.length > 1 ? setCurrentView(selectedListing ? 'detail' : 'feed') : goHome()}
+              onBack={goBack}
               onOpenListing={openListing}
               onRequireAuth={requireAuth}
               onPostOpen={openPost}

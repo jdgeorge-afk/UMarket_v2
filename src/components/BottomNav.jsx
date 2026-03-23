@@ -30,12 +30,11 @@ function UserIcon() {
   )
 }
 
-export default function BottomNav({ currentView, onFeed, onFavorites, onPost, onProfile }) {
+export default function BottomNav({ currentView, onFeed, onPost, onProfile }) {
   const tabs = [
-    { label: 'Home',    view: 'feed',      Icon: HomeIcon,  action: onFeed },
-    { label: 'Saved',   view: 'favorites', Icon: HeartIcon, action: onFavorites },
-    { label: 'Post',    view: null,        Icon: PlusIcon,  action: onPost,    isPost: true },
-    { label: 'Profile', view: 'profile',   Icon: UserIcon,  action: onProfile },
+    { label: 'Home',    view: 'feed',    Icon: HomeIcon, action: onFeed },
+    { label: 'Post',    view: null,      Icon: PlusIcon, action: onPost,    isPost: true },
+    { label: 'Profile', view: 'profile', Icon: UserIcon, action: onProfile },
   ]
 
   return (

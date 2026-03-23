@@ -189,3 +189,40 @@ create trigger on_auth_user_created
 -- insert into storage.buckets (id, name, public)
 -- values ('listing-images', 'listing-images', true)
 -- on conflict (id) do nothing;
+
+-- ============================================================
+-- MIGRATIONS (run in Supabase SQL Editor if tables already exist)
+-- ============================================================
+
+-- Add per-listing contact fields
+-- alter table listings add column if not exists contact_type text;
+-- alter table listings add column if not exists contact_value text;
+
+-- contact_requests: tracks when a buyer clicks "Contact Seller"
+create table if not exists contact_requests (
+  id         uuid primary key default gen_random_uuid(),
+  listing_id uuid references listings(id) on delete cascade,
+  buyer_id   uuid references profiles(id) on delete cascade,
+  seller_id  uuid references profiles(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique(listing_id, buyer_id)
+);
+alter table contact_requests enable row level security;
+create policy "cr_insert_buyer"  on contact_requests for insert with check (auth.uid() = buyer_id);
+create policy "cr_select_buyer"  on contact_requests for select using (auth.uid() = buyer_id);
+create policy "cr_select_seller" on contact_requests for select using (auth.uid() = seller_id);
+
+-- notifications: seller gets one per contact_request
+create table if not exists notifications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references profiles(id) on delete cascade,
+  type       text default 'contact',
+  listing_id uuid references listings(id) on delete cascade,
+  buyer_id   uuid references profiles(id) on delete cascade,
+  read       boolean default false,
+  created_at timestamptz default now()
+);
+alter table notifications enable row level security;
+create policy "notif_insert_buyer"  on notifications for insert with check (auth.uid() = buyer_id);
+create policy "notif_select_own"    on notifications for select using (auth.uid() = user_id);
+create policy "notif_update_own"    on notifications for update using (auth.uid() = user_id);

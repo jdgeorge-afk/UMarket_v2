@@ -35,6 +35,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [contactOpen, setContactOpen] = useState(false)
+  const [contactRequested, setContactRequested] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [markingAsSold, setMarkingAsSold] = useState(false)
 
@@ -192,7 +193,23 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       {!isOwner ? (
         <>
           <button
-            onClick={() => onRequireAuth(() => setContactOpen(true))}
+            onClick={() => onRequireAuth(async () => {
+              if (!contactRequested) {
+                setContactRequested(true)
+                await supabase.from('contact_requests').upsert(
+                  { listing_id: listing.id, buyer_id: user.id, seller_id: listing.seller_id },
+                  { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true }
+                )
+                // Only notify seller if this is a new request (ignoreDuplicates won't insert again)
+                await supabase.from('notifications').insert({
+                  user_id: listing.seller_id,
+                  type: 'contact',
+                  listing_id: listing.id,
+                  buyer_id: user.id,
+                })
+              }
+              setContactOpen(true)
+            })}
             className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-lg hover:opacity-90 transition-opacity shadow-md mb-3"
           >
             Contact Seller
@@ -218,8 +235,8 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       {lightboxOpen && (
         <Lightbox images={images} startIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />
       )}
-      {contactOpen && seller && (
-        <ContactModal seller={seller} onClose={() => setContactOpen(false)} />
+      {contactOpen && (
+        <ContactModal listing={listing} seller={seller} onClose={() => setContactOpen(false)} />
       )}
       {reportOpen && (
         <ReportModal listingId={listing.id} onClose={() => setReportOpen(false)} />
