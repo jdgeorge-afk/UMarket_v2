@@ -247,20 +247,7 @@ export default function ListingFeed({
   const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([]) }
   const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0
 
-  // "For You" / Looking For tab gets its own full-page component
-  if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
-    return (
-      <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
-        <LookingForPage
-          onOpenListing={onOpenListing}
-          onRequireAuth={onRequireAuth}
-          onPostOpen={onPostOpen}
-        />
-      </>
-    )
-  }
-
+  // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
   const { listings, loading, error } = useListings({
     ...listingFilter,
@@ -274,6 +261,20 @@ export default function ListingFeed({
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
   })
+
+  // "For You" / Looking For tab gets its own full-page component
+  if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
+    return (
+      <>
+        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <LookingForPage
+          onOpenListing={onOpenListing}
+          onRequireAuth={onRequireAuth}
+          onPostOpen={onPostOpen}
+        />
+      </>
+    )
+  }
 
   const items = injectAds(listings)
 
