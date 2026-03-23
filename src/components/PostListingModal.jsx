@@ -140,7 +140,7 @@ export default function PostListingModal({ onClose }) {
         onClick={() => formRef.current?.requestSubmit()}
         className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-base disabled:opacity-40 hover:opacity-90 transition-opacity"
       >
-        {uploading ? 'Uploading & Posting…' : '🚀 Post Listing'}
+        {uploading ? 'Uploading & Posting…' : 'Post Listing'}
       </button>
     </>
   )
@@ -307,10 +307,10 @@ export default function PostListingModal({ onClose }) {
               onChange={(e) => setContactType(e.target.value)}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary"
             >
-              <option value="phone">📱 Phone</option>
-              <option value="email">✉️ Email</option>
-              <option value="instagram">📸 Instagram</option>
-              <option value="snapchat">👻 Snapchat</option>
+              <option value="phone">Phone</option>
+              <option value="email">Email</option>
+              <option value="instagram">Instagram</option>
+              <option value="snapchat">Snapchat</option>
             </select>
             <input
               value={contactValue}

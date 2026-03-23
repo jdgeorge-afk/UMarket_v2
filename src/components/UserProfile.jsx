@@ -60,7 +60,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
           onClick={() => onEdit(listing)}
           className="flex-1 text-xs font-semibold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
         >
-          ✏️ Edit
+          Edit
         </button>
         <button
           disabled={toggling}
@@ -76,7 +76,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
               : 'border-orange-200 text-orange-600 hover:bg-orange-50',
           ].join(' ')}
         >
-          {toggling ? '…' : listing.sold ? '↩ Unmark Sold' : '✓ Mark Sold'}
+          {toggling ? '…' : listing.sold ? 'Unmark Sold' : 'Mark Sold'}
         </button>
         <button
           disabled={deleting}
@@ -87,7 +87,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
           }}
           className="px-3 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
         >
-          🗑️
+          Delete
         </button>
       </div>
       {/* Boost button — only for active (non-sold) listings */}
@@ -101,7 +101,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
               : 'border-school-primary/30 text-school-primary hover:bg-school-primary/5',
           ].join(' ')}
         >
-          {isActiveBoosted ? `⚡ Boosted · expires ${new Date(listing.boost_expires_at).toLocaleDateString()}` : '⚡ Boost this listing · $3/day'}
+          {isActiveBoosted ? `Boosted · expires ${new Date(listing.boost_expires_at).toLocaleDateString()}` : 'Boost this listing · $3/day'}
         </button>
       )}
       <p className="text-[10px] text-gray-300 font-mono mt-1 px-0.5 select-all">
@@ -294,7 +294,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   if (!profile) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-400">
-        <p className="text-5xl mb-3">🤷</p>
+        <p className="text-5xl mb-3"></p>
         <p className="font-semibold">User not found</p>
         <button onClick={onBack} className="mt-4 text-school-primary font-semibold">Go back</button>
       </div>
@@ -366,7 +366,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </h1>
             {profile.grade && <p className="text-sm text-gray-400">{profile.grade}</p>}
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className={`font-bold text-sm ${scoreColor}`}>⭐ {profile.score} score</span>
+              <span className={`font-bold text-sm ${scoreColor}`}>{profile.score} score</span>
               <span className="text-gray-400 text-sm">{profile.sold_count ?? 0} sold</span>
               <span className="text-gray-400 text-sm">{profile.transactions ?? 0} transactions</span>
             </div>
@@ -403,9 +403,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                 value={editContactType} onChange={(e) => setEditContactType(e.target.value)}
                 className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary"
               >
-                <option value="phone">📱 Phone</option>
-                <option value="email">✉️ Email</option>
-                <option value="instagram">📸 Instagram</option>
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="instagram">Instagram</option>
               </select>
               <input
                 value={editContact} onChange={(e) => setEditContact(e.target.value)}
@@ -491,7 +491,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </div>
           ) : (
             <div className="text-center py-10 text-gray-400 mb-6">
-              <p className="text-3xl mb-2">📦</p>
+              <p className="text-3xl mb-2"></p>
               <p className="text-sm">{isOwn ? 'No active listings. Post something!' : 'No active listings.'}</p>
             </div>
           )}
@@ -544,7 +544,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </div>
           ) : (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-4xl mb-3">💔</p>
+              <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No saved listings yet</p>
               <p className="text-sm mt-1">Tap the heart on any listing to save it.</p>
             </div>
@@ -568,7 +568,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </div>
           ) : (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-4xl mb-3">📬</p>
+              <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No contacted listings yet</p>
               <p className="text-sm mt-1">Listings you contact will appear here.</p>
             </div>
@@ -607,7 +607,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </div>
           ) : (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-4xl mb-3">🔔</p>
+              <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No notifications yet</p>
               <p className="text-sm mt-1">You'll be notified when someone contacts you.</p>
             </div>
@@ -621,10 +621,10 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2">Account</p>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50">
             {[
-              { icon: '✅', label: 'Verification', sub: profile.verified ? 'Verified .edu email' : 'Not verified', action: null },
-              { icon: '🛡️', label: 'Safety', sub: 'Tips for safe transactions', action: null },
-              { icon: '❓', label: 'Help', sub: 'umarket.jr@gmail.com', action: null },
-              { icon: '📄', label: 'Legal & Disclaimers', sub: 'Affiliations, liability & terms', action: () => setLegalOpen(true) },
+              { icon: '', label: 'Verification', sub: profile.verified ? 'Verified .edu email' : 'Not verified', action: null },
+              { icon: '', label: 'Safety', sub: 'Tips for safe transactions', action: null },
+              { icon: '', label: 'Help', sub: 'umarket.jr@gmail.com', action: null },
+              { icon: '', label: 'Legal & Disclaimers', sub: 'Affiliations, liability & terms', action: () => setLegalOpen(true) },
             ].map(({ icon, label, sub, action }) => (
               <button
                 key={label}

@@ -4,37 +4,37 @@ const SECTIONS = [
   {
     value: 'all',
     label: 'All',
-    icon: '🏷️',
+    icon: '',
     subs: [],
   },
   {
     value: 'housing',
     label: 'Housing',
-    icon: '🏠',
+    icon: '',
     subs: [
-      { value: 'housing',             label: 'All Housing',          icon: '🏠' },
-      { value: 'housing:sublease',    label: 'Sublease',             icon: '🔑' },
-      { value: 'housing:looking_for', label: 'Looking for Housing',  icon: '🏘️' },
+      { value: 'housing',             label: 'All Housing',          icon: '' },
+      { value: 'housing:sublease',    label: 'Sublease',             icon: '' },
+      { value: 'housing:looking_for', label: 'Looking for Housing',  icon: '' },
     ],
   },
   {
     value: 'looking_for',
     label: 'Looking For',
-    icon: '🔍',
+    icon: '',
     subs: [],
   },
   {
     value: 'marketplace',
     label: 'Marketplace',
-    icon: '🛍️',
+    icon: '',
     subs: [
-      { value: 'marketplace',              label: 'All',         icon: '🛍️' },
-      { value: 'marketplace:textbooks',    label: 'Textbooks',   icon: '📚' },
-      { value: 'marketplace:furniture',    label: 'Furniture',   icon: '🛋️' },
-      { value: 'marketplace:electronics',  label: 'Electronics', icon: '💻' },
-      { value: 'marketplace:clothing',     label: 'Clothing',    icon: '👕' },
-      { value: 'marketplace:sports',       label: 'Sports',      icon: '⚽' },
-      { value: 'marketplace:misc',         label: 'Misc',        icon: '📦' },
+      { value: 'marketplace',              label: 'All',         icon: '' },
+      { value: 'marketplace:textbooks',    label: 'Textbooks',   icon: '' },
+      { value: 'marketplace:furniture',    label: 'Furniture',   icon: '' },
+      { value: 'marketplace:electronics',  label: 'Electronics', icon: '' },
+      { value: 'marketplace:clothing',     label: 'Clothing',    icon: '' },
+      { value: 'marketplace:sports',       label: 'Sports',      icon: '' },
+      { value: 'marketplace:misc',         label: 'Misc',        icon: '' },
     ],
   },
 ]
@@ -63,7 +63,6 @@ export default function CategoryStrip({ activeFilter, onFilter }) {
                 : 'bg-gray-50 text-gray-500 border-gray-200',
             ].join(' ')}
           >
-            <span className="leading-none">{sub.icon}</span>
             {sub.label}
           </button>
         )

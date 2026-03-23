@@ -38,7 +38,7 @@ export default function LookingForStrip({ onOpenListing, onFilter, onPostOpen })
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div>
           <p className="font-semibold text-gray-900 flex items-center gap-1.5">
-            🔍 Looking For
+            Looking For
           </p>
           <p className="text-xs text-gray-400">Students searching now</p>
         </div>
@@ -71,7 +71,6 @@ export default function LookingForStrip({ onOpenListing, onFilter, onPostOpen })
             onClick={() => onOpenListing(item)}
             className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
           >
-            <span className="text-xl shrink-0">🔍</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
               <p className="text-xs text-gray-400">

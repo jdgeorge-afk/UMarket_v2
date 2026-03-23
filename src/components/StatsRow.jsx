@@ -25,9 +25,9 @@ export default function StatsRow({ onFilter }) {
   }, [school])
 
   const items = [
-    { icon: '🏠', label: 'Housing',     count: stats.housing,     filter: 'housing' },
-    { icon: '🔍', label: 'Looking For', count: stats.looking,     filter: 'looking_for' },
-    { icon: '🛒', label: 'Marketplace', count: stats.marketplace, filter: 'marketplace' },
+    { label: 'Housing',     count: stats.housing,     filter: 'housing' },
+    { label: 'Looking For', count: stats.looking,     filter: 'looking_for' },
+    { label: 'Marketplace', count: stats.marketplace, filter: 'marketplace' },
   ]
 
   return (
@@ -38,7 +38,6 @@ export default function StatsRow({ onFilter }) {
           onClick={() => onFilter(item.filter)}
           className="bg-white rounded-xl border border-gray-100 px-3 py-3 flex items-center gap-2 hover:border-school-primary/30 hover:bg-school-primary/5 transition-colors text-left shadow-sm"
         >
-          <span className="text-xl">{item.icon}</span>
           <div>
             <p className="text-lg font-bold text-gray-900 leading-tight">{item.count}</p>
             <p className="text-xs text-gray-400">{item.label}</p>

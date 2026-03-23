@@ -106,7 +106,7 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
           onClick={() => onRequireAuth(() => onPostOpen?.())}
           className="mt-6 inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity shadow-sm"
         >
-          🔍 Post a Need
+          Post a Need
         </button>
       </div>
 
@@ -134,7 +134,6 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
 
       {error && (
         <div className="text-center py-12 text-red-400">
-          <p className="text-3xl mb-2">⚠️</p>
           <p className="font-medium">Failed to load</p>
           <p className="text-sm opacity-70">{error}</p>
         </div>
@@ -142,7 +141,6 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
 
       {!loading && !error && listings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-3">🔍</p>
           <p className="font-semibold text-gray-600 text-lg">No requests yet</p>
           <p className="text-sm mt-1">Be the first to post what you're looking for!</p>
           <button
@@ -179,14 +177,14 @@ function SectionHero({ activeFilter, onPostOpen, onRequireAuth }) {
       headline: ['Find roommates, subleases,', 'and your next place near campus.'],
       highlight: 1, // which line gets the school color
       sub: 'Real listings posted by real students at your school.',
-      cta: '🏠 Post a Housing Listing',
+      cta: 'Post a Housing Listing',
     },
     marketplace: {
       eyebrow: 'Marketplace',
       headline: ['Buy and sell textbooks,', 'furniture, electronics, and more.'],
       highlight: 0,
       sub: 'Your campus secondhand market — fast, local, and free to list.',
-      cta: '🛍️ Post a Listing',
+      cta: 'Post a Listing',
     },
   }
 
@@ -327,7 +325,6 @@ export default function ListingFeed({
 
       {error && (
         <div className="text-center py-16 text-red-400">
-          <p className="text-4xl mb-2">⚠️</p>
           <p className="font-medium">Failed to load listings</p>
           <p className="text-sm mt-1 opacity-70">{error}</p>
         </div>
@@ -336,7 +333,7 @@ export default function ListingFeed({
       {!loading && !error && listings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-5xl mb-3">
-            {favoritesOnly ? '💔' : searchQuery ? '🔍' : '📭'}
+            {''}
           </p>
           <p className="font-semibold text-gray-600 text-lg">
             {favoritesOnly

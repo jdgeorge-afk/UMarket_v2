@@ -205,7 +205,6 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     return (
       <Modal onClose={onClose}>
         <div className="text-center py-2">
-          <p className="text-5xl mb-4">📧</p>
           <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
           <p className="text-sm text-gray-400 mt-2 mb-1">
             We sent a confirmation link to
@@ -213,7 +212,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
           <p className="font-semibold text-gray-900 mb-4">{email}</p>
           {isEdu && (
             <div className="bg-blue-50 text-blue-600 text-sm rounded-xl px-4 py-3 mb-4">
-              ✓ .edu email detected — you'll get a <strong>Verified</strong> badge automatically!
+              .edu email detected — you'll get a <strong>Verified</strong> badge automatically!
             </div>
           )}
           <p className="text-xs text-gray-400 leading-relaxed">
@@ -235,7 +234,6 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     return (
       <Modal onClose={onClose}>
         <div className="text-center py-2">
-          <p className="text-5xl mb-4">🔐</p>
           <h2 className="text-xl font-bold text-gray-900">Reset link sent</h2>
           <p className="text-sm text-gray-400 mt-2">Check your email for a password reset link.</p>
           <button onClick={onClose} className="mt-6 text-school-primary font-semibold">Close</button>
@@ -304,7 +302,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
         />
         {mode === 'signup' && isEdu && (
           <p className="text-blue-500 text-xs flex items-center gap-1 -mt-1 px-1">
-            ✓ .edu email — you'll get a Verified badge!
+            .edu email — you'll get a Verified badge!
           </p>
         )}
         <input

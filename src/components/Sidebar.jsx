@@ -38,34 +38,34 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
     <div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-3 px-2 flex flex-col gap-0.5">
 
       {/* ── All ────────────────────────────────────────────────────────────── */}
-      <NavItem icon="🏠" label="Home"           value="all"          activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Home"           value="all"          activeFilter={activeFilter} onFilter={onFilter} />
 
       {/* ── Housing section ───────────────────────────────────────────────── */}
       <SectionLabel>Housing</SectionLabel>
-      <NavItem icon="🏠" label="Housing"         value="housing"      activeFilter={activeFilter} onFilter={onFilter} />
-      <NavItem icon="🔑" label="Sublease"        value="housing:sublease"      activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="🔍" label="Looking For Housing" value="housing:looking_for" activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Housing"         value="housing"      activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Sublease"        value="housing:sublease"      activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Looking For Housing" value="housing:looking_for" activeFilter={activeFilter} onFilter={onFilter} indent />
 
       {/* ── Looking For ───────────────────────────────────────────────────── */}
       <SectionLabel>Looking For</SectionLabel>
-      <NavItem icon="🔍" label="Looking For"     value="looking_for"  activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Looking For"     value="looking_for"  activeFilter={activeFilter} onFilter={onFilter} />
 
       {/* ── Marketplace section ───────────────────────────────────────────── */}
       <SectionLabel>Marketplace</SectionLabel>
-      <NavItem icon="🛍️" label="All Marketplace" value="marketplace"            activeFilter={activeFilter} onFilter={onFilter} />
-      <NavItem icon="📦" label="Miscellaneous"            value="marketplace:misc"        activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="👕" label="Clothing"        value="marketplace:clothing"    activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="⚽" label="Sports"          value="marketplace:sports"      activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="📚" label="Textbooks"       value="marketplace:textbooks"   activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="🛋️" label="Furniture"       value="marketplace:furniture"   activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="💻" label="Electronics"     value="marketplace:electronics" activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="All Marketplace" value="marketplace"            activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Miscellaneous"   value="marketplace:misc"        activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Clothing"        value="marketplace:clothing"    activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Sports"          value="marketplace:sports"      activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Textbooks"       value="marketplace:textbooks"   activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Furniture"       value="marketplace:furniture"   activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Electronics"     value="marketplace:electronics" activeFilter={activeFilter} onFilter={onFilter} indent />
 
       {/* ── Boost upsell ──────────────────────────────────────────────────── */}
       <div
         className="mt-auto rounded-2xl p-4 text-white"
         style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
       >
-        <p className="text-sm font-bold flex items-center gap-1">⚡ Boost for $2</p>
+        <p className="text-sm font-bold flex items-center gap-1">Boost for $2</p>
         <p className="text-xs text-white/75 mt-0.5 mb-3">10x more views instantly.</p>
         <button
           onClick={onPostOpen}

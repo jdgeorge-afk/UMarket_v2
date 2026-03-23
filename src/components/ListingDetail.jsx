@@ -139,11 +139,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       <div className="flex flex-wrap gap-1.5 mb-2">
         <Chip>{getCategoryLabel(listing.category)}</Chip>
         {listing.condition && <Chip>{listing.condition}</Chip>}
-        {listing.location && <Chip>📍 {listing.location}</Chip>}
+        {listing.location && <Chip>{listing.location}</Chip>}
         {listing.is_housing && listing.beds && <Chip>{listing.beds} BR</Chip>}
         {listing.is_housing && listing.size && <Chip>{listing.size}</Chip>}
         {listing.is_housing && listing.avail && <Chip>Available {listing.avail}</Chip>}
-        {listing.boosted && <Chip accent>⚡ Featured</Chip>}
+        {listing.boosted && <Chip accent>Featured</Chip>}
         <Chip>{timeAgo(listing.created_at)}</Chip>
       </div>
 
@@ -181,7 +181,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
                 </svg>
               )}
             </p>
-            <p className="text-sm text-gray-400">⭐ {seller.score ?? '5.0'} · {seller.sold_count ?? 0} sold · {seller.grade ?? ''}</p>
+            <p className="text-sm text-gray-400">{seller.score ?? '5.0'} · {seller.sold_count ?? 0} sold · {seller.grade ?? ''}</p>
           </div>
           <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -227,7 +227,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
           disabled={markingAsSold || listing.sold}
           className="w-full border-2 border-school-primary text-school-primary font-bold py-3 rounded-2xl hover:bg-school-primary hover:text-white transition-colors disabled:opacity-40"
         >
-          {listing.sold ? '✓ Marked as Sold' : markingAsSold ? 'Marking…' : 'Mark as Sold'}
+          {listing.sold ? 'Marked as Sold' : markingAsSold ? 'Marking…' : 'Mark as Sold'}
         </button>
       )}
 
