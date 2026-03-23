@@ -67,7 +67,6 @@ export default function BoostModal({ listing, onClose }) {
     <Modal onClose={onClose} title="Boost Listing" footer={footer}>
       {submitted ? (
         <div className="text-center py-6">
-          <div className="text-5xl mb-4">⚡</div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Request Received!</h2>
           <p className="text-gray-500 text-sm leading-relaxed mb-4">
             We'll email you within 24 hours with payment options.
@@ -112,9 +111,9 @@ export default function BoostModal({ listing, onClose }) {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">What you get</p>
             <div className="space-y-2">
               {[
-                ['⚡', 'Pinned to the top of the feed', 'Your listing shows above all non-boosted posts'],
-                ['🔄', 'Rotated with other boosted posts', 'Equal visibility — not just one seller dominating'],
-                ['🏷️', 'Featured badge on your card', 'Stands out visually to every shopper'],
+                ['', 'Pinned to the top of the feed', 'Your listing shows above all non-boosted posts'],
+                ['', 'Rotated with other boosted posts', 'Equal visibility — not just one seller dominating'],
+                ['', 'Featured badge on your card', 'Stands out visually to every shopper'],
               ].map(([icon, title, desc]) => (
                 <div key={title} className="flex items-start gap-2.5">
                   <span className="text-lg leading-none mt-0.5">{icon}</span>

@@ -6,7 +6,7 @@ const ADS = [
     cta: 'Get a Quote →',
     url: 'https://lemonade.com',
     bg: 'linear-gradient(135deg, #f953c6, #b91d73)',
-    emoji: '🏠',
+    emoji: '',
   },
   {
     id: 'ad_chime',
@@ -15,7 +15,7 @@ const ADS = [
     cta: 'Open Account →',
     url: 'https://chime.com',
     bg: 'linear-gradient(135deg, #11998e, #38ef7d)',
-    emoji: '💳',
+    emoji: '',
   },
 ]
 

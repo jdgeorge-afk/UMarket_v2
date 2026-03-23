@@ -13,28 +13,28 @@ export default function ContactModal({ listing, seller, onClose }) {
           label: 'Phone / Text',
           display: value,
           href: `tel:${value}`,
-          icon: '📱',
+          icon: '',
         }
       case 'email':
         return {
           label: 'Email',
           display: value,
           href: `mailto:${value}`,
-          icon: '✉️',
+          icon: '',
         }
       case 'instagram':
         return {
           label: 'Instagram',
           display: `@${value}`,
           href: `https://instagram.com/${value}`,
-          icon: '📸',
+          icon: '',
         }
       case 'snapchat':
         return {
           label: 'Snapchat',
           display: '@' + value,
           href: 'https://snapchat.com/add/' + value,
-          icon: '👻',
+          icon: '',
         }
       default:
         return null
@@ -68,13 +68,13 @@ export default function ContactModal({ listing, seller, onClose }) {
         </a>
       ) : (
         <div className="text-center py-6 text-gray-400">
-          <p className="text-3xl mb-2">🤷</p>
+          <p className="text-3xl mb-2"></p>
           <p className="text-sm">This seller hasn't added contact info yet.</p>
         </div>
       )}
 
       <p className="text-xs text-gray-400 text-center mt-5 leading-relaxed">
-        🛡️ Always meet in a public place on campus.<br />Never send payment before seeing the item.
+        Always meet in a public place on campus.<br />Never send payment before seeing the item.
       </p>
     </Modal>
   )

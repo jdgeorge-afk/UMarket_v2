@@ -15,16 +15,7 @@ function timeAgo(dateStr) {
 }
 
 function guessEmoji(title = '') {
-  const t = title.toLowerCase()
-  if (t.includes('text') || t.includes('book')) return '📚'
-  if (t.includes('furn') || t.includes('couch') || t.includes('desk') || t.includes('chair')) return '🛋️'
-  if (t.includes('laptop') || t.includes('computer') || t.includes('electron')) return '💻'
-  if (t.includes('cloth') || t.includes('shirt') || t.includes('jacket') || t.includes('shoes')) return '👕'
-  if (t.includes('sport') || t.includes('bike') || t.includes('gym') || t.includes('soccer')) return '⚽'
-  if (t.includes('hous') || t.includes('room') || t.includes('sublease') || t.includes('apt') || t.includes('bed')) return '🏠'
-  if (t.includes('guitar') || t.includes('music') || t.includes('drum') || t.includes('piano')) return '🎸'
-  if (t.includes('car') || t.includes('truck') || t.includes('vehicle')) return '🚗'
-  return '🔍'
+  return ''
 }
 
 // Static fallbacks shown before data loads (or if db is empty)
@@ -58,7 +49,7 @@ function HousingCard({ listing }) {
       <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
         {l.images?.[0]
           ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
-          : <span className="text-7xl">🏠</span>
+          : null
         }
       </div>
       <div className="p-5">
@@ -99,26 +90,24 @@ function HousingCard({ listing }) {
 function MarketplaceCard({ recentListing }) {
   const l = recentListing ?? FALLBACK_MARKET
   const cats = [
-    { icon: '📚', label: 'Textbooks' },
-    { icon: '💻', label: 'Electronics' },
-    { icon: '🛋️', label: 'Furniture' },
-    { icon: '👕', label: 'Clothing' },
-    { icon: '⚽', label: 'Sports' },
-    { icon: '📦', label: 'Misc' },
+    { label: 'Textbooks' },
+    { label: 'Electronics' },
+    { label: 'Furniture' },
+    { label: 'Clothing' },
+    { label: 'Sports' },
+    { label: 'Misc' },
   ]
   return (
     <div className="w-full max-w-xs mx-auto">
       <div className="grid grid-cols-3 gap-3 mb-3">
         {cats.map((c) => (
           <div key={c.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center py-4 gap-1.5">
-            <span className="text-3xl">{c.icon}</span>
             <p className="text-[11px] font-semibold text-gray-500">{c.label}</p>
           </div>
         ))}
       </div>
       {/* Most recent real listing */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
-        <span className="text-2xl shrink-0">{guessEmoji(l.title)}</span>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm text-gray-900 truncate">{l.title}</p>
           <p className="text-xs text-gray-400">{timeAgo(l.created_at)}</p>
@@ -138,7 +127,6 @@ function LookingForList({ listings }) {
     <div className="space-y-2.5 w-full max-w-xs mx-auto">
       {items.slice(0, 4).map((item, i) => (
         <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
-          <span className="text-xl shrink-0">{guessEmoji(item.title)}</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
             <p className="text-xs text-gray-400">{item.profiles?.name ?? 'Student'}</p>
@@ -303,7 +291,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
         headline="Find roommates, subleases, and your next place."
         accentWord="subleases,"
         body={`Real listings posted by students and landlords at ${school?.shortName ?? 'your school'}. Filter by distance, price, and availability — then connect directly.`}
-        ctaLabel="🏠 Browse Housing →"
+        ctaLabel="Browse Housing →"
         onCta={() => onFilter('housing')}
         visual={<HousingCard listing={previews.housing} />}
         bg="white"
@@ -316,7 +304,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
         headline="Buy and sell everything student life."
         accentWord="everything"
         body="Textbooks, furniture, electronics, clothing, and more — all from students nearby. Local pickup, no fees, no hassle."
-        ctaLabel="🛍️ Browse Marketplace →"
+        ctaLabel="Browse Marketplace →"
         onCta={() => onFilter('marketplace')}
         visual={<MarketplaceCard recentListing={previews.marketplace} />}
         bg="gray"
@@ -329,7 +317,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth }) {
         headline="Post what you need. Let campus come to you."
         accentWord="campus"
         body="Tell your campus community what you're searching for — housing, textbooks, furniture, and more. Sellers will find you."
-        ctaLabel="🔍 See Requests →"
+        ctaLabel="See Requests →"
         onCta={() => onFilter('looking_for')}
         visual={<LookingForList listings={previews.looking} />}
         bg="white"

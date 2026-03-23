@@ -31,7 +31,7 @@ export default function ReportModal({ listingId, onClose }) {
     <Modal onClose={onClose}>
       {done ? (
         <div className="text-center py-4">
-          <p className="text-5xl mb-3">✅</p>
+          <p className="text-5xl mb-3"></p>
           <p className="text-lg font-bold text-gray-900">Report Submitted</p>
           <p className="text-sm text-gray-400 mt-1">We'll review this listing shortly. Thank you.</p>
           <button onClick={onClose} className="mt-6 text-school-primary font-semibold">Close</button>

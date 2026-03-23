@@ -48,7 +48,7 @@ function BoostRow({ boost, onActivate, onReject, activating }) {
         {/* Thumbnail */}
         {listing?.images?.[0]
           ? <img src={listing.images[0]} className="w-12 h-12 rounded-lg object-cover shrink-0" alt="" />
-          : <div className="w-12 h-12 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xl">📦</div>
+          : <div className="w-12 h-12 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xl"></div>
         }
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900 text-sm truncate">{listing?.title ?? '(deleted)'}</p>
@@ -83,14 +83,14 @@ function BoostRow({ boost, onActivate, onReject, activating }) {
                 onClick={() => onActivate(boost)}
                 className="flex-1 bg-green-500 text-white text-sm font-bold py-2 rounded-lg hover:bg-green-600 disabled:opacity-40 transition-colors"
               >
-                {activating ? 'Activating…' : '✓ Activate Boost'}
+                {activating ? 'Activating…' : 'Activate Boost'}
               </button>
               <button
                 disabled={activating}
                 onClick={() => onReject(boost)}
                 className="flex-1 border border-red-200 text-red-500 text-sm font-bold py-2 rounded-lg hover:bg-red-50 disabled:opacity-40 transition-colors"
               >
-                ✕ Reject
+                Reject
               </button>
             </div>
           )}
@@ -108,7 +108,7 @@ function ReportRow({ report }) {
     <div className="border border-gray-100 rounded-xl p-3 flex items-start gap-3">
       {listing?.images?.[0]
         ? <img src={listing.images[0]} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
-        : <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-300 text-base">📦</div>
+        : <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-300 text-base"></div>
       }
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm text-gray-900 truncate">{listing?.title ?? '(deleted)'}</p>
@@ -139,7 +139,7 @@ export default function AdminDashboard({ onBack }) {
   if (!profile?.is_admin) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-400">
-        <p className="text-5xl mb-3">🔒</p>
+        <p className="text-5xl mb-3"></p>
         <p className="font-semibold">Admin access only</p>
         <button onClick={onBack} className="mt-4 text-school-primary font-semibold">Go back</button>
       </div>
@@ -289,7 +289,7 @@ export default function AdminDashboard({ onBack }) {
 
           {filteredBoosts.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-4xl mb-3">⚡</p>
+              <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No {boostFilter === 'all' ? '' : boostFilter} boost requests</p>
             </div>
           ) : (
@@ -313,7 +313,7 @@ export default function AdminDashboard({ onBack }) {
         <>
           {reports.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-4xl mb-3">🚩</p>
+              <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No reports yet</p>
             </div>
           ) : (
@@ -328,14 +328,14 @@ export default function AdminDashboard({ onBack }) {
       {!loading && tab === 'stats' && stats && (
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Total Listings',  value: stats.listings,                  icon: '📦' },
-            { label: 'Total Users',     value: stats.users,                     icon: '👤' },
-            { label: 'Live Schools',    value: stats.schools,                   icon: '🏫' },
-            { label: 'Boost Revenue',   value: `$${stats.revenue.toFixed(2)}`,  icon: '💰' },
-            { label: 'Total Boosts',    value: boosts.length,                   icon: '⚡' },
-            { label: 'Active Boosts',   value: boosts.filter((b) => b.status === 'active').length,  icon: '🔥' },
-            { label: 'Total Reports',   value: reports.length,                  icon: '🚩' },
-            { label: 'Pending Boosts',  value: pendingCount,                    icon: '⏳' },
+            { label: 'Total Listings',  value: stats.listings,                  icon: '' },
+            { label: 'Total Users',     value: stats.users,                     icon: '' },
+            { label: 'Live Schools',    value: stats.schools,                   icon: '' },
+            { label: 'Boost Revenue',   value: `$${stats.revenue.toFixed(2)}`,  icon: '' },
+            { label: 'Total Boosts',    value: boosts.length,                   icon: '' },
+            { label: 'Active Boosts',   value: boosts.filter((b) => b.status === 'active').length,  icon: '' },
+            { label: 'Total Reports',   value: reports.length,                  icon: '' },
+            { label: 'Pending Boosts',  value: pendingCount,                    icon: '' },
           ].map(({ label, value, icon }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
               <p className="text-2xl mb-1">{icon}</p>
