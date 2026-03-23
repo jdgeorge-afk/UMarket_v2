@@ -17,8 +17,8 @@ export default function SchoolPicker() {
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <div className="text-center mb-8">
-        <h1 className="text-5xl font-extrabold text-white tracking-tight">UMarket</h1>
-        <p className="text-gray-400 mt-2 text-lg">The college student marketplace</p>
+        <h1 className="text-5xl font-extrabold text-white tracking-tight">UMarket — The College Student Marketplace</h1>
+        <p className="text-gray-400 mt-2 text-lg">Buy, sell, find housing, and sublease near your campus.</p>
         <p className="text-gray-600 text-xs mt-2">UMarket is not affiliated with or endorsed by any university.</p>
       </div>
 
