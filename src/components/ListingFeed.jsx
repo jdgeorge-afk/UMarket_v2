@@ -112,13 +112,12 @@ function LookingForPage({ onOpenListing, onRequireAuth, onPostOpen }) {
       <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900">See What People Are Looking For</h2>
-        <button
-          onClick={() => onRequireAuth(() => onPostOpen?.())}
-          className="bg-school-primary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90"
-        >
-          + Post a Need
-        </button>
+        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          See What People Are Looking For
+          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+        </h2>
       </div>
 
       {loading && (
