@@ -1,4 +1,43 @@
 import { useState, useEffect, useRef } from 'react'
+
+// ── Legal & Disclaimers modal ─────────────────────────────────────────────────
+function LegalModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-gray-900 text-lg">Legal & Disclaimers</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+        <div className="overflow-y-auto px-5 py-4 space-y-5 text-sm text-gray-600 leading-relaxed">
+          <section>
+            <h3 className="font-bold text-gray-900 mb-1">No University Affiliation</h3>
+            <p>UMarket is an independent platform and is not affiliated with, endorsed by, sponsored by, or officially connected to any university, college, or educational institution referenced on this site. All university names, colors, and identifiers are used solely to help students identify their campus community. UMarket makes no claim of association with any academic institution, and use of any university name does not imply any relationship or endorsement.</p>
+          </section>
+          <section>
+            <h3 className="font-bold text-gray-900 mb-1">Independent Platform</h3>
+            <p>UMarket is a student-to-student marketplace operated independently. All transactions are between individual users. UMarket is not a party to any transaction and does not guarantee the accuracy of listings, the conduct of users, or the outcome of any transaction.</p>
+          </section>
+          <section>
+            <h3 className="font-bold text-gray-900 mb-1">No Safety Guarantee</h3>
+            <p>UMarket does not vet, verify, or background-check users. Always meet in safe, public places and use your best judgment. UMarket is not responsible for any harm, loss, or dispute arising from use of this platform.</p>
+          </section>
+          <section>
+            <h3 className="font-bold text-gray-900 mb-1">Use at Your Own Risk</h3>
+            <p>This platform is provided as-is. UMarket disclaims all warranties, express or implied. Use of this platform is at your own risk.</p>
+          </section>
+          <section>
+            <h3 className="font-bold text-gray-900 mb-1">Contact</h3>
+            <p>Questions or concerns? Email us at <a href="mailto:umarket.jr@gmail.com" className="text-school-primary font-semibold">umarket.jr@gmail.com</a>.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
@@ -101,6 +140,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [editingListing, setEditingListing] = useState(null)
   const [boostingListing, setBoostingListing] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [legalOpen, setLegalOpen] = useState(false)
   const avatarInputRef = useRef(null)
 
   const isOwn = user?.id === userId
@@ -575,6 +615,42 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
         </>
       )}
 
+      {/* ── Settings rows (own profile only) ──────────────────────────────── */}
+      {isOwn && (
+        <div className="mt-8 mb-4">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2">Account</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+            {[
+              { icon: '✅', label: 'Verification', sub: profile.verified ? 'Verified .edu email' : 'Not verified', action: null },
+              { icon: '🛡️', label: 'Safety', sub: 'Tips for safe transactions', action: null },
+              { icon: '❓', label: 'Help', sub: 'umarket.jr@gmail.com', action: null },
+              { icon: '📄', label: 'Legal & Disclaimers', sub: 'Affiliations, liability & terms', action: () => setLegalOpen(true) },
+            ].map(({ icon, label, sub, action }) => (
+              <button
+                key={label}
+                onClick={action ?? undefined}
+                disabled={!action}
+                className={[
+                  'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors first:rounded-t-2xl last:rounded-b-2xl',
+                  action ? 'hover:bg-gray-50 active:bg-gray-100' : 'cursor-default',
+                ].join(' ')}
+              >
+                <span className="text-xl w-6 text-center shrink-0">{icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">{label}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+                </div>
+                {action && (
+                  <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Edit listing modal */}
       {editingListing && (
         <EditListingModal
@@ -591,6 +667,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
           onClose={() => setBoostingListing(null)}
         />
       )}
+
+      {/* Legal modal */}
+      {legalOpen && <LegalModal onClose={() => setLegalOpen(false)} />}
     </div>
   )
 }
