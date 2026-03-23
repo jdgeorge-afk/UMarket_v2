@@ -15,34 +15,27 @@ function timeAgo(dateStr) {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-function guessEmoji(title = '') {
-  return ''
-}
-
-// Static fallbacks shown before data loads (or if db is empty)
+// Static fallback shown before data loads (or if db is empty)
 const FALLBACK_HOUSING = {
   title: '2BR Near Campus — May',
   price: 850, beds: 2, avail: 'May', category: 'sublease',
   profiles: { name: 'Jordan S.' },
   created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
 }
-const FALLBACK_LOOKING = [
-  { title: 'Organic Chem textbook (any edition)', budget: 40, profiles: { name: 'Maya K.' }, created_at: new Date().toISOString() },
-  { title: 'Desk + chair for studio apt',         budget: 80, profiles: { name: 'Tyler B.' }, created_at: new Date().toISOString() },
-  { title: 'Single room sublease May–Aug',         budget: 700, profiles: { name: 'Priya R.' }, created_at: new Date().toISOString() },
-  { title: 'Used acoustic guitar',                 budget: 120, profiles: { name: 'Sam W.' }, created_at: new Date().toISOString() },
-]
 
 const MARKETPLACE_CATS = ['textbooks', 'furniture', 'electronics', 'clothing', 'sports', 'misc']
 
 // ── Housing listing card ───────────────────────────────────────────────────────
-function HousingCard({ listing }) {
+function HousingCard({ listing, onOpen }) {
   const l = listing ?? FALLBACK_HOUSING
   const sellerInitial = (l.profiles?.name ?? 'U')[0].toUpperCase()
   const categoryLabel = l.category === 'sublease' ? 'Sublease' : 'Housing'
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden w-full max-w-xs mx-auto">
+    <div
+      onClick={() => listing && onOpen?.(listing)}
+      className={`bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden w-full max-w-xs mx-auto ${listing && onOpen ? 'cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-150' : ''}`}
+    >
       <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
         {l.images?.[0]
           ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
@@ -101,23 +94,19 @@ function MarketplaceGrid({ listings, onOpen, onRequireAuth }) {
   )
 }
 
-// ── Looking For request list ───────────────────────────────────────────────────
-function LookingForList({ listings }) {
-  const items = listings?.length ? listings : FALLBACK_LOOKING
+// ── Looking For listing grid ──────────────────────────────────────────────────
+function LookingForGrid({ listings, onOpen, onRequireAuth }) {
+  const items = listings?.length ? listings : []
+  if (!items.length) return null
   return (
-    <div className="space-y-2.5 w-full max-w-xs mx-auto">
-      {items.slice(0, 4).map((item, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
-            <p className="text-xs text-gray-400">{item.profiles?.name ?? 'Student'}</p>
-          </div>
-          {item.budget && (
-            <span className="shrink-0 bg-school-primary/10 text-school-primary text-xs font-bold px-2.5 py-0.5 rounded-full">
-              ${Number(item.budget).toLocaleString()}
-            </span>
-          )}
-        </div>
+    <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">
+      {items.slice(0, 4).map((l) => (
+        <ListingCard
+          key={l.id}
+          listing={l}
+          onOpen={onOpen}
+          onRequireAuth={onRequireAuth}
+        />
       ))}
     </div>
   )
@@ -190,7 +179,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
           .limit(4),
         supabase
           .from('listings')
-          .select('id, title, budget, created_at, profiles!seller_id(name)')
+          .select('id, title, price, budget, category, condition, images, is_looking, is_housing, beds, avail, boosted, sold, created_at, profiles!seller_id(verified)')
           .eq('school_id', school.id).eq('sold', false)
           .eq('category', 'looking_for')
           .order('created_at', { ascending: false })
@@ -274,7 +263,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
         body={`Real listings posted by students and landlords at ${school?.shortName ?? 'your school'}. Filter by distance, price, and availability — then connect directly.`}
         ctaLabel="Browse Housing →"
         onCta={() => onFilter('housing')}
-        visual={<HousingCard listing={previews.housing} />}
+        visual={<HousingCard listing={previews.housing} onOpen={onOpenListing} />}
         bg="white"
       />
 
@@ -300,7 +289,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
         body="Tell your campus community what you're searching for — housing, textbooks, furniture, and more. Sellers will find you."
         ctaLabel="See Requests →"
         onCta={() => onFilter('looking_for')}
-        visual={<LookingForList listings={previews.looking} />}
+        visual={<LookingForGrid listings={previews.looking} onOpen={onOpenListing ?? (() => {})} onRequireAuth={onRequireAuth} />}
         bg="white"
       />
 
