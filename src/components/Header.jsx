@@ -21,12 +21,12 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
 
   return (
     <header className="sticky top-0 z-40 shadow-md" style={{ background: school?.gradient ?? 'var(--school-gradient)' }}>
-      <div className="w-full px-3 sm:px-4 h-14 flex items-center gap-2 sm:gap-3">
+      <div className="w-full px-3 sm:px-6 h-16 sm:h-20 flex items-center gap-2 sm:gap-4">
 
         {/* Logo */}
         <button
           onClick={onGoHome}
-          className="flex items-center gap-2 shrink-0 text-white font-extrabold text-2xl sm:text-3xl leading-none tracking-tight"
+          className="flex items-center gap-2 shrink-0 text-white font-extrabold text-3xl sm:text-4xl leading-none tracking-tight"
         >
           UMarket
           <span className="text-[10px] font-semibold bg-white/25 text-white px-1.5 py-0.5 rounded-full tracking-wide self-center">
@@ -109,7 +109,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             placeholder={`Search listings, housing, textbooks...`}
-            className="w-full h-9 pl-9 pr-3 rounded-lg bg-white/20 text-white placeholder:text-white/60 text-sm outline-none focus:bg-white/30 transition-colors"
+            className="w-full h-10 pl-9 pr-3 rounded-full bg-white/20 text-white placeholder:text-white/60 text-sm outline-none focus:bg-white/30 transition-colors"
           />
           {searchQuery && (
             <button
@@ -152,7 +152,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
               {/* Post button */}
               <button
                 onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors shadow-sm"
+                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-5 py-2 rounded-full hover:bg-white/90 transition-colors shadow-sm"
               >
                 + Post
               </button>
@@ -206,19 +206,19 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
             <>
               <button
                 onClick={() => onAuthOpen('signin')}
-                className="text-white font-medium text-sm px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+                className="text-white font-semibold text-sm px-5 py-2 rounded-full border-2 border-white hover:bg-white/10 transition-colors"
               >
                 Log In
               </button>
               <button
                 onClick={() => onAuthOpen('signup')}
-                className="text-white font-medium text-sm px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+                className="text-school-primary font-semibold text-sm px-5 py-2 rounded-full bg-white hover:bg-white/90 transition-colors shadow-sm"
               >
                 Sign Up
               </button>
               <button
                 onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors shadow-sm"
+                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-5 py-2 rounded-full hover:bg-white/90 transition-colors shadow-sm"
               >
                 + Post
               </button>
@@ -229,7 +229,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
         {/* Mobile post button */}
         <button
           onClick={onPostOpen}
-          className="sm:hidden bg-white text-school-primary font-bold text-sm px-2.5 py-1.5 rounded-lg shrink-0 ml-auto"
+          className="sm:hidden bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-full shrink-0 ml-auto shadow-sm"
         >
           + Post
         </button>
