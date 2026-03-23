@@ -236,12 +236,18 @@ export default function ListingFeed({
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [conditions, setConditions] = useState([])
+  const [clothingSizes, setClothingSizes] = useState([])
+  const [genders, setGenders] = useState([])
 
   const toggleCondition = (c) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
+  const toggleClothingSize = (s) =>
+    setClothingSizes((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
+  const toggleGender = (g) =>
+    setGenders((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])
 
-  const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]) }
-  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0
+  const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([]) }
+  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0
 
   // "For You" / Looking For tab gets its own full-page component
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
@@ -267,6 +273,8 @@ export default function ListingFeed({
     minPrice: minPrice !== '' ? Number(minPrice) : null,
     maxPrice: maxPrice !== '' ? Number(maxPrice) : null,
     conditions: conditions.length > 0 ? conditions : null,
+    clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
+    genders: genders.length > 0 ? genders : null,
   })
 
   const items = injectAds(listings)
@@ -306,6 +314,10 @@ export default function ListingFeed({
         onMinPrice={setMinPrice}
         onMaxPrice={setMaxPrice}
         onToggleCondition={toggleCondition}
+        clothingSizes={clothingSizes}
+        genders={genders}
+        onToggleClothingSize={toggleClothingSize}
+        onToggleGender={toggleGender}
         onClearExtraFilters={clearExtraFilters}
         hasExtraFilters={hasExtraFilters}
       />

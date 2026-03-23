@@ -21,8 +21,11 @@ export default function PostListingModal({ onClose }) {
   const [location, setLocation]     = useState('')
   // Housing-specific
   const [beds, setBeds]             = useState('')
-  const [size, setSize]             = useState('')
+  const [baths, setBaths]           = useState('')
   const [avail, setAvail]           = useState('')
+  // Clothing-specific
+  const [clothingSize, setClothingSize] = useState('')
+  const [gender, setGender]         = useState('')
   // Looking-for
   const [budget, setBudget]         = useState('')
   // Contact
@@ -35,9 +38,10 @@ export default function PostListingModal({ onClose }) {
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
 
-  const isHousing       = category === 'housing' || category === 'sublease'
-  const isLooking       = category === 'looking_for'
+  const isHousing        = category === 'housing' || category === 'sublease'
+  const isLooking        = category === 'looking_for'
   const isLookingHousing = category === 'looking_housing'
+  const isClothing       = category === 'clothing'
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
@@ -106,7 +110,8 @@ export default function PostListingModal({ onClose }) {
         condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
         beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
-        size:        isHousing ? size.trim() : null,
+        size:        isHousing ? baths.trim() : isClothing ? clothingSize : null,
+        gender:      isClothing ? gender : null,
         avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
         contact_type: contactType,
         contact_value: contactValue.trim(),
@@ -230,8 +235,8 @@ export default function PostListingModal({ onClose }) {
             />
             {isHousing && (
               <input
-                value={size} onChange={(e) => setSize(e.target.value)}
-                placeholder="Size (e.g. 1BR/1BA)"
+                type="number" value={baths} onChange={(e) => setBaths(e.target.value)}
+                placeholder="# Bathrooms" min={0}
                 className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
               />
             )}
@@ -240,6 +245,28 @@ export default function PostListingModal({ onClose }) {
               placeholder={isLookingHousing ? 'Move-in Date' : 'Available (Aug 2025)'}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
             />
+          </div>
+        )}
+
+        {/* ── Clothing fields ───────────────────────────────────────────────── */}
+        {isClothing && (
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <select
+              value={clothingSize} onChange={(e) => setClothingSize(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary"
+            >
+              <option value="">Size (optional)</option>
+              {['XS','S','M','L','XL','XXL','XXXL'].map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <select
+              value={gender} onChange={(e) => setGender(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary"
+            >
+              <option value="">Gender (optional)</option>
+              <option>Men&apos;s</option>
+              <option>Women&apos;s</option>
+              <option>Unisex</option>
+            </select>
           </div>
         )}
 
