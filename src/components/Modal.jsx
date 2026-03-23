@@ -34,7 +34,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
     >
       {/* Backdrop — tapping closes on desktop; hidden behind full-screen sheet on mobile */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
 
