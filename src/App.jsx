@@ -140,6 +140,7 @@ function AppInner() {
               onFilter={setActiveFilter}
               onPostOpen={openPost}
               onRequireAuth={requireAuth}
+              onOpenListing={openListing}
             />
           )}
 
