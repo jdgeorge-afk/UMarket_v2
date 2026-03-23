@@ -84,11 +84,11 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
               <div className="border-t border-gray-100 pt-1 shrink-0">
                 <button
                   onClick={() => { clearSchool(); setSchoolDropOpen(false) }}
-                  className="w-full px-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 text-left"
+                  className="w-full px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 text-left font-medium"
                 >
                   Switch school
                 </button>
-                <p className="px-3 pb-2 text-[10px] text-gray-300 leading-snug">
+                <p className="px-3 pb-2 text-[10px] text-gray-400 leading-snug">
                   UMarket is not affiliated with or endorsed by any university.
                 </p>
               </div>
