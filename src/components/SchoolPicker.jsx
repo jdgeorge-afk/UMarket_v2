@@ -90,6 +90,9 @@ export default function SchoolPicker() {
       <p className="text-gray-600 text-xs mt-10">
         More schools coming soon — request yours at umarket.co
       </p>
+      <p className="text-gray-700 text-xs mt-3">
+        UMarket is not affiliated with or endorsed by any university.
+      </p>
     </div>
   )
 }
