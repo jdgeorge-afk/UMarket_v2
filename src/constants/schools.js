@@ -67,7 +67,7 @@ export const SCHOOLS = [
     primary: '#00539F',
     light: '#0070d6',
     dark: '#003366',
-    gradient: 'linear-gradient(135deg, #00539F, #A8996E)',
+    gradient: 'linear-gradient(135deg, #00539F, #8B0000)',
     live: true,
   },
   {
