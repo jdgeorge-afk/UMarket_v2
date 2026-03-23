@@ -121,7 +121,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-xl px-4 py-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
-              <p className="text-sm font-medium text-gray-900">support@umarketplace.co</p>
+              <p className="text-sm font-medium text-gray-900">umarket.jr@gmail.com</p>
             </div>
             <div className="bg-gray-50 rounded-xl px-4 py-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Response Time</p>
