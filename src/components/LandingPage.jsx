@@ -223,7 +223,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
           <p className="text-sm font-bold tracking-widest uppercase text-school-primary mb-6">
             University Marketplace
           </p>
-          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
             Your campus.<br />
             <span className="text-school-primary">Your marketplace.</span>
           </h1>
