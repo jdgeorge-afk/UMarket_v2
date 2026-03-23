@@ -1,15 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor']
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+const GENDERS = ["Men's", "Women's", 'Unisex']
 
 export default function FilterBar({
   sortBy, onSort,
   activeFilter, onClearFilter,
   totalCount, label,
   minPrice, maxPrice, conditions,
-  onMinPrice, onMaxPrice, onToggleCondition, onClearExtraFilters,
-  hasExtraFilters,
+  onMinPrice, onMaxPrice, onToggleCondition,
+  clothingSizes, genders, onToggleClothingSize, onToggleGender,
+  onClearExtraFilters, hasExtraFilters,
 }) {
+  const isClothing = activeFilter === 'marketplace:clothing'
   const hasFilter = (activeFilter && activeFilter !== 'all') || hasExtraFilters
   const [open, setOpen] = useState(false)
   const panelRef = useRef(null)
@@ -109,6 +113,58 @@ export default function FilterBar({
                 })}
               </div>
             </div>
+
+            {/* Clothing size */}
+            {isClothing && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Size</p>
+                <div className="flex flex-wrap gap-2">
+                  {CLOTHING_SIZES.map((s) => {
+                    const active = clothingSizes.includes(s)
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => onToggleClothingSize(s)}
+                        className={[
+                          'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                          active
+                            ? 'bg-school-primary text-white border-school-primary'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                        ].join(' ')}
+                      >
+                        {s}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Gender */}
+            {isClothing && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Gender</p>
+                <div className="flex flex-wrap gap-2">
+                  {GENDERS.map((g) => {
+                    const active = genders.includes(g)
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => onToggleGender(g)}
+                        className={[
+                          'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                          active
+                            ? 'bg-school-primary text-white border-school-primary'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                        ].join(' ')}
+                      >
+                        {g}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-1 border-t border-gray-100">

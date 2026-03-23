@@ -198,6 +198,9 @@ create trigger on_auth_user_created
 -- alter table listings add column if not exists contact_type text;
 -- alter table listings add column if not exists contact_value text;
 
+-- Add clothing-specific fields
+-- alter table listings add column if not exists gender text;
+
 -- contact_requests: tracks when a buyer clicks "Contact Seller"
 create table if not exists contact_requests (
   id         uuid primary key default gen_random_uuid(),

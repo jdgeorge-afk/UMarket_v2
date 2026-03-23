@@ -69,7 +69,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
         <div
           className={[
             'p-6 pb-4',
-            'overflow-y-auto flex-1',
+            'overflow-y-auto flex-1 min-h-0',
             fullHeight ? 'sm:overflow-y-auto' : '',
           ].join(' ')}
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
