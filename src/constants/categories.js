@@ -1,9 +1,9 @@
 export const CATEGORIES = [
   { id: 'all',         label: 'All',          icon: '' },
-  { id: 'housing',     label: 'Housing',      icon: '' },
-  { id: 'sublease',    label: 'Sublease',     icon: '' },
-  { id: 'looking_for',    label: 'Looking For',         icon: '' },
-  { id: 'looking_housing', label: 'Looking for Housing', icon: '' },
+  { id: 'housing',     label: 'Housing Available',   icon: '' },
+  { id: 'sublease',    label: 'Sublease Available',  icon: '' },
+  { id: 'looking_for',    label: 'Looking For',              icon: '' },
+  { id: 'looking_housing', label: 'Need Housing / Roommate', icon: '' },
   { id: 'textbooks',   label: 'Textbooks',    icon: '' },
   { id: 'furniture',   label: 'Furniture',    icon: '' },
   { id: 'electronics', label: 'Electronics',  icon: '' },

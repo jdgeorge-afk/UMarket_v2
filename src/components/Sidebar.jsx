@@ -42,9 +42,9 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
 
       {/* ── Housing section ───────────────────────────────────────────────── */}
       <SectionLabel>Housing</SectionLabel>
-      <NavItem icon="" label="Housing"         value="housing"      activeFilter={activeFilter} onFilter={onFilter} />
-      <NavItem icon="" label="Sublease"        value="housing:sublease"      activeFilter={activeFilter} onFilter={onFilter} indent />
-      <NavItem icon="" label="Looking For Housing" value="housing:looking_for" activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="All Housing"            value="housing"            activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Available Subleases"   value="housing:sublease"    activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Need Housing / Roommate" value="housing:looking_for" activeFilter={activeFilter} onFilter={onFilter} indent />
 
       {/* ── Looking For ───────────────────────────────────────────────────── */}
       <SectionLabel>Looking For</SectionLabel>
