@@ -12,9 +12,12 @@ const SECTIONS = [
     label: 'Housing',
     icon: '',
     subs: [
-      { value: 'housing',             label: 'All Housing',            icon: '' },
-      { value: 'housing:sublease',    label: 'Available Subleases',   icon: '' },
-      { value: 'housing:looking_for', label: 'Need Housing / Roommate', icon: '' },
+      { value: 'housing',                      label: 'All Housing',             icon: '' },
+      { value: 'housing:landlord',             label: 'Housing by Landlord',     icon: '' },
+      { value: 'housing:sublease',             label: 'Subleases by Tenant',     icon: '' },
+      { value: 'housing:roommates',            label: 'Looking for Roommates',   icon: '' },
+      { value: 'housing:looking_sublease',     label: 'Looking for Sublease',    icon: '' },
+      { value: 'housing:looking_for',          label: 'Looking for Housing',     icon: '' },
     ],
   },
   {

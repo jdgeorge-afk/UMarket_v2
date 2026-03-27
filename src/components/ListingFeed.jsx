@@ -21,10 +21,14 @@ const AD_INTERVAL = 8
 function resolveListingFilter(activeFilter) {
   if (!activeFilter || activeFilter === 'all') return {}
 
-  // Housing section: top-level shows housing + sublease; sub-tabs drill down
-  if (activeFilter === 'housing')            return { categoryIn: ['housing', 'sublease'] }
-  if (activeFilter === 'housing:sublease')   return { category: 'sublease' }
-  if (activeFilter === 'housing:looking_for') return { category: 'looking_housing' }
+  // Housing section: top-level shows all housing types; sub-tabs drill down
+  if (activeFilter === 'housing')
+    return { categoryIn: ['housing', 'sublease', 'looking_housing', 'looking_roommate', 'looking_sublease'] }
+  if (activeFilter === 'housing:landlord')         return { category: 'housing' }
+  if (activeFilter === 'housing:sublease')         return { category: 'sublease' }
+  if (activeFilter === 'housing:roommates')        return { category: 'looking_roommate' }
+  if (activeFilter === 'housing:looking_sublease') return { category: 'looking_sublease' }
+  if (activeFilter === 'housing:looking_for')      return { category: 'looking_housing' }
 
   // Looking For section: exact category match
   if (activeFilter === 'looking_for')        return { category: 'looking_for' }
@@ -42,9 +46,12 @@ function resolveListingFilter(activeFilter) {
 function filterToLabel(activeFilter) {
   const map = {
     all:                       'All Listings',
-    housing:                   'Housing & Subleases',
-    'housing:sublease':        'Subleases',
-    'housing:looking_for':     'Looking for Housing',
+    housing:                          'All Housing',
+    'housing:landlord':               'Housing by Landlord',
+    'housing:sublease':               'Subleases by Tenant',
+    'housing:roommates':              'Looking for Roommates',
+    'housing:looking_sublease':       'Looking for Sublease',
+    'housing:looking_for':            'Looking for Housing',
     looking_for:               'Looking For',
     marketplace:               'Marketplace',
     'marketplace:misc':        'Misc',
