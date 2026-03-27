@@ -74,7 +74,7 @@ function EventsBanner() {
           Tickets. Passes. A good time.
         </p>
         <p className="text-white/80 text-sm mt-0.5">
-          Buy and sell event tickets, passes, and experiences from students at your school.
+          Buy and sell tickets, passes, experiences, and promote events from students at your school.
         </p>
       </div>
       <div className="shrink-0 text-3xl select-none" aria-hidden="true">
