@@ -9,6 +9,7 @@ export const CATEGORIES = [
   { id: 'electronics', label: 'Electronics',  icon: '' },
   { id: 'clothing',    label: 'Clothing',     icon: '' },
   { id: 'sports',      label: 'Sports',       icon: '' },
+  { id: 'events',      label: 'Events',       icon: '' },
   { id: 'misc',        label: 'Misc',         icon: '' },
 ]
 

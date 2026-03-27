@@ -34,6 +34,7 @@ const SECTIONS = [
       { value: 'marketplace:electronics',  label: 'Electronics', icon: '' },
       { value: 'marketplace:clothing',     label: 'Clothing',    icon: '' },
       { value: 'marketplace:sports',       label: 'Sports',      icon: '' },
+      { value: 'marketplace:events',       label: 'Events',      icon: '' },
       { value: 'marketplace:misc',         label: 'Misc',        icon: '' },
     ],
   },
