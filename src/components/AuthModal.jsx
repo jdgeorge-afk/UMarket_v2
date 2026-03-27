@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import Modal from './Modal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, sanitizeEmail, signInSchema, signUpSchema } from '../lib/validation'
 
 const TERMS_SECTIONS = [
   {
@@ -73,13 +75,30 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     setError('')
 
     if (mode === 'signup') {
-      if (name.trim().length < 2) { setError('Please enter your name.'); return }
+      // Validate sign-up fields (name, email format, password ≥ 8 chars)
+      const { valid, firstError } = validate(
+        { name: name.trim(), email: sanitizeEmail(email), password },
+        signUpSchema,
+      )
+      if (!valid) { setError(firstError); return }
+
       // Show Terms of Use before creating the account
       setTermsFromSignup(true)
       setStep('terms')
     } else {
+      // Rate limit sign-in attempts (5 per 15 minutes per device)
+      const rl = checkRateLimit('sign_in')
+      if (!rl.allowed) { setError(rateLimitMessage('sign_in', rl.retryAfterMs)); return }
+
+      // Validate email format and non-empty password before hitting the network
+      const { valid, firstError } = validate(
+        { email: sanitizeEmail(email), password },
+        signInSchema,
+      )
+      if (!valid) { setError(firstError); return }
+
       setLoading(true)
-      const { error: err } = await signIn({ email, password })
+      const { error: err } = await signIn({ email: sanitizeEmail(email), password })
       if (err) setError(err.message.includes('Invalid') ? 'Incorrect email or password.' : err.message)
       else onClose()
       setLoading(false)
@@ -87,9 +106,13 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   }
 
   const handleAcceptTerms = async () => {
+    // Rate limit sign-up attempts (3 per hour per device)
+    const rl = checkRateLimit('sign_up')
+    if (!rl.allowed) { setError(rateLimitMessage('sign_up', rl.retryAfterMs)); return }
+
     setLoading(true)
     setError('')
-    const { error: err } = await signUp({ email, password, name: name.trim(), schoolId: school?.id })
+    const { error: err } = await signUp({ email: sanitizeEmail(email), password, name: name.trim(), schoolId: school?.id })
     if (err) {
       setError(err.message)
       setStep('form')
@@ -102,8 +125,13 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const handleReset = async (e) => {
     e.preventDefault()
     setError('')
+
+    // Rate limit password reset requests (3 per hour per device)
+    const rl = checkRateLimit('password_reset')
+    if (!rl.allowed) { setError(rateLimitMessage('password_reset', rl.retryAfterMs)); return }
+
     setLoading(true)
-    const { error: err } = await resetPassword(email)
+    const { error: err } = await resetPassword(sanitizeEmail(email))
     if (err) setError(err.message)
     else setStep('reset')
     setLoading(false)

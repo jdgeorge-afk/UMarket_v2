@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Modal from './Modal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, sanitizeText, sanitizeEmail, boostSchema } from '../lib/validation'
 
 const PRICE_PER_DAY = 3
 
@@ -27,10 +29,21 @@ export default function BoostModal({ listing, onClose }) {
 
   const handleSubmit = async () => {
     if (!user) return
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError('Please enter a valid email address so we can send your invoice.')
-      return
-    }
+
+    // Rate limit: prevent duplicate/spam boost requests (5 per day per device)
+    const rl = checkRateLimit('boost_request')
+    if (!rl.allowed) { setError(rateLimitMessage('boost_request', rl.retryAfterMs)); return }
+
+    // Schema validation: email format, valid day option, note max length
+    const { valid, firstError } = validate(
+      { email: sanitizeEmail(email), selectedDays, note },
+      boostSchema,
+    )
+    if (!valid) { setError(firstError); return }
+
+    const cleanEmail = sanitizeEmail(email)
+    const cleanNote  = sanitizeText(note)
+
     setSubmitting(true)
     setError('')
     const { error: err } = await supabase.from('boosts').insert({
@@ -38,7 +51,7 @@ export default function BoostModal({ listing, onClose }) {
       seller_id:   user.id,
       days:        selectedDays,
       total_price: totalPrice,
-      note:        `[Invoice email: ${email.trim()}]${note.trim() ? ' ' + note.trim() : ''}`,
+      note:        `[Invoice email: ${cleanEmail}]${cleanNote ? ' ' + cleanNote : ''}`,
       status:      'pending',
     })
     if (err) { setError(err.message); setSubmitting(false); return }

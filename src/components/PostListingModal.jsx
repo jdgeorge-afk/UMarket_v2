@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import { CATEGORIES, CONDITIONS, GRADES } from '../constants/categories'
 import Modal from './Modal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib/validation'
 
 const MAX_IMAGES = 6
 
@@ -45,6 +47,11 @@ export default function PostListingModal({ onClose }) {
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
+    // Validate each file for MIME type and size before accepting
+    for (const file of selected) {
+      const fileErr = validateImageFile(file)
+      if (fileErr) { setError(fileErr); e.target.value = ''; return }
+    }
     const combined = [...files, ...selected].slice(0, MAX_IMAGES)
     setFiles(combined)
     setPreviews(combined.map((f) => URL.createObjectURL(f)))
@@ -77,9 +84,32 @@ export default function PostListingModal({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!category) { setError('Please select a category.'); return }
-    if (!title.trim()) { setError('Please add a title.'); return }
-    if (!contactValue.trim()) { setError('Please add contact info so buyers can reach you.'); return }
+
+    // Rate limit: prevent spam posting (10 listings per hour per device)
+    const rl = checkRateLimit('post_listing')
+    if (!rl.allowed) { setError(rateLimitMessage('post_listing', rl.retryAfterMs)); return }
+
+    // Schema-based input validation — type checks, length limits, allowed values
+    const { valid, firstError } = validate(
+      {
+        title:         sanitizeText(title),
+        category,
+        description:   sanitizeText(description),
+        location:      sanitizeText(location),
+        // Pass null for fields that don't apply to this category so the
+        // validator skips them (non-required empty fields are always valid)
+        price:         (isLooking || isLookingHousing) ? null : price,
+        budget:        (isLooking || isLookingHousing) ? budget : null,
+        beds:          (isHousing || isLookingHousing) ? beds   : null,
+        avail:         sanitizeText(avail),
+        contact_value: sanitizeText(contactValue),
+        contact_type:  contactType,
+        condition:     (isLooking || isLookingHousing || isHousing) ? null : condition,
+      },
+      listingSchema,
+    )
+    if (!valid) { setError(firstError); return }
+
     setUploading(true)
     setError('')
     try {
@@ -96,10 +126,10 @@ export default function PostListingModal({ onClose }) {
 
       const imageUrls = files.length ? await uploadImages() : []
       const { error: insertErr } = await supabase.from('listings').insert({
-        title:       title.trim(),
+        title:       sanitizeText(title),
         category,
-        description: description.trim(),
-        location:    location.trim(),
+        description: sanitizeText(description),
+        location:    sanitizeText(location),
         images:      imageUrls,
         seller_id:   user.id,
         school_id:   school.id,
@@ -114,7 +144,7 @@ export default function PostListingModal({ onClose }) {
         gender:      isClothing ? gender : null,
         avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
         contact_type: contactType,
-        contact_value: contactValue.trim(),
+        contact_value: sanitizeText(contactValue),
       })
       if (insertErr) {
         console.error('Listing insert error:', insertErr)

@@ -45,6 +45,8 @@ import { GRADES } from '../constants/categories'
 import ListingCard from './ListingCard'
 import EditListingModal from './EditListingModal'
 import BoostModal from './BoostModal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, validateImageFile, sanitizeText, profileSchema } from '../lib/validation'
 
 // ── Owner action bar shown below each of the user's own listings ─────────────
 function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
@@ -227,6 +229,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    // Validate MIME type and file size before uploading
+    const fileErr = validateImageFile(file)
+    if (fileErr) { setSaveError(fileErr); e.target.value = ''; return }
     setAvatarUploading(true)
     const ext = file.name.split('.').pop().toLowerCase()
     const path = `${user.id}/avatar.${ext}`
@@ -241,12 +246,28 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   }
 
   const saveEdit = async () => {
+    // Rate limit: prevent profile-update spam (10 per hour per device)
+    const rl = checkRateLimit('profile_update')
+    if (!rl.allowed) { setSaveError(rateLimitMessage('profile_update', rl.retryAfterMs)); return }
+
+    // Validate name length, grade/contact_type are allowed values, contact max length
+    const { valid, firstError } = validate(
+      {
+        name:         editName.trim(),
+        grade:        editGrade,
+        contact:      sanitizeText(editContact),
+        contact_type: editContactType,
+      },
+      profileSchema,
+    )
+    if (!valid) { setSaveError(firstError); return }
+
     setSaving(true)
     setSaveError('')
     const { error } = await updateProfile({
-      name:         editName.trim(),
+      name:         sanitizeText(editName),
       grade:        editGrade,
-      contact:      editContact.trim(),
+      contact:      sanitizeText(editContact),
       contact_type: editContactType,
     })
     if (error) { setSaveError(error.message); setSaving(false); return }

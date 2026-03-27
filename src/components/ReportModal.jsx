@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { REPORT_REASONS } from '../constants/categories'
 import Modal from './Modal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, sanitizeText, reportSchema } from '../lib/validation'
 
 export default function ReportModal({ listingId, onClose }) {
   const { user } = useAuth()
@@ -14,13 +16,23 @@ export default function ReportModal({ listingId, onClose }) {
 
   const handleSubmit = async () => {
     if (!reason) return
+
+    // Rate limit: prevent report spam (5 per hour per device)
+    const rl = checkRateLimit('report_listing')
+    if (!rl.allowed) { setError(rateLimitMessage('report_listing', rl.retryAfterMs)); return }
+
+    // Validate reason is a known value and note is within length limits
+    const { valid, firstError } = validate({ reason, note }, reportSchema)
+    if (!valid) { setError(firstError); return }
+
     setLoading(true)
     setError('')
+    const sanitizedNote = sanitizeText(note) || null
     const { error: err } = await supabase.from('reports').insert({
-      listing_id: listingId,
+      listing_id:  listingId,
       reporter_id: user.id,
       reason,
-      note: note.trim() || null,
+      note:        sanitizedNote,
     })
     if (err) setError(err.message)
     else setDone(true)
