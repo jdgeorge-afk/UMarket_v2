@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { CONDITIONS } from '../constants/categories'
 import Modal from './Modal'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
+import { validate, validateImageFile, sanitizeText, editListingSchema } from '../lib/validation'
 
 const MAX_IMAGES = 6
 
@@ -34,6 +36,11 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
+    // Validate each file for MIME type and size before accepting
+    for (const file of selected) {
+      const fileErr = validateImageFile(file)
+      if (fileErr) { setError(fileErr); e.target.value = ''; return }
+    }
     const combined = [...newFiles, ...selected].slice(0, MAX_IMAGES - existingImages.length)
     setNewFiles(combined)
     setNewPreviews(combined.map((f) => URL.createObjectURL(f)))
@@ -68,23 +75,42 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!title.trim()) { setError('Please add a title.'); return }
+
+    // Rate limit: prevent bulk edits (20 edits per hour per device)
+    const rl = checkRateLimit('edit_listing')
+    if (!rl.allowed) { setError(rateLimitMessage('edit_listing', rl.retryAfterMs)); return }
+
+    // Schema-based input validation
+    const { valid, firstError } = validate(
+      {
+        title:       sanitizeText(title),
+        description: sanitizeText(description),
+        location:    sanitizeText(location),
+        price:       (isLooking || isLookingHousing) ? null : price,
+        budget:      (isLooking || isLookingHousing) ? budget : null,
+        beds:        (isHousing || isLookingHousing) ? beds   : null,
+        avail:       sanitizeText(avail),
+      },
+      editListingSchema,
+    )
+    if (!valid) { setError(firstError); return }
+
     setSaving(true)
     setError('')
     try {
       const newUrls   = newFiles.length ? await uploadNewImages() : []
       const allImages = [...existingImages, ...newUrls]
       const updates = {
-        title:       title.trim(),
-        description: description.trim(),
-        location:    location.trim(),
+        title:       sanitizeText(title),
+        description: sanitizeText(description),
+        location:    sanitizeText(location),
         images:      allImages,
         price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
         condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
         beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
-        size:        isHousing ? size.trim() : null,
-        avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
+        size:        isHousing ? sanitizeText(size) : null,
+        avail:       (isHousing || isLookingHousing) ? sanitizeText(avail) : null,
       }
       const { error: updateErr } = await supabase
         .from('listings')

@@ -6,6 +6,7 @@ import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
 import { getCategoryLabel } from '../constants/categories'
+import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -36,6 +37,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [contactOpen, setContactOpen] = useState(false)
   const [contactRequested, setContactRequested] = useState(false)
+  const [contactError, setContactError] = useState('')
   const [reportOpen, setReportOpen] = useState(false)
   const [markingAsSold, setMarkingAsSold] = useState(false)
 
@@ -194,6 +196,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         <>
           <button
             onClick={() => onRequireAuth(async () => {
+              // Rate limit: prevent contact request spam (15 per hour per device)
+              const rl = checkRateLimit('contact_seller')
+              if (!rl.allowed) { setContactError(rateLimitMessage('contact_seller', rl.retryAfterMs)); return }
+              setContactError('')
+
               if (!contactRequested) {
                 setContactRequested(true)
                 await supabase.from('contact_requests').upsert(
@@ -214,6 +221,9 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
           >
             Contact Seller
           </button>
+          {contactError && (
+            <p className="text-red-500 text-sm text-center mb-2">{contactError}</p>
+          )}
           <button
             onClick={() => onRequireAuth(() => setReportOpen(true))}
             className="w-full text-gray-400 text-sm py-2 hover:text-gray-600 transition-colors"
