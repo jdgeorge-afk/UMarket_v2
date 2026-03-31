@@ -14,7 +14,7 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
   const isHousing        = listing.category === 'housing' || listing.category === 'sublease'
   const isSublease       = listing.category === 'sublease'
   const isLooking        = listing.category === 'looking_for'
-  const isLookingHousing = listing.category === 'looking_housing' || listing.category === 'looking_roommate' || listing.category === 'looking_sublease'
+  const isLookingHousing = listing.category === 'looking_housing' || listing.category === 'looking_roommate'
   const isEvents         = listing.category === 'events'
 
   const [title, setTitle]           = useState(listing.title ?? '')

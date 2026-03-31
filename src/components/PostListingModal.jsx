@@ -44,7 +44,7 @@ export default function PostListingModal({ onClose }) {
   const isHousing        = category === 'housing' || category === 'sublease'
   const isSublease       = category === 'sublease'
   const isLooking        = category === 'looking_for'
-  const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate' || category === 'looking_sublease'
+  const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate'
   const isClothing       = category === 'clothing'
   const isEvents         = category === 'events'
 
