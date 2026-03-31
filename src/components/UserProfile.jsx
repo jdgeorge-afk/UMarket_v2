@@ -277,13 +277,19 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   }
 
   const handleToggleSold = async (listing) => {
+    const nowSold = !listing.sold
     const { error } = await supabase
       .from('listings')
-      .update({ sold: !listing.sold })
+      .update({ sold: nowSold })
       .eq('id', listing.id)
       .eq('seller_id', user.id)
     if (!error) {
-      setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, sold: !listing.sold } : l))
+      setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, sold: nowSold } : l))
+      // Keep profile sold_count in sync with the listing's sold state
+      const delta    = nowSold ? 1 : -1
+      const newCount = Math.max(0, (profile?.sold_count ?? 0) + delta)
+      await supabase.from('profiles').update({ sold_count: newCount }).eq('id', user.id)
+      setProfile((p) => ({ ...p, sold_count: newCount }))
     }
   }
 
