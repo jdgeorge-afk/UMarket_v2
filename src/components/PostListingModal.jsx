@@ -25,6 +25,7 @@ export default function PostListingModal({ onClose }) {
   const [beds, setBeds]             = useState('')
   const [baths, setBaths]           = useState('')
   const [avail, setAvail]           = useState('')
+  const [spotsAvailable, setSpotsAvailable] = useState('')
   // Clothing-specific
   const [clothingSize, setClothingSize] = useState('')
   const [gender, setGender]         = useState('')
@@ -41,9 +42,11 @@ export default function PostListingModal({ onClose }) {
   const [error, setError]           = useState('')
 
   const isHousing        = category === 'housing' || category === 'sublease'
+  const isSublease       = category === 'sublease'
   const isLooking        = category === 'looking_for'
   const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate' || category === 'looking_sublease'
   const isClothing       = category === 'clothing'
+  const isEvents         = category === 'events'
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
@@ -139,10 +142,11 @@ export default function PostListingModal({ onClose }) {
         price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
         condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
-        beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
-        size:        isHousing ? baths.trim() : isClothing ? clothingSize : null,
-        gender:      isClothing ? gender : null,
-        avail:       (isHousing || isLookingHousing) ? avail.trim() : null,
+        beds:            (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
+        size:            isHousing ? baths.trim() : isClothing ? clothingSize : null,
+        gender:          isClothing ? gender : null,
+        avail:           (isHousing || isLookingHousing || isEvents) ? sanitizeText(avail) : null,
+        spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
         contact_type: contactType,
         contact_value: sanitizeText(contactValue),
       })
@@ -272,10 +276,28 @@ export default function PostListingModal({ onClose }) {
             )}
             <input
               value={avail} onChange={(e) => setAvail(e.target.value)}
-              placeholder={isLookingHousing ? 'Move-in Date' : 'Available (Aug 2025)'}
+              placeholder={isLookingHousing ? 'Move-in Date' : 'Available (e.g. Aug 2025)'}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
             />
           </div>
+        )}
+
+        {/* ── Sublease — spots available ────────────────────────────────────── */}
+        {isSublease && (
+          <input
+            type="number" value={spotsAvailable} onChange={(e) => setSpotsAvailable(e.target.value)}
+            placeholder="Spots available (# of subleasers needed)" min={1}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
+          />
+        )}
+
+        {/* ── Events — date & time ──────────────────────────────────────────── */}
+        {isEvents && (
+          <input
+            value={avail} onChange={(e) => setAvail(e.target.value)}
+            placeholder="Date & Time (e.g. Sat Mar 15, 7PM)"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
+          />
         )}
 
         {/* ── Clothing fields ───────────────────────────────────────────────── */}

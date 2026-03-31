@@ -70,7 +70,9 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const formatPrice = () => {
     if (listing.is_looking) return listing.budget ? `Budget: $${Number(listing.budget).toLocaleString()}` : 'No budget listed'
     if (!listing.price || Number(listing.price) === 0) return 'Free'
-    return `$${Number(listing.price).toLocaleString()}`
+    const base = `$${Number(listing.price).toLocaleString()}`
+    // Housing and sublease listings show monthly rent
+    return listing.is_housing ? `${base}/mo` : base
   }
 
   return (
@@ -122,6 +124,12 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
           <p className="text-3xl font-extrabold text-school-primary mt-1">{formatPrice()}</p>
+          {/* Bedroom count shown below price for housing/sublease */}
+          {listing.is_housing && listing.beds && (
+            <p className="text-sm text-gray-500 mt-0.5">
+              {listing.beds} bedroom{listing.beds !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
         <button
           onClick={() => onRequireAuth(() => toggleFavorite(listing.id))}
@@ -145,6 +153,10 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         {listing.is_housing && listing.beds && <Chip>{listing.beds} BR</Chip>}
         {listing.is_housing && listing.size && <Chip>{listing.size}</Chip>}
         {listing.is_housing && listing.avail && <Chip>Available {listing.avail}</Chip>}
+        {listing.category === 'sublease' && listing.spots_available && (
+          <Chip>{listing.spots_available} spot{listing.spots_available !== 1 ? 's' : ''} available</Chip>
+        )}
+        {listing.category === 'events' && listing.avail && <Chip>{listing.avail}</Chip>}
         {listing.boosted && <Chip accent>Featured</Chip>}
         <Chip>{timeAgo(listing.created_at)}</Chip>
       </div>

@@ -325,7 +325,8 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
       </section>
 
       {/* ── Disclaimer ──────────────────────────────────────────────────── */}
-      <div className="bg-white text-center py-4 border-t border-gray-100">
+      <div className="bg-white text-center py-4 border-t border-gray-100 space-y-1">
+        <p className="text-gray-500 text-xs font-medium">© 2026 UMarket™</p>
         <p className="text-gray-400 text-xs">
           UMarket is not affiliated with or endorsed by any university.
         </p>

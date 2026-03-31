@@ -12,8 +12,10 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
   const { user } = useAuth()
 
   const isHousing        = listing.category === 'housing' || listing.category === 'sublease'
+  const isSublease       = listing.category === 'sublease'
   const isLooking        = listing.category === 'looking_for'
   const isLookingHousing = listing.category === 'looking_housing' || listing.category === 'looking_roommate' || listing.category === 'looking_sublease'
+  const isEvents         = listing.category === 'events'
 
   const [title, setTitle]           = useState(listing.title ?? '')
   const [price, setPrice]           = useState(listing.price ?? '')
@@ -24,6 +26,7 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
   const [beds, setBeds]             = useState(listing.beds ?? '')
   const [size, setSize]             = useState(listing.size ?? '')
   const [avail, setAvail]           = useState(listing.avail ?? '')
+  const [spotsAvailable, setSpotsAvailable] = useState(listing.spots_available ?? '')
 
   const [existingImages, setExistingImages] = useState(listing.images ?? [])
   const [newFiles, setNewFiles]             = useState([])
@@ -108,9 +111,10 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
         price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
         condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
-        beds:        (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
-        size:        isHousing ? sanitizeText(size) : null,
-        avail:       (isHousing || isLookingHousing) ? sanitizeText(avail) : null,
+        beds:            (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
+        size:            isHousing ? sanitizeText(size) : null,
+        avail:           (isHousing || isLookingHousing || isEvents) ? sanitizeText(avail) : null,
+        spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
       }
       const { error: updateErr } = await supabase
         .from('listings')
@@ -198,6 +202,20 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
               placeholder={isLookingHousing ? 'Move-in Date' : 'Available'}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
           </div>
+        )}
+
+        {/* Sublease — spots available */}
+        {isSublease && (
+          <input type="number" value={spotsAvailable} onChange={(e) => setSpotsAvailable(e.target.value)}
+            placeholder="Spots available (# of subleasers needed)" min={1}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+        )}
+
+        {/* Events — date & time */}
+        {isEvents && (
+          <input value={avail} onChange={(e) => setAvail(e.target.value)}
+            placeholder="Date & Time (e.g. Sat Mar 15, 7PM)"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
         )}
 
         {/* Condition */}

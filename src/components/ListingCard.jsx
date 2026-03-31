@@ -19,7 +19,9 @@ function formatPrice(listing) {
     return listing.budget ? `Budget: $${Number(listing.budget).toLocaleString()}` : 'Looking'
   }
   if (!listing.price || Number(listing.price) === 0) return 'Free'
-  return `$${Number(listing.price).toLocaleString()}`
+  const base = `$${Number(listing.price).toLocaleString()}`
+  // Housing and sublease listings show monthly rent
+  return listing.is_housing ? `${base}/mo` : base
 }
 
 export default function ListingCard({ listing, onOpen, onRequireAuth }) {
@@ -79,17 +81,25 @@ export default function ListingCard({ listing, onOpen, onRequireAuth }) {
       <div className="p-2.5">
         <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{listing.title}</p>
 
-        {/* Price */}
-        <p className="text-school-primary font-bold text-base mt-0.5">{formatPrice(listing)}</p>
+        {/* Price + bedroom count for housing */}
+        <div className="flex items-baseline gap-1.5 mt-0.5">
+          <p className="text-school-primary font-bold text-base">{formatPrice(listing)}</p>
+          {listing.is_housing && listing.beds && (
+            <span className="text-xs text-gray-400">{listing.beds}bd</span>
+          )}
+        </div>
 
         {/* Meta row */}
         <div className="flex items-center justify-between mt-1.5 gap-1">
           <div className="flex items-center gap-1 min-w-0">
-            {listing.condition && !listing.is_looking && (
+            {listing.condition && !listing.is_looking && !listing.is_housing && (
               <span className="text-[10px] text-gray-400 truncate">{listing.condition}</span>
             )}
-            {listing.is_housing && listing.beds && (
-              <span className="text-[10px] text-gray-400">{listing.beds}BR · {listing.avail}</span>
+            {listing.is_housing && listing.avail && (
+              <span className="text-[10px] text-gray-400 truncate">{listing.avail}</span>
+            )}
+            {listing.category === 'sublease' && listing.spots_available && (
+              <span className="text-[10px] text-gray-400">{listing.spots_available} spot{listing.spots_available !== 1 ? 's' : ''} avail.</span>
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">

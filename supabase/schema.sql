@@ -53,12 +53,15 @@ create table if not exists listings (
   size            text,               -- e.g. '1BR/1BA'
   -- looking-for field
   budget          numeric(10,2),
+  -- sublease-specific field
+  spots_available int,               -- number of subleasers/spots needed
   sold            boolean default false,
   created_at      timestamptz default now()
 );
 
 -- Migration: run these if tables already exist
 -- alter table listings add column if not exists boost_expires_at timestamptz;
+-- alter table listings add column if not exists spots_available int;
 
 -- favorites: users saving listings they like
 create table if not exists favorites (

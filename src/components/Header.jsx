@@ -28,10 +28,7 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           onClick={onGoHome}
           className="flex items-center gap-2 shrink-0 text-white font-extrabold text-3xl sm:text-4xl leading-none tracking-tight"
         >
-          UMarket
-          <span className="text-[10px] font-semibold bg-white/25 text-white px-1.5 py-0.5 rounded-full tracking-wide self-center">
-            BETA
-          </span>
+          UMarket™
         </button>
 
         {/* School switcher pill */}

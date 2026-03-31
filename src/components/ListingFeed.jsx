@@ -30,6 +30,9 @@ function resolveListingFilter(activeFilter) {
   if (activeFilter === 'housing:looking_sublease') return { category: 'looking_sublease' }
   if (activeFilter === 'housing:looking_for')      return { category: 'looking_housing' }
 
+  // Events top-level tab
+  if (activeFilter === 'events')             return { category: 'events' }
+
   // Looking For section: exact category match
   if (activeFilter === 'looking_for')        return { category: 'looking_for' }
 
@@ -52,6 +55,7 @@ function filterToLabel(activeFilter) {
     'housing:roommates':              'Looking for Roommates',
     'housing:looking_sublease':       'Looking for Sublease',
     'housing:looking_for':            'Looking for Housing',
+    events:                    'Events',
     looking_for:               'Looking For',
     marketplace:               'Marketplace',
     'marketplace:misc':        'Misc',
@@ -110,6 +114,62 @@ function FeedSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Events page ───────────────────────────────────────────────────────────────
+function EventsPage({ onOpenListing, onRequireAuth, onPostOpen }) {
+  const { school } = useSchool()
+  const { listings, loading, error } = useListings({ category: 'events' })
+
+  return (
+    <div>
+      {/* Hero */}
+      <div className="px-4 sm:px-8 pt-10 pb-6 text-center">
+        <p className="text-xs font-semibold tracking-widest uppercase text-school-primary mb-3">Events</p>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 leading-tight max-w-xl mx-auto">
+          Tickets. Passes.<br />
+          <span className="text-school-primary">A good time.</span>
+        </h1>
+        <p className="text-gray-400 text-base mt-4 max-w-md mx-auto">
+          Buy and sell tickets, passes, experiences, and promote events from students at {school?.shortName ?? 'your school'}.
+        </p>
+        <button
+          onClick={() => onRequireAuth(() => onPostOpen?.())}
+          className="mt-6 inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity shadow-sm"
+        >
+          Post an Event
+        </button>
+      </div>
+
+      <div className="p-4">
+        {loading && <FeedSkeleton />}
+        {error && (
+          <div className="text-center py-12 text-red-400">
+            <p className="font-medium">Failed to load events</p>
+          </div>
+        )}
+        {!loading && !error && listings.length === 0 && (
+          <div className="text-center py-20 text-gray-400">
+            <p className="font-semibold text-gray-600 text-lg">No events yet</p>
+            <p className="text-sm mt-1">Be the first to post an event or sell tickets!</p>
+            <button
+              onClick={() => onRequireAuth(() => onPostOpen?.())}
+              className="mt-4 bg-school-primary text-white font-semibold px-5 py-2.5 rounded-xl hover:opacity-90"
+            >
+              Post an Event
+            </button>
+          </div>
+        )}
+        {!loading && listings.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {listings.map((item) => (
+              <ListingCard key={item.id} listing={item} onOpen={onOpenListing} onRequireAuth={onRequireAuth} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -290,6 +350,20 @@ export default function ListingFeed({
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
   })
+
+  // Events tab gets its own full-page component
+  if (!favoritesOnly && !searchQuery && activeFilter === 'events') {
+    return (
+      <>
+        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <EventsPage
+          onOpenListing={onOpenListing}
+          onRequireAuth={onRequireAuth}
+          onPostOpen={onPostOpen}
+        />
+      </>
+    )
+  }
 
   // "For You" / Looking For tab gets its own full-page component
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
