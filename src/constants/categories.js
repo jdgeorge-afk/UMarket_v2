@@ -5,7 +5,6 @@ export const CATEGORIES = [
   { id: 'looking_for',       label: 'Looking For',            icon: '' },
   { id: 'looking_housing',   label: 'Looking for Housing',    icon: '' },
   { id: 'looking_roommate',  label: 'Looking for Roommate',   icon: '' },
-  { id: 'looking_sublease',  label: 'Looking for Sublease',   icon: '' },
   { id: 'textbooks',   label: 'Textbooks',    icon: '' },
   { id: 'furniture',   label: 'Furniture',    icon: '' },
   { id: 'electronics', label: 'Electronics',  icon: '' },
