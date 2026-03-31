@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SchoolProvider, useSchool } from './context/SchoolContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
@@ -93,6 +93,11 @@ function AppInner() {
 
   const openPost  = () => requireAuth(() => setPostModalOpen(true))
   const openAdmin = () => { if (profile?.is_admin) setCurrentView('admin') }
+
+  // Scroll to top on every view or category change (not on modal open)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [currentView, activeFilter])
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
