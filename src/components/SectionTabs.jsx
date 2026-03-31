@@ -3,14 +3,16 @@ export default function SectionTabs({ activeFilter, onFilter }) {
     { label: 'Home',        value: 'all'         },
     { label: 'Housing',     value: 'housing'     },
     { label: 'Marketplace', value: 'marketplace' },
+    { label: 'Events',      value: 'events'      },
     { label: 'Looking For', value: 'looking_for' },
   ]
 
   const activeTop =
-    activeFilter === 'all'                                              ? 'all'
-    : activeFilter === 'housing' || activeFilter?.startsWith('housing:')       ? 'housing'
-    : activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:') ? 'marketplace'
-    : activeFilter === 'looking_for'                                    ? 'looking_for'
+    activeFilter === 'all'                                                         ? 'all'
+    : activeFilter === 'housing' || activeFilter?.startsWith('housing:')           ? 'housing'
+    : activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')   ? 'marketplace'
+    : activeFilter === 'events'                                                    ? 'events'
+    : activeFilter === 'looking_for'                                               ? 'looking_for'
     : 'all'
 
   return (

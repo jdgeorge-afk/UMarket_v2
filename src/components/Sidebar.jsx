@@ -56,7 +56,11 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
       {/* ── Marketplace section ───────────────────────────────────────────── */}
       <SectionLabel>Marketplace</SectionLabel>
       <NavItem icon="" label="All Marketplace" value="marketplace"            activeFilter={activeFilter} onFilter={onFilter} />
+      <NavItem icon="" label="Textbooks"       value="marketplace:textbooks"   activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Furniture"       value="marketplace:furniture"   activeFilter={activeFilter} onFilter={onFilter} indent />
       <NavItem icon="" label="Electronics"     value="marketplace:electronics" activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Clothing"        value="marketplace:clothing"    activeFilter={activeFilter} onFilter={onFilter} indent />
+      <NavItem icon="" label="Sports"          value="marketplace:sports"      activeFilter={activeFilter} onFilter={onFilter} indent />
       <NavItem icon="" label="Events"          value="marketplace:events"      activeFilter={activeFilter} onFilter={onFilter} indent />
       <NavItem icon="" label="Miscellaneous"   value="marketplace:misc"        activeFilter={activeFilter} onFilter={onFilter} indent />
 
