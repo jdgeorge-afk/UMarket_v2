@@ -18,6 +18,7 @@ import AdminDashboard from './components/AdminDashboard'
 // Modals
 import AuthModal from './components/AuthModal'
 import PostListingModal from './components/PostListingModal'
+import BoostModal from './components/BoostModal'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inner app — consumes both contexts (which are set up in the App wrapper below)
@@ -47,6 +48,8 @@ function AppInner() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState('signin') // 'signin' | 'signup'
   const [postModalOpen, setPostModalOpen] = useState(false)
+  const [boostAfterPost, setBoostAfterPost] = useState(false)
+  const [boostListing, setBoostListing] = useState(null)
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const pushNav = (newView, listing = null, userId = null) => {
@@ -91,8 +94,9 @@ function AppInner() {
     callback()
   }
 
-  const openPost  = () => requireAuth(() => setPostModalOpen(true))
-  const openAdmin = () => { if (profile?.is_admin) setCurrentView('admin') }
+  const openPost         = () => requireAuth(() => { setBoostAfterPost(false); setPostModalOpen(true) })
+  const openPostAndBoost = () => requireAuth(() => { setBoostAfterPost(true);  setPostModalOpen(true) })
+  const openAdmin        = () => { if (profile?.is_admin) setCurrentView('admin') }
 
   // Scroll to top on every view or category change (not on modal open)
   useEffect(() => {
@@ -133,6 +137,7 @@ function AppInner() {
               activeFilter={activeFilter}
               onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
               onPostOpen={openPost}
+              onBoostOpen={openPostAndBoost}
             />
           </aside>
         )}
@@ -229,7 +234,14 @@ function AppInner() {
       )}
 
       {postModalOpen && (
-        <PostListingModal onClose={() => setPostModalOpen(false)} />
+        <PostListingModal
+          onClose={() => { setPostModalOpen(false); setBoostAfterPost(false) }}
+          onPosted={boostAfterPost ? (listing) => { setPostModalOpen(false); setBoostAfterPost(false); setBoostListing(listing) } : null}
+        />
+      )}
+
+      {boostListing && (
+        <BoostModal listing={boostListing} onClose={() => setBoostListing(null)} />
       )}
     </div>
   )

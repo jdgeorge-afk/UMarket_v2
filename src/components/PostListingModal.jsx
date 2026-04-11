@@ -9,7 +9,7 @@ import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib
 
 const MAX_IMAGES = 6
 
-export default function PostListingModal({ onClose }) {
+export default function PostListingModal({ onClose, onPosted }) {
   const { user } = useAuth()
   const { school } = useSchool()
   const formRef = useRef(null)
@@ -128,7 +128,7 @@ export default function PostListingModal({ onClose }) {
         .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true })
 
       const imageUrls = files.length ? await uploadImages() : []
-      const { error: insertErr } = await supabase.from('listings').insert({
+      const { data: newListing, error: insertErr } = await supabase.from('listings').insert({
         title:       sanitizeText(title),
         category,
         description: sanitizeText(description),
@@ -149,12 +149,13 @@ export default function PostListingModal({ onClose }) {
         spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
         contact_type: contactType,
         contact_value: sanitizeText(contactValue),
-      })
+      }).select().single()
       if (insertErr) {
         console.error('Listing insert error:', insertErr)
         throw new Error(insertErr.message + (insertErr.hint ? ` — ${insertErr.hint}` : '') + (insertErr.details ? ` (${insertErr.details})` : ''))
       }
-      onClose()
+      if (onPosted && newListing) onPosted(newListing)
+      else onClose()
     } catch (err) {
       console.error('Post listing error:', err)
       setError(err.message)
