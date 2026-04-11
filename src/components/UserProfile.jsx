@@ -129,6 +129,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [loadingContacted, setLoadingContacted]   = useState(false)
   const [notifItems, setNotifItems]               = useState([])
   const [loadingNotifs, setLoadingNotifs]         = useState(false)
+  const [expandedNotifId, setExpandedNotifId]     = useState(null)
   const [unreadCount, setUnreadCount]             = useState(0)
 
   const [editing, setEditing]       = useState(false)
@@ -633,42 +634,80 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                 const listingTitle = n.listing?.title ?? 'your listing'
                 const avatarBg     = isSaved ? 'bg-red-400' : isReport ? 'bg-orange-400' : 'bg-school-primary'
 
+                const isExpanded = expandedNotifId === n.id
+                const contactHref = ctType === 'phone' ? `tel:${ctValue}`
+                  : ctType === 'email' ? `mailto:${ctValue}`
+                  : ctType === 'instagram' ? `https://instagram.com/${ctValue}`
+                  : ctType === 'snapchat' ? `https://snapchat.com/add/${ctValue}`
+                  : null
+
                 return (
-                  <div key={n.id} className={`flex items-start gap-3 p-3 rounded-2xl border ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
-                    <div className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden`}>
-                      {isInterest
-                        ? (n.buyer?.avatar_url ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" /> : buyerName[0]?.toUpperCase() ?? '?')
-                        : isSaved ? '♥' : '!'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {isInterest && (
-                        <>
+                  <div key={n.id} className={`rounded-2xl border overflow-hidden ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
+                    {/* Row */}
+                    <div
+                      className={`flex items-start gap-3 p-3 ${isInterest && ctValue ? 'cursor-pointer hover:bg-black/[0.02] transition-colors' : ''}`}
+                      onClick={() => isInterest && ctValue && setExpandedNotifId(isExpanded ? null : n.id)}
+                    >
+                      <div className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden`}>
+                        {isInterest
+                          ? (n.buyer?.avatar_url ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" /> : buyerName[0]?.toUpperCase() ?? '?')
+                          : isSaved ? '♥' : '!'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {isInterest && (
                           <p className="text-sm text-gray-900">
                             <span className="font-semibold">{buyerName}</span>
                             {' '}is interested in{' '}
                             <span className="font-semibold">{listingTitle}</span>
                           </p>
-                          {ctValue && (
-                            <p className="text-xs font-medium text-school-primary mt-0.5">
-                              {ctLabel}: {ctValue}
-                            </p>
-                          )}
-                        </>
-                      )}
-                      {isSaved && (
-                        <p className="text-sm text-gray-900">
-                          Someone saved <span className="font-semibold">{listingTitle}</span>
-                          {n.metadata?.save_count > 1 && <span className="text-gray-400"> · {n.metadata.save_count} total saves</span>}
-                        </p>
-                      )}
-                      {isReport && (
-                        <p className="text-sm text-gray-900">
-                          <span className="font-semibold">{listingTitle}</span> was flagged for review
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
+                        )}
+                        {isSaved && (
+                          <p className="text-sm text-gray-900">
+                            Someone saved <span className="font-semibold">{listingTitle}</span>
+                            {n.metadata?.save_count > 1 && <span className="text-gray-400"> · {n.metadata.save_count} total saves</span>}
+                          </p>
+                        )}
+                        {isReport && (
+                          <p className="text-sm text-gray-900">
+                            <span className="font-semibold">{listingTitle}</span> was flagged for review
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                        {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary" />}
+                        {isInterest && ctValue && (
+                          <svg className={`w-4 h-4 text-gray-300 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
-                    {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0 mt-1.5" />}
+
+                    {/* Expanded contact panel */}
+                    {isInterest && ctValue && isExpanded && (
+                      <div className="px-3 pb-3">
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Their Contact Info</p>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-xs text-gray-400">{ctLabel}</p>
+                              <p className="font-semibold text-gray-900">{ctType === 'instagram' || ctType === 'snapchat' ? `@${ctValue}` : ctValue}</p>
+                            </div>
+                            {contactHref && (
+                              <a
+                                href={contactHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 bg-school-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                              >
+                                {ctType === 'phone' ? 'Call / Text' : ctType === 'email' ? 'Send Email' : 'Open'}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })}
