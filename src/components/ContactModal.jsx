@@ -98,19 +98,23 @@ export default function ContactModal({ listing, seller, onClose }) {
       { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true },
     )
 
-    // 2. Insert seller notification directly — works without edge functions deployed
-    await supabase.from('notifications').upsert(
-      {
-        user_id:    listing.seller_id,
-        type:       'interest',
-        listing_id: listing.id,
-        buyer_id:   user.id,
-        message:    `${name} is interested in your listing`,
-        metadata:   { buyer_name: name, buyer_contact_type: buyerContactType, buyer_contact_value: value },
-        read:       false,
-      },
-      { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true },
-    )
+    // 2. Insert seller notification directly — works without edge functions deployed.
+    // Delete any prior notification for this buyer+listing first so the fresh metadata
+    // (with contact info) is always stored, regardless of whether a unique constraint exists.
+    await supabase.from('notifications')
+      .delete()
+      .eq('listing_id', listing.id)
+      .eq('buyer_id', user.id)
+
+    await supabase.from('notifications').insert({
+      user_id:    listing.seller_id,
+      type:       'interest',
+      listing_id: listing.id,
+      buyer_id:   user.id,
+      message:    `${name} is interested in your listing`,
+      metadata:   { buyer_name: name, buyer_contact_type: buyerContactType, buyer_contact_value: value },
+      read:       false,
+    })
 
     // 3. Fire edge function for the email — non-blocking, fails silently if not deployed
     supabase.functions.invoke('notify-interest', {
