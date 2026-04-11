@@ -6,6 +6,7 @@ import { CATEGORIES, CONDITIONS, GRADES } from '../constants/categories'
 import Modal from './Modal'
 import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib/validation'
+import { compressImage } from '../lib/compressImage'
 
 const MAX_IMAGES = 6
 
@@ -71,11 +72,11 @@ export default function PostListingModal({ onClose, onPosted }) {
   const uploadImages = async () => {
     const urls = []
     for (const file of files) {
-      const ext  = file.name.split('.').pop()
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const compressed = await compressImage(file)
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`
       const { error: upErr } = await supabase.storage
         .from('listing-images')
-        .upload(path, file, { cacheControl: '3600', upsert: false })
+        .upload(path, compressed, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage
         .from('listing-images')
