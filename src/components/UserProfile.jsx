@@ -410,9 +410,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
               </button>
               <button
                 onClick={signOut}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Log Out
+                Sign Out
               </button>
             </div>
           )}
@@ -469,19 +469,19 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
 
       {/* Tabs + Post button (own profile only) */}
       {isOwn ? (
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
           <div className="flex bg-gray-100 rounded-xl p-1 flex-1">
             {[
-              { id: 'listings', label: `My Listings (${listings.length})` },
-              { id: 'saved',    label: 'Saved' },
-              { id: 'contacted', label: 'Contacted' },
-              { id: 'notifications', label: unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications' },
+              { id: 'listings',      label: `Listings (${listings.length})` },
+              { id: 'saved',         label: 'Saved' },
+              { id: 'contacted',     label: 'Contacted' },
+              { id: 'notifications', label: unreadCount > 0 ? `Notifs (${unreadCount})` : 'Notifs' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={[
-                  'flex-1 py-2 rounded-lg text-sm font-semibold transition-all',
+                  'flex-1 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all',
                   activeTab === tab.id ? 'bg-white shadow text-gray-900' : 'text-gray-400',
                 ].join(' ')}
               >
@@ -493,7 +493,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             onClick={onPostOpen}
             className="shrink-0 bg-school-primary text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
           >
-            + Post
+            + Post a Listing
           </button>
         </div>
       ) : null}
