@@ -68,7 +68,7 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen, onBoostOpe
         className="mt-auto rounded-2xl p-4 text-white"
         style={{ background: school?.gradient ?? 'var(--school-gradient)' }}
       >
-        <p className="text-sm font-bold flex items-center gap-1">Boost for $2</p>
+        <p className="text-sm font-bold flex items-center gap-1">Boost for $3/day</p>
         <p className="text-xs text-white/75 mt-0.5 mb-3">10x more views instantly.</p>
         <button
           onClick={onBoostOpen ?? onPostOpen}
