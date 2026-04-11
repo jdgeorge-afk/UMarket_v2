@@ -6,7 +6,6 @@ import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
 import { getCategoryLabel } from '../constants/categories'
-import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -36,8 +35,6 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [contactOpen, setContactOpen] = useState(false)
-  const [contactRequested, setContactRequested] = useState(false)
-  const [contactError, setContactError] = useState('')
   const [reportOpen, setReportOpen] = useState(false)
   const [markingAsSold, setMarkingAsSold] = useState(false)
 
@@ -54,6 +51,14 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         .then(({ data }) => { if (data) setSeller(data) })
     }
   }, [listing.seller_id]) // eslint-disable-line
+
+  // Track listing view (fire-and-forget — don't block render)
+  useEffect(() => {
+    supabase.from('listing_views').insert({
+      listing_id: listing.id,
+      viewer_id:  user?.id ?? null,
+    }).then(() => {}).catch(() => {})
+  }, [listing.id]) // eslint-disable-line
 
   const openLightbox = (i) => {
     setLightboxIndex(i)
@@ -214,35 +219,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       {!isOwner ? (
         <>
           <button
-            onClick={() => onRequireAuth(async () => {
-              // Rate limit: prevent contact request spam (15 per hour per device)
-              const rl = checkRateLimit('contact_seller')
-              if (!rl.allowed) { setContactError(rateLimitMessage('contact_seller', rl.retryAfterMs)); return }
-              setContactError('')
-
-              if (!contactRequested) {
-                setContactRequested(true)
-                await supabase.from('contact_requests').upsert(
-                  { listing_id: listing.id, buyer_id: user.id, seller_id: listing.seller_id },
-                  { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true }
-                )
-                // Only notify seller if this is a new request (ignoreDuplicates won't insert again)
-                await supabase.from('notifications').insert({
-                  user_id: listing.seller_id,
-                  type: 'contact',
-                  listing_id: listing.id,
-                  buyer_id: user.id,
-                })
-              }
-              setContactOpen(true)
-            })}
+            onClick={() => onRequireAuth(() => setContactOpen(true))}
             className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-lg hover:opacity-90 transition-opacity shadow-md mb-3"
           >
-            Contact Seller
+            I'm Interested / Get Contact Info
           </button>
-          {contactError && (
-            <p className="text-red-500 text-sm text-center mb-2">{contactError}</p>
-          )}
           <button
             onClick={() => onRequireAuth(() => setReportOpen(true))}
             className="w-full text-gray-400 text-sm py-2 hover:text-gray-600 transition-colors"

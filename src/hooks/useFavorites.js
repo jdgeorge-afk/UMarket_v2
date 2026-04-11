@@ -54,6 +54,10 @@ export function useFavorites() {
         await supabase
           .from('favorites')
           .insert({ user_id: user.id, listing_id: listingId })
+        // Notify seller (fire-and-forget — never block the UI)
+        supabase.functions.invoke('notify-saved', {
+          body: { listing_id: listingId },
+        }).catch(() => {})
       }
 
       return !alreadyFaved
