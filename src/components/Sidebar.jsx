@@ -31,7 +31,7 @@ function SectionLabel({ children }) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
+export default function Sidebar({ activeFilter, onFilter, onPostOpen, onBoostOpen }) {
   const { school } = useSchool()
 
   return (
@@ -71,7 +71,7 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen }) {
         <p className="text-sm font-bold flex items-center gap-1">Boost for $2</p>
         <p className="text-xs text-white/75 mt-0.5 mb-3">10x more views instantly.</p>
         <button
-          onClick={onPostOpen}
+          onClick={onBoostOpen ?? onPostOpen}
           className="w-full bg-white text-school-primary font-bold text-xs py-2 rounded-lg hover:bg-white/90 transition-colors"
         >
           Post &amp; Boost →
