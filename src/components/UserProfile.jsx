@@ -40,6 +40,20 @@ function LegalModal({ onClose }) {
 }
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+
+// ── Dismissed-item helpers ────────────────────────────────────────────────────
+// RLS delete policies may not exist, so we track dismissed IDs in localStorage
+// and filter them out on every fetch so they stay gone across refreshes.
+const DELETED_NOTIFS_KEY   = 'umarket_deleted_notifs'
+const DELETED_CONTACTS_KEY = 'umarket_deleted_contacts'
+function readDismissedSet(key) {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')) } catch { return new Set() }
+}
+function persistDismissed(key, id) {
+  const s = readDismissedSet(key)
+  s.add(String(id))
+  localStorage.setItem(key, JSON.stringify([...s]))
+}
 import { useSchool } from '../context/SchoolContext'
 import { GRADES } from '../constants/categories'
 import ListingCard from './ListingCard'
@@ -195,9 +209,10 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error('contacted fetch error:', error)
+        const dismissed = readDismissedSet(DELETED_CONTACTS_KEY)
         setContactedItems(
           (data ?? [])
-            .filter((r) => r.listings)
+            .filter((r) => r.listings && !dismissed.has(String(r.listing_id)))
             .map((r) => ({ listing: r.listings, createdAt: r.created_at }))
         )
         setLoadingContacted(false)
@@ -215,7 +230,8 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       .limit(50)
       .then(({ data, error }) => {
         if (error) console.error('notifications fetch error:', error)
-        const items = data ?? []
+        const dismissed = readDismissedSet(DELETED_NOTIFS_KEY)
+        const items = (data ?? []).filter((n) => !dismissed.has(String(n.id)))
         setNotifItems(items)
         setLoadingNotifs(false)
         setUnreadCount(0)
@@ -318,7 +334,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   }
 
   const handleRemoveContacted = async (listingId) => {
+    persistDismissed(DELETED_CONTACTS_KEY, listingId)
     setContactedItems((prev) => prev.filter((item) => item.listing.id !== listingId))
+    // Best-effort DB delete (may fail silently if RLS policy is missing)
     await supabase.from('contact_requests')
       .delete()
       .eq('buyer_id', user.id)
@@ -326,7 +344,9 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   }
 
   const handleDeleteNotif = async (notifId) => {
+    persistDismissed(DELETED_NOTIFS_KEY, notifId)
     setNotifItems((prev) => prev.filter((n) => n.id !== notifId))
+    // Best-effort DB delete (may fail silently if RLS policy is missing)
     await supabase.from('notifications').delete().eq('id', notifId)
   }
 

@@ -63,7 +63,14 @@ function AppInner() {
   const goBack = () => {
     setNavHistory(h => {
       const prev = h[h.length - 1]
-      if (!prev) return h
+      if (!prev) {
+        // No history — happens when user refreshed directly on this page.
+        // Fall back to the feed so the back button always does something useful.
+        setCurrentView('feed')
+        setSelectedListing(null)
+        setViewedUserId(null)
+        return h
+      }
       setCurrentView(prev.view)
       setSelectedListing(prev.listing)
       setViewedUserId(prev.userId)
