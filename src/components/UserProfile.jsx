@@ -125,11 +125,12 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [loadingSaved, setLoadingSaved] = useState(false)
   const [activeTab, setActiveTab]   = useState('listings') // 'listings' | 'saved' | 'contacted' | 'notifications'
 
-  const [contactedListings, setContactedListings] = useState([])
+  // contactedItems: array of { listing, createdAt } — listing includes seller's contact_type/contact_value
+  const [contactedItems, setContactedItems]       = useState([])
   const [loadingContacted, setLoadingContacted]   = useState(false)
   const [notifItems, setNotifItems]               = useState([])
   const [loadingNotifs, setLoadingNotifs]         = useState(false)
-  const [expandedNotifId, setExpandedNotifId]     = useState(null)
+  const [notifsVersion, setNotifsVersion]         = useState(0) // bump to force re-fetch
   const [unreadCount, setUnreadCount]             = useState(0)
 
   const [editing, setEditing]       = useState(false)
@@ -184,21 +185,26 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       .then(({ count }) => setUnreadCount(count ?? 0))
   }, [isOwn, user])
 
-  // Fetch contacted listings
+  // Fetch contacted listings — include all listing columns so we have seller's contact_type/contact_value
   useEffect(() => {
     if (!isOwn || activeTab !== 'contacted' || !user) return
     setLoadingContacted(true)
     supabase.from('contact_requests')
-      .select('listing_id, listings(*)')
+      .select('listing_id, created_at, listings(*)')
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setContactedListings((data ?? []).map((r) => r.listings).filter(Boolean))
+      .then(({ data, error }) => {
+        if (error) console.error('contacted fetch error:', error)
+        setContactedItems(
+          (data ?? [])
+            .filter((r) => r.listings)
+            .map((r) => ({ listing: r.listings, createdAt: r.created_at }))
+        )
         setLoadingContacted(false)
       })
   }, [isOwn, activeTab, user])
 
-  // Fetch notifications
+  // Fetch notifications — re-runs on tab switch and whenever notifsVersion is bumped
   useEffect(() => {
     if (!isOwn || activeTab !== 'notifications' || !user) return
     setLoadingNotifs(true)
@@ -207,16 +213,18 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50)
-      .then(({ data }) => {
-        setNotifItems(data ?? [])
+      .then(({ data, error }) => {
+        if (error) console.error('notifications fetch error:', error)
+        const items = data ?? []
+        setNotifItems(items)
         setLoadingNotifs(false)
         setUnreadCount(0)
-        if ((data ?? []).some((n) => !n.read)) {
+        if (items.some((n) => !n.read)) {
           supabase.from('notifications').update({ read: true })
             .eq('user_id', user.id).eq('read', false)
         }
       })
-  }, [isOwn, activeTab, user])
+  }, [isOwn, activeTab, user, notifsVersion])
 
   const startEdit = () => {
     setEditName(profile?.name ?? '')
@@ -596,11 +604,50 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-44 animate-pulse" />)}
             </div>
-          ) : contactedListings.length > 0 ? (
+          ) : contactedItems.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {contactedListings.map((l) => (
-                <ListingCard key={l.id} listing={l} onOpen={onOpenListing} onRequireAuth={onRequireAuth ?? ((cb) => cb())} />
-              ))}
+              {contactedItems.map(({ listing }) => {
+                const ctType  = listing.contact_type
+                const ctValue = listing.contact_value
+                const ctLabel = ctType === 'phone' ? 'Phone'
+                  : ctType === 'instagram' ? 'Instagram'
+                  : ctType === 'snapchat'  ? 'Snapchat'
+                  : 'Email'
+                const ctDisplay = (ctType === 'instagram' || ctType === 'snapchat') ? `@${ctValue}` : ctValue
+                const ctHref = ctType === 'phone' ? `tel:${ctValue}`
+                  : ctType === 'email' ? `mailto:${ctValue}`
+                  : ctType === 'instagram' ? `https://instagram.com/${ctValue}`
+                  : ctType === 'snapchat' ? `https://snapchat.com/add/${ctValue}`
+                  : null
+
+                return (
+                  <div key={listing.id}>
+                    <ListingCard listing={listing} onOpen={onOpenListing} onRequireAuth={onRequireAuth ?? ((cb) => cb())} />
+                    {/* Seller contact info — always visible */}
+                    {ctValue && (
+                      <div className="mt-1.5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Seller Contact</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-gray-400">{ctLabel}</p>
+                            <p className="text-xs font-semibold text-gray-900 truncate">{ctDisplay}</p>
+                          </div>
+                          {ctHref && (
+                            <a
+                              href={ctHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 bg-school-primary text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                            >
+                              {ctType === 'phone' ? 'Text' : ctType === 'email' ? 'Email' : 'Open'}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-16 text-gray-400">
@@ -615,10 +662,18 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       {/* ── Notifications tab ───────────────────────────────────────────────── */}
       {isOwn && activeTab === 'notifications' && (
         <>
-          <h2 className="font-bold text-gray-900 mb-3">Notifications</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-gray-900">Notifications</h2>
+            <button
+              onClick={() => setNotifsVersion((v) => v + 1)}
+              className="text-xs text-school-primary font-semibold hover:opacity-75 transition-opacity"
+            >
+              Refresh
+            </button>
+          </div>
           {loadingNotifs ? (
             <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-16 animate-pulse" />)}
+              {[...Array(3)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-20 animate-pulse" />)}
             </div>
           ) : notifItems.length > 0 ? (
             <div className="space-y-2">
@@ -627,39 +682,66 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                 const isSaved    = n.type === 'saved'
                 const isReport   = n.type === 'report'
 
-                const buyerName    = n.metadata?.buyer_name || n.buyer?.name || 'Someone'
-                const ctType       = n.metadata?.buyer_contact_type
-                const ctValue      = n.metadata?.buyer_contact_value
-                const ctLabel      = ctType === 'phone' ? 'Phone' : ctType === 'instagram' ? 'Instagram' : ctType === 'snapchat' ? 'Snapchat' : 'Email'
+                // Buyer contact — always from metadata snapshot (not live profile)
+                const buyerName   = n.metadata?.buyer_name || n.buyer?.name || 'Someone'
+                const ctType      = n.metadata?.buyer_contact_type
+                const ctValue     = n.metadata?.buyer_contact_value
+                const ctLabel     = ctType === 'phone' ? 'Phone'
+                  : ctType === 'instagram' ? 'Instagram'
+                  : ctType === 'snapchat'  ? 'Snapchat'
+                  : 'Email'
+                const ctDisplay   = (ctType === 'instagram' || ctType === 'snapchat') ? `@${ctValue}` : ctValue
+                const ctHref      = ctType === 'phone' ? `tel:${ctValue}`
+                  : ctType === 'email' ? `mailto:${ctValue}`
+                  : ctType === 'instagram' ? `https://instagram.com/${ctValue}`
+                  : ctType === 'snapchat'  ? `https://snapchat.com/add/${ctValue}`
+                  : null
                 const listingTitle = n.listing?.title ?? 'your listing'
                 const avatarBg     = isSaved ? 'bg-red-400' : isReport ? 'bg-orange-400' : 'bg-school-primary'
 
-                const isExpanded = expandedNotifId === n.id
-                const contactHref = ctType === 'phone' ? `tel:${ctValue}`
-                  : ctType === 'email' ? `mailto:${ctValue}`
-                  : ctType === 'instagram' ? `https://instagram.com/${ctValue}`
-                  : ctType === 'snapchat' ? `https://snapchat.com/add/${ctValue}`
-                  : null
-
                 return (
                   <div key={n.id} className={`rounded-2xl border overflow-hidden ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
-                    {/* Row */}
-                    <div
-                      className={`flex items-start gap-3 p-3 ${isInterest && ctValue ? 'cursor-pointer hover:bg-black/[0.02] transition-colors' : ''}`}
-                      onClick={() => isInterest && ctValue && setExpandedNotifId(isExpanded ? null : n.id)}
-                    >
+                    <div className="flex items-start gap-3 p-3">
+                      {/* Avatar */}
                       <div className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden`}>
                         {isInterest
-                          ? (n.buyer?.avatar_url ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" /> : buyerName[0]?.toUpperCase() ?? '?')
+                          ? (n.buyer?.avatar_url
+                              ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" />
+                              : buyerName[0]?.toUpperCase() ?? '?')
                           : isSaved ? '♥' : '!'}
                       </div>
+
+                      {/* Body */}
                       <div className="flex-1 min-w-0">
                         {isInterest && (
-                          <p className="text-sm text-gray-900">
-                            <span className="font-semibold">{buyerName}</span>
-                            {' '}is interested in{' '}
-                            <span className="font-semibold">{listingTitle}</span>
-                          </p>
+                          <>
+                            <p className="text-sm text-gray-900 leading-snug">
+                              <span className="font-semibold">{buyerName}</span>
+                              {' '}is interested in{' '}
+                              <span className="font-semibold">{listingTitle}</span>
+                            </p>
+                            {/* Buyer contact info — always visible, no tap required */}
+                            {ctValue ? (
+                              <div className="mt-2 flex items-center justify-between gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{ctLabel}</p>
+                                  <p className="text-sm font-semibold text-gray-900 truncate">{ctDisplay}</p>
+                                </div>
+                                {ctHref && (
+                                  <a
+                                    href={ctHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="shrink-0 bg-school-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                                  >
+                                    {ctType === 'phone' ? 'Call / Text' : ctType === 'email' ? 'Email' : 'Open'}
+                                  </a>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-400 mt-1">No contact info provided</p>
+                            )}
+                          </>
                         )}
                         {isSaved && (
                           <p className="text-sm text-gray-900">
@@ -672,42 +754,12 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                             <span className="font-semibold">{listingTitle}</span> was flagged for review
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-400 mt-1.5">{new Date(n.created_at).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                        {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary" />}
-                        {isInterest && ctValue && (
-                          <svg className={`w-4 h-4 text-gray-300 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Expanded contact panel */}
-                    {isInterest && ctValue && isExpanded && (
-                      <div className="px-3 pb-3">
-                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Their Contact Info</p>
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400">{ctLabel}</p>
-                              <p className="font-semibold text-gray-900">{ctType === 'instagram' || ctType === 'snapchat' ? `@${ctValue}` : ctValue}</p>
-                            </div>
-                            {contactHref && (
-                              <a
-                                href={contactHref}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="shrink-0 bg-school-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-                              >
-                                {ctType === 'phone' ? 'Call / Text' : ctType === 'email' ? 'Send Email' : 'Open'}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      {/* Unread dot */}
+                      {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0 mt-1.5" />}
+                    </div>
                   </div>
                 )
               })}
