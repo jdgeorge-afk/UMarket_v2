@@ -48,6 +48,7 @@ export default function PhotoCarousel({ images = [], alt = 'listing photo', onCl
         className="w-full h-full object-cover"
         loading="lazy"
         draggable={false}
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
       />
 
       {/* Prev / Next arrows — only visible if multiple images */}

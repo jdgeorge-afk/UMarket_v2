@@ -50,8 +50,6 @@ export const ALLOWED_IMAGE_TYPES = new Set([
   'image/png',
   'image/webp',
   'image/gif',
-  'image/heic',
-  'image/heif',
 ])
 
 /** 10 MB per image — consistent with Supabase Storage default upload limit. */
@@ -64,6 +62,10 @@ export const MAX_IMAGE_BYTES = 10 * 1024 * 1024
  */
 export function validateImageFile(file) {
   if (!ALLOWED_IMAGE_TYPES.has(file.type.toLowerCase())) {
+    const isHeic = file.type.toLowerCase().includes('heic') || file.type.toLowerCase().includes('heif') || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+    if (isHeic) {
+      return `iPhone HEIC photos aren't supported by browsers. On your iPhone go to Settings → Camera → Formats → select "Most Compatible" to shoot in JPG, then re-take the photo.`
+    }
     return `"${file.name}" is not a supported image type. Please use JPG, PNG, WebP, or GIF.`
   }
   if (file.size > MAX_IMAGE_BYTES) {
