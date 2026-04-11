@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SchoolProvider, useSchool } from './context/SchoolContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { supabase } from './lib/supabase'
 
 // Layout
 import Header from './components/Header'
@@ -102,6 +103,56 @@ function AppInner() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [currentView, activeFilter])
+
+  // ── URL ↔ state sync ──────────────────────────────────────────────────────
+  // Track whether we've done the one-time URL restore on initial load
+  const urlRestoredRef = useRef(false)
+
+  // On first render (once school is available), parse URL and restore state
+  useEffect(() => {
+    if (!mounted || !school || urlRestoredRef.current) return
+    urlRestoredRef.current = true
+
+    const p = new URLSearchParams(window.location.search)
+    if (p.has('listing')) {
+      supabase.from('listings').select('*').eq('id', p.get('listing')).single()
+        .then(({ data }) => {
+          if (data) { setSelectedListing(data); setCurrentView('detail') }
+        })
+    } else if (p.has('profile')) {
+      setViewedUserId(p.get('profile'))
+      setCurrentView('profile')
+    } else if (p.get('view') === 'favorites') {
+      setCurrentView('favorites')
+    } else if (p.get('view') === 'admin') {
+      setCurrentView('admin')
+    } else if (p.has('filter')) {
+      setActiveFilter(p.get('filter'))
+    } else if (p.has('search')) {
+      setSearchQuery(p.get('search'))
+    }
+  }, [mounted, school]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep URL in sync with navigation state — replaceState so browser back
+  // button doesn't fight the app's own navHistory stack
+  useEffect(() => {
+    if (!mounted || !school) return
+    const p = new URLSearchParams()
+    if (currentView === 'detail' && selectedListing) {
+      p.set('listing', selectedListing.id)
+    } else if (currentView === 'profile' && viewedUserId) {
+      p.set('profile', viewedUserId)
+    } else if (currentView === 'favorites') {
+      p.set('view', 'favorites')
+    } else if (currentView === 'admin') {
+      p.set('view', 'admin')
+    } else if (currentView === 'feed') {
+      if (activeFilter && activeFilter !== 'all') p.set('filter', activeFilter)
+      if (searchQuery) p.set('search', searchQuery)
+    }
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
+  }, [mounted, school, currentView, selectedListing, viewedUserId, activeFilter, searchQuery])
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
