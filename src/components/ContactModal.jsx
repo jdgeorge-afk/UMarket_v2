@@ -69,7 +69,7 @@ function ContactRevealed({ listing, seller, onClose }) {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function ContactModal({ listing, seller, onClose }) {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
 
   const [step, setStep] = useState('form') // 'form' | 'revealed'
   const [buyerName,         setBuyerName]         = useState(profile?.name ?? '')
@@ -89,19 +89,33 @@ export default function ContactModal({ listing, seller, onClose }) {
     setSubmitting(true)
     setError('')
 
-    try {
-      // Fire edge function — non-blocking: even if it fails we still reveal contact info
-      await supabase.functions.invoke('notify-interest', {
-        body: {
-          listing_id:          listing.id,
-          buyer_name:          buyerName.trim(),
-          buyer_contact_type:  buyerContactType,
-          buyer_contact_value: buyerContactValue.trim(),
-        },
-      })
-    } catch (e) {
-      console.warn('notify-interest non-fatal error:', e)
-    }
+    const name  = buyerName.trim()
+    const value = buyerContactValue.trim()
+
+    // 1. Record in contact_requests so it appears in buyer's "Contacted" tab
+    await supabase.from('contact_requests').upsert(
+      { listing_id: listing.id, buyer_id: user.id, seller_id: listing.seller_id },
+      { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true },
+    )
+
+    // 2. Insert seller notification directly — works without edge functions deployed
+    await supabase.from('notifications').upsert(
+      {
+        user_id:    listing.seller_id,
+        type:       'interest',
+        listing_id: listing.id,
+        buyer_id:   user.id,
+        message:    `${name} is interested in your listing`,
+        metadata:   { buyer_name: name, buyer_contact_type: buyerContactType, buyer_contact_value: value },
+        read:       false,
+      },
+      { onConflict: 'listing_id,buyer_id', ignoreDuplicates: true },
+    )
+
+    // 3. Fire edge function for the email — non-blocking, fails silently if not deployed
+    supabase.functions.invoke('notify-interest', {
+      body: { listing_id: listing.id, buyer_name: name, buyer_contact_type: buyerContactType, buyer_contact_value: value },
+    }).catch(() => {})
 
     setSubmitting(false)
     setStep('revealed')
