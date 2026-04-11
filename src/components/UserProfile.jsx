@@ -317,6 +317,19 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     setListings((prev) => prev.map((l) => l.id === updated.id ? updated : l))
   }
 
+  const handleRemoveContacted = async (listingId) => {
+    setContactedItems((prev) => prev.filter((item) => item.listing.id !== listingId))
+    await supabase.from('contact_requests')
+      .delete()
+      .eq('buyer_id', user.id)
+      .eq('listing_id', listingId)
+  }
+
+  const handleDeleteNotif = async (notifId) => {
+    setNotifItems((prev) => prev.filter((n) => n.id !== notifId))
+    await supabase.from('notifications').delete().eq('id', notifId)
+  }
+
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center text-gray-400">
@@ -645,6 +658,12 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                         </div>
                       </div>
                     )}
+                    <button
+                      onClick={() => handleRemoveContacted(listing.id)}
+                      className="w-full mt-1.5 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors"
+                    >
+                      Remove
+                    </button>
                   </div>
                 )
               })}
@@ -757,8 +776,17 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                         <p className="text-xs text-gray-400 mt-1.5">{new Date(n.created_at).toLocaleDateString()}</p>
                       </div>
 
-                      {/* Unread dot */}
-                      {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0 mt-1.5" />}
+                      {/* Unread dot + delete */}
+                      <div className="flex flex-col items-center gap-1.5 shrink-0 mt-0.5">
+                        {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary" />}
+                        <button
+                          onClick={() => handleDeleteNotif(n.id)}
+                          className="w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors text-base leading-none"
+                          aria-label="Delete notification"
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
