@@ -401,7 +401,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
 
           {/* Edit profile button (own) */}
           {isOwn && !editing && (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
               <button
                 onClick={startEdit}
                 className="text-xs text-school-primary border border-school-primary/30 px-3 py-1.5 rounded-lg hover:bg-school-primary/5"
@@ -410,7 +410,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
               </button>
               <button
                 onClick={signOut}
-                className="text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
                 Log Out
               </button>
