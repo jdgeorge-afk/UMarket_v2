@@ -34,8 +34,14 @@ export default function ReportModal({ listingId, onClose }) {
       reason,
       note:        sanitizedNote,
     })
-    if (err) setError(err.message)
-    else setDone(true)
+    if (err) { setError(err.message) }
+    else {
+      setDone(true)
+      // Notify the listing owner (fire-and-forget — neutral, no reporter info disclosed)
+      supabase.functions.invoke('notify-report', {
+        body: { listing_id: listingId },
+      }).catch(() => {})
+    }
     setLoading(false)
   }
 

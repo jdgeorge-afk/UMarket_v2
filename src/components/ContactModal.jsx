@@ -1,54 +1,43 @@
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import Modal from './Modal'
 
-export default function ContactModal({ listing, seller, onClose }) {
-  if (!seller && !listing) return null
+const CONTACT_TYPES = [
+  { value: 'email',     label: 'Email' },
+  { value: 'phone',     label: 'Phone' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'snapchat',  label: 'Snapchat' },
+]
 
-  const getContact = () => {
-    const type  = listing?.contact_type  || seller?.contact_type
-    const value = listing?.contact_value || seller?.contact
-    if (!type || !value) return null
-    switch (type) {
-      case 'phone':
-        return {
-          label: 'Phone / Text',
-          display: value,
-          href: `tel:${value}`,
-          icon: '',
-        }
-      case 'email':
-        return {
-          label: 'Email',
-          display: value,
-          href: `mailto:${value}`,
-          icon: '',
-        }
-      case 'instagram':
-        return {
-          label: 'Instagram',
-          display: `@${value}`,
-          href: `https://instagram.com/${value}`,
-          icon: '',
-        }
-      case 'snapchat':
-        return {
-          label: 'Snapchat',
-          display: '@' + value,
-          href: 'https://snapchat.com/add/' + value,
-          icon: '',
-        }
-      default:
-        return null
-    }
+function getSellerContact(listing, seller) {
+  const type  = listing?.contact_type  || seller?.contact_type
+  const value = listing?.contact_value || seller?.contact
+  if (!type || !value) return null
+  switch (type) {
+    case 'phone':
+      return { label: 'Phone / Text', display: value, href: `tel:${value}` }
+    case 'email':
+      return { label: 'Email', display: value, href: `mailto:${value}` }
+    case 'instagram':
+      return { label: 'Instagram', display: `@${value}`, href: `https://instagram.com/${value}` }
+    case 'snapchat':
+      return { label: 'Snapchat', display: `@${value}`, href: `https://snapchat.com/add/${value}` }
+    default:
+      return null
   }
+}
 
-  const contact = getContact()
-
+// ── Step 2: Seller contact revealed ──────────────────────────────────────────
+function ContactRevealed({ listing, seller, onClose }) {
+  const contact = getSellerContact(listing, seller)
   return (
     <Modal onClose={onClose}>
-      <h2 className="text-xl font-bold text-gray-900 mb-1">
-        Contact {seller?.name ?? 'Seller'}
-      </h2>
-      <p className="text-sm text-gray-400 mb-6">Seller's preferred contact method</p>
+      <div className="text-center mb-5">
+        <span className="text-3xl">🎉</span>
+        <h2 className="text-xl font-bold text-gray-900 mt-2">You're all set!</h2>
+        <p className="text-sm text-gray-400 mt-1">The seller has been notified. Here's how to reach them:</p>
+      </div>
 
       {contact ? (
         <a
@@ -57,18 +46,16 @@ export default function ContactModal({ listing, seller, onClose }) {
           rel="noopener noreferrer"
           className="flex items-center gap-4 p-4 bg-school-primary/5 border border-school-primary/20 rounded-xl hover:bg-school-primary/10 transition-colors group"
         >
-          <span className="text-3xl">{contact.icon}</span>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-400 mb-0.5">{contact.label}</p>
-            <p className="font-semibold text-gray-900 truncate">{contact.display}</p>
+            <p className="font-semibold text-gray-900 truncate text-lg">{contact.display}</p>
           </div>
-          <svg className="w-5 h-5 text-school-primary group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-5 h-5 text-school-primary group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </a>
       ) : (
         <div className="text-center py-6 text-gray-400">
-          <p className="text-3xl mb-2"></p>
           <p className="text-sm">This seller hasn't added contact info yet.</p>
         </div>
       )}
@@ -76,6 +63,103 @@ export default function ContactModal({ listing, seller, onClose }) {
       <p className="text-xs text-gray-400 text-center mt-5 leading-relaxed">
         Always meet in a public place on campus.<br />Never send payment before seeing the item.
       </p>
+    </Modal>
+  )
+}
+
+// ── Main export ───────────────────────────────────────────────────────────────
+export default function ContactModal({ listing, seller, onClose }) {
+  const { profile } = useAuth()
+
+  const [step, setStep] = useState('form') // 'form' | 'revealed'
+  const [buyerName,         setBuyerName]         = useState(profile?.name ?? '')
+  const [buyerContactType,  setBuyerContactType]  = useState(profile?.contact_type ?? 'email')
+  const [buyerContactValue, setBuyerContactValue] = useState(profile?.contact ?? '')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError]           = useState('')
+
+  if (step === 'revealed') {
+    return <ContactRevealed listing={listing} seller={seller} onClose={onClose} />
+  }
+
+  const handleSubmit = async () => {
+    if (!buyerName.trim())         { setError('Please enter your name.'); return }
+    if (!buyerContactValue.trim()) { setError('Please enter your contact info.'); return }
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      // Fire edge function — non-blocking: even if it fails we still reveal contact info
+      await supabase.functions.invoke('notify-interest', {
+        body: {
+          listing_id:          listing.id,
+          buyer_name:          buyerName.trim(),
+          buyer_contact_type:  buyerContactType,
+          buyer_contact_value: buyerContactValue.trim(),
+        },
+      })
+    } catch (e) {
+      console.warn('notify-interest non-fatal error:', e)
+    }
+
+    setSubmitting(false)
+    setStep('revealed')
+  }
+
+  const placeholder = buyerContactType === 'phone' ? '(555) 000-0000'
+    : buyerContactType === 'email' ? 'you@email.com'
+    : 'username (no @)'
+
+  return (
+    <Modal onClose={onClose}>
+      <h2 className="text-xl font-bold text-gray-900 mb-1">I'm Interested!</h2>
+      <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+        Share your contact info and we'll let the seller know — then reveal their contact details instantly.
+      </p>
+
+      <div className="space-y-3">
+        <input
+          value={buyerName}
+          onChange={(e) => setBuyerName(e.target.value)}
+          placeholder="Your name *"
+          maxLength={80}
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+        />
+
+        <div className="flex gap-2">
+          <select
+            value={buyerContactType}
+            onChange={(e) => setBuyerContactType(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-3 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-school-primary shrink-0"
+          >
+            {CONTACT_TYPES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <input
+            value={buyerContactValue}
+            onChange={(e) => setBuyerContactValue(e.target.value)}
+            placeholder={placeholder}
+            maxLength={120}
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+          />
+        </div>
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-base hover:opacity-90 transition-opacity disabled:opacity-40 shadow-md"
+        >
+          {submitting ? 'Sending…' : 'Get Contact Info →'}
+        </button>
+
+        <p className="text-xs text-gray-400 text-center leading-relaxed">
+          Your info will be shared with the seller. They'll be notified that you're interested.
+        </p>
+      </div>
     </Modal>
   )
 }

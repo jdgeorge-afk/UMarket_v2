@@ -621,24 +621,57 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             </div>
           ) : notifItems.length > 0 ? (
             <div className="space-y-2">
-              {notifItems.map((n) => (
-                <div key={n.id} className={`flex items-center gap-3 p-3 rounded-2xl border ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
-                  <div className="w-10 h-10 rounded-full bg-school-primary flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
-                    {n.buyer?.avatar_url
-                      ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" />
-                      : (n.buyer?.name?.[0]?.toUpperCase() ?? '?')}
+              {notifItems.map((n) => {
+                const isInterest = n.type === 'interest' || n.type === 'contact'
+                const isSaved    = n.type === 'saved'
+                const isReport   = n.type === 'report'
+
+                const buyerName    = n.metadata?.buyer_name || n.buyer?.name || 'Someone'
+                const ctType       = n.metadata?.buyer_contact_type
+                const ctValue      = n.metadata?.buyer_contact_value
+                const ctLabel      = ctType === 'phone' ? 'Phone' : ctType === 'instagram' ? 'Instagram' : ctType === 'snapchat' ? 'Snapchat' : 'Email'
+                const listingTitle = n.listing?.title ?? 'your listing'
+                const avatarBg     = isSaved ? 'bg-red-400' : isReport ? 'bg-orange-400' : 'bg-school-primary'
+
+                return (
+                  <div key={n.id} className={`flex items-start gap-3 p-3 rounded-2xl border ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
+                    <div className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden`}>
+                      {isInterest
+                        ? (n.buyer?.avatar_url ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" /> : buyerName[0]?.toUpperCase() ?? '?')
+                        : isSaved ? '♥' : '!'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {isInterest && (
+                        <>
+                          <p className="text-sm text-gray-900">
+                            <span className="font-semibold">{buyerName}</span>
+                            {' '}is interested in{' '}
+                            <span className="font-semibold">{listingTitle}</span>
+                          </p>
+                          {ctValue && (
+                            <p className="text-xs font-medium text-school-primary mt-0.5">
+                              {ctLabel}: {ctValue}
+                            </p>
+                          )}
+                        </>
+                      )}
+                      {isSaved && (
+                        <p className="text-sm text-gray-900">
+                          Someone saved <span className="font-semibold">{listingTitle}</span>
+                          {n.metadata?.save_count > 1 && <span className="text-gray-400"> · {n.metadata.save_count} total saves</span>}
+                        </p>
+                      )}
+                      {isReport && (
+                        <p className="text-sm text-gray-900">
+                          <span className="font-semibold">{listingTitle}</span> was flagged for review
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
+                    </div>
+                    {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0 mt-1.5" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-semibold">{n.buyer?.name ?? 'Someone'}</span>
-                      {' '}wants to buy{' '}
-                      <span className="font-semibold">{n.listing?.title ?? 'your listing'}</span>
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{new Date(n.created_at).toLocaleDateString()}</p>
-                  </div>
-                  {!n.read && <span className="w-2 h-2 rounded-full bg-school-primary shrink-0" />}
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-16 text-gray-400">
