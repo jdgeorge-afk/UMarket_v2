@@ -98,10 +98,19 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
       if (!valid) { setError(firstError); return }
 
       setLoading(true)
-      const { error: err } = await signIn({ email: sanitizeEmail(email), password })
-      if (err) setError(err.message.includes('Invalid') ? 'Incorrect email or password.' : err.message)
-      else onClose()
-      setLoading(false)
+      try {
+        const { error: err } = await signIn({ email: sanitizeEmail(email), password })
+        if (err) {
+          const msg = err?.message ?? ''
+          setError(msg.includes('Invalid') || msg.includes('invalid') ? 'Incorrect email or password.' : (msg || 'Sign in failed. Please try again.'))
+        } else {
+          onClose()
+        }
+      } catch (e) {
+        setError('Something went wrong. Please check your connection and try again.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -112,14 +121,25 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
     setLoading(true)
     setError('')
-    const { error: err } = await signUp({ email: sanitizeEmail(email), password, name: name.trim(), schoolId: school?.id })
-    if (err) {
-      setError(err.message)
+    try {
+      const { error: err } = await signUp({ email: sanitizeEmail(email), password, name: name.trim(), schoolId: school?.id })
+      if (err) {
+        // err.message can be undefined or empty for certain Supabase error types
+        // (e.g. email rate limit, CAPTCHA failures, network errors)
+        const msg = typeof err?.message === 'string' && err.message.trim()
+          ? err.message.trim()
+          : 'Account creation failed. Please check your connection and try again.'
+        setError(msg)
+        setStep('form')
+      } else {
+        setStep('verify')
+      }
+    } catch (e) {
+      setError('Something went wrong. Please check your connection and try again.')
       setStep('form')
-    } else {
-      setStep('verify')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleReset = async (e) => {
@@ -131,10 +151,15 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     if (!rl.allowed) { setError(rateLimitMessage('password_reset', rl.retryAfterMs)); return }
 
     setLoading(true)
-    const { error: err } = await resetPassword(sanitizeEmail(email))
-    if (err) setError(err.message)
-    else setStep('reset')
-    setLoading(false)
+    try {
+      const { error: err } = await resetPassword(sanitizeEmail(email))
+      if (err) setError(err?.message || 'Failed to send reset email. Please try again.')
+      else setStep('reset')
+    } catch (e) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // ── Contact info screen ───────────────────────────────────────────────────
