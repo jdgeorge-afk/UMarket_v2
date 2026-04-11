@@ -155,6 +155,8 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [saving, setSaving]         = useState(false)
   const [saveError, setSaveError]   = useState('')
 
+  const [deletingAccount, setDeletingAccount] = useState(false)
+
   const [editingListing, setEditingListing] = useState(null)
   const [boostingListing, setBoostingListing] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -348,6 +350,20 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     setNotifItems((prev) => prev.filter((n) => n.id !== notifId))
     const { error } = await supabase.from('notifications').delete().eq('id', notifId)
     if (error) console.warn('notifications delete blocked (add RLS delete policy):', error.message)
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(
+      'Permanently delete your account?\n\nThis will remove your profile, all your listings, and cannot be undone.'
+    )) return
+    setDeletingAccount(true)
+    const { error } = await supabase.rpc('delete_own_account')
+    if (error) {
+      alert('Could not delete account: ' + error.message)
+      setDeletingAccount(false)
+      return
+    }
+    await signOut()
   }
 
   if (loading) {
@@ -854,6 +870,21 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                 )}
               </button>
             ))}
+          </div>
+
+          {/* Delete account — separate from the settings rows, clearly destructive */}
+          <div className="mt-6 mb-2">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2">Danger Zone</p>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deletingAccount}
+              className="w-full py-3 rounded-2xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
+            >
+              {deletingAccount ? 'Deleting…' : 'Delete Account'}
+            </button>
+            <p className="text-xs text-gray-400 text-center mt-2 leading-relaxed">
+              Permanently removes your profile, listings, and all data. Cannot be undone.
+            </p>
           </div>
         </div>
       )}
