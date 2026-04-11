@@ -115,7 +115,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function UserProfile({ userId, onBack, onOpenListing, onRequireAuth, onPostOpen }) {
-  const { user, profile: myProfile, updateProfile } = useAuth()
+  const { user, profile: myProfile, updateProfile, signOut } = useAuth()
   const { school } = useSchool()
 
   const [profile, setProfile]       = useState(null)
@@ -401,12 +401,20 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
 
           {/* Edit profile button (own) */}
           {isOwn && !editing && (
-            <button
-              onClick={startEdit}
-              className="shrink-0 text-xs text-school-primary border border-school-primary/30 px-3 py-1.5 rounded-lg hover:bg-school-primary/5"
-            >
-              Edit Profile
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={startEdit}
+                className="text-xs text-school-primary border border-school-primary/30 px-3 py-1.5 rounded-lg hover:bg-school-primary/5"
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={signOut}
+                className="text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                Log Out
+              </button>
+            </div>
           )}
         </div>
 
