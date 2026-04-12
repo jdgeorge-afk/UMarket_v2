@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useFavorites } from '../hooks/useFavorites'
+import { trackView } from '../lib/personalization'
 import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
@@ -52,8 +53,10 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
     }
   }, [listing.seller_id]) // eslint-disable-line
 
-  // Track listing view (fire-and-forget — don't block render)
+  // Track listing view — record to Supabase for analytics and to localStorage
+  // for client-side personalization (feed re-ranking, recently viewed strip)
   useEffect(() => {
+    trackView(listing)
     supabase.from('listing_views').insert({
       listing_id: listing.id,
       viewer_id:  user?.id ?? null,

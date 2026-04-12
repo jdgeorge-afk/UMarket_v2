@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
+import { scoreListings, hasSignal } from '../lib/personalization'
 
 /**
  * Fetches listings for the current school with optional filters.
@@ -137,7 +138,13 @@ export function useListings({
         const j = Math.floor(Math.random() * (i + 1))
         ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
       }
-      setListings([...activeBoosted, ...rest])
+      // Personalize the non-boosted portion when on the default "newest" sort
+      // and the user has opened enough listings to have a meaningful signal.
+      // Manual sorts (price asc/desc) are left untouched.
+      const rankedRest = (sortBy === 'newest' && hasSignal())
+        ? scoreListings(rest)
+        : rest
+      setListings([...activeBoosted, ...rankedRest])
     } catch (err) {
       setError(err.message)
     } finally {
