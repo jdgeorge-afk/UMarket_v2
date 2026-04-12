@@ -31,7 +31,7 @@ function LegalModal({ onClose }) {
           </section>
           <section>
             <h3 className="font-bold text-gray-900 mb-1">Contact</h3>
-            <p>Questions or concerns? Email us at <a href="mailto:umarket.jr@gmail.com" className="text-school-primary font-semibold">umarket.jr@gmail.com</a>.</p>
+            <p>Questions or concerns? Email us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-school-primary font-semibold">{SUPPORT_EMAIL}</a>.</p>
           </section>
         </div>
       </div>
@@ -41,6 +41,7 @@ function LegalModal({ onClose }) {
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { compressImage } from '../lib/compressImage'
+import { SUPPORT_EMAIL } from '../constants/config'
 
 // ── Dismissed-item helpers ────────────────────────────────────────────────────
 // RLS delete policies may not exist, so we track dismissed IDs in localStorage
@@ -847,7 +848,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
             {[
               { icon: '', label: 'Verification', sub: profile.verified ? 'Verified .edu email' : 'Not verified', action: null },
               { icon: '', label: 'Safety', sub: 'Tips for safe transactions', action: null },
-              { icon: '', label: 'Help', sub: 'umarket.jr@gmail.com', action: null },
+              { icon: '', label: 'Help', sub: SUPPORT_EMAIL, action: () => window.location.href = `mailto:${SUPPORT_EMAIL}` },
               { icon: '', label: 'Legal & Disclaimers', sub: 'Affiliations, liability & terms', action: () => setLegalOpen(true) },
             ].map(({ icon, label, sub, action }) => (
               <button

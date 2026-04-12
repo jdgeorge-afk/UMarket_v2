@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSchool } from '../context/SchoolContext'
 import { SCHOOLS } from '../constants/schools'
+import { SUPPORT_EMAIL } from '../constants/config'
 
 export default function SchoolPicker() {
   const { selectSchool } = useSchool()
@@ -89,7 +90,8 @@ export default function SchoolPicker() {
       </div>
 
       <p className="text-gray-600 text-xs mt-10">
-        More schools coming soon — request yours at umarket.jr@gmail.com
+        More schools coming soon — request yours at{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-gray-800">{SUPPORT_EMAIL}</a>
       </p>
     </div>
   )

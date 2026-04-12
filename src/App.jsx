@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { SchoolProvider, useSchool } from './context/SchoolContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { supabase } from './lib/supabase'
+import { SUPPORT_EMAIL } from './constants/config'
 
 // Layout
 import Header from './components/Header'
@@ -259,10 +260,10 @@ function AppInner() {
         <div>
           <p className="text-xs font-semibold text-white/70 mb-1">Questions or feedback?</p>
           <a
-            href="mailto:umarket.jr@gmail.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-sm font-bold text-white hover:underline"
           >
-            umarket.jr@gmail.com
+            {SUPPORT_EMAIL}
           </a>
           <p className="text-[11px] text-white/60 mt-1">We read every message and typically reply within 24 hours.</p>
         </div>
