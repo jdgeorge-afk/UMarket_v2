@@ -272,7 +272,7 @@ export default function PostListingModal({ onClose, onPosted }) {
             {isHousing && (
               <input
                 type="number" value={baths} onChange={(e) => setBaths(e.target.value)}
-                placeholder="# Bathrooms" min={0}
+                placeholder="# Bathrooms" min={0} step={0.5}
                 className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
               />
             )}
