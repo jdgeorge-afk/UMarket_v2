@@ -225,10 +225,33 @@ create table if not exists notifications (
   type       text default 'contact',
   listing_id uuid references listings(id) on delete cascade,
   buyer_id   uuid references profiles(id) on delete cascade,
+  message    text,
+  metadata   jsonb default '{}',
   read       boolean default false,
   created_at timestamptz default now()
 );
+
+-- If you already created the notifications table without message/metadata, run:
+-- alter table notifications add column if not exists message text;
+-- alter table notifications add column if not exists metadata jsonb default '{}';
 alter table notifications enable row level security;
 create policy "notif_insert_buyer"  on notifications for insert with check (auth.uid() = buyer_id);
 create policy "notif_select_own"    on notifications for select using (auth.uid() = user_id);
 create policy "notif_update_own"    on notifications for update using (auth.uid() = user_id);
+create policy "notif_delete_own"    on notifications for delete using (auth.uid() = user_id);
+
+-- contact_requests DELETE policy (allows buyer to remove from their Contacted tab)
+create policy "cr_delete_buyer"     on contact_requests for delete using (auth.uid() = buyer_id);
+
+-- ── delete_own_account RPC ─────────────────────────────────────────────────────
+-- Allows a user to permanently delete their own account from auth.users.
+-- Cascades to profiles, listings, favorites, notifications, contact_requests via FK.
+-- Run this in Supabase SQL Editor to enable the "Delete Account" feature.
+create or replace function delete_own_account()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from auth.users where id = auth.uid();
+$$;

@@ -4,6 +4,7 @@ import { useSchool } from '../context/SchoolContext'
 import Modal from './Modal'
 import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, sanitizeEmail, signInSchema, signUpSchema } from '../lib/validation'
+import { SUPPORT_EMAIL } from '../constants/config'
 
 const TERMS_SECTIONS = [
   {
@@ -174,7 +175,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-xl px-4 py-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
-              <p className="text-sm font-medium text-gray-900">umarket.jr@gmail.com</p>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-sm font-medium text-gray-900 hover:underline">{SUPPORT_EMAIL}</a>
             </div>
             <div className="bg-gray-50 rounded-xl px-4 py-4">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Response Time</p>
