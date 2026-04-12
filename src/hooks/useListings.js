@@ -141,8 +141,8 @@ export function useListings({
       // Personalize the non-boosted portion when on the default "newest" sort
       // and the user has opened enough listings to have a meaningful signal.
       // Manual sorts (price asc/desc) are left untouched.
-      const rankedRest = (sortBy === 'newest' && hasSignal())
-        ? scoreListings(rest)
+      const rankedRest = (sortBy === 'newest' && hasSignal(school.id))
+        ? scoreListings(rest, school.id)
         : rest
       setListings([...activeBoosted, ...rankedRest])
     } catch (err) {

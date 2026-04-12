@@ -56,7 +56,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   // Track listing view — record to Supabase for analytics and to localStorage
   // for client-side personalization (feed re-ranking, recently viewed strip)
   useEffect(() => {
-    trackView(listing)
+    trackView(listing, listing.school_id)
     supabase.from('listing_views').insert({
       listing_id: listing.id,
       viewer_id:  user?.id ?? null,
