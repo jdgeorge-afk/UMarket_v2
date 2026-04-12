@@ -72,8 +72,6 @@ export default function PostListingModal({ onClose, onPosted }) {
   const uploadImages = async () => {
     const urls = []
     for (const file of files) {
-      // Compress to ≤1200 px / 82 % JPEG before uploading — reduces a 5 MB
-      // phone photo to ~200–400 KB, cutting egress by 10–25×
       const compressed = await compressImage(file)
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`
       const { error: upErr } = await supabase.storage
