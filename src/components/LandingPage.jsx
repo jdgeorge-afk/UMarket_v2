@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
+import { getRecentlyViewed } from '../lib/personalization'
 import SectionTabs from './SectionTabs'
 import StatsRow from './StatsRow'
 import ListingCard from './ListingCard'
@@ -158,6 +159,8 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
 export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing }) {
   const { school } = useSchool()
   const [previews, setPreviews] = useState({ housing: null, marketplace: [], looking: [] })
+  // Read once on mount — getRecentlyViewed() is synchronous (localStorage)
+  const [recentlyViewed] = useState(() => getRecentlyViewed())
 
   useEffect(() => {
     if (!school) return
@@ -253,6 +256,31 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
           </div>
         </div>
       </section>
+
+      {/* ── Recently Viewed ─────────────────────────────────────────────── */}
+      {recentlyViewed.length > 0 && (
+        <section className="bg-white py-10 px-4 sm:px-8">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Recently Viewed</h2>
+              <span className="text-xs font-semibold text-school-primary bg-school-primary/10 px-2.5 py-1 rounded-full">
+                Picked for you
+              </span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory scrollbar-hide">
+              {recentlyViewed.map((l) => (
+                <div key={l.id} className="shrink-0 w-40 snap-start">
+                  <ListingCard
+                    listing={l}
+                    onOpen={onOpenListing}
+                    onRequireAuth={onRequireAuth ?? ((cb) => cb())}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Housing ─────────────────────────────────────────────────────── */}
       <FeatureSection
