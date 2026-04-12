@@ -15,29 +15,32 @@
  *   +0–0.5 price range match (bonus when price is close to the user's average)
  */
 
-const KEY          = 'umarket_interests'
 const MAX_RECENT   = 12   // stubs kept in the "recently viewed" strip
 const MAX_SEEN_IDS = 300  // oldest IDs dropped after this many unique views
 const MIN_SIGNAL   = 3    // minimum total views before we start re-ranking
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
+// Keys are scoped per school so Utah browsing history never affects the TCU feed.
 
-function read() {
-  try { return JSON.parse(localStorage.getItem(KEY) || '{}') } catch { return {} }
+function key(schoolId) {
+  return schoolId ? `umarket_interests_${schoolId}` : 'umarket_interests'
 }
-function write(data) {
-  try { localStorage.setItem(KEY, JSON.stringify(data)) } catch {}
+function read(schoolId) {
+  try { return JSON.parse(localStorage.getItem(key(schoolId)) || '{}') } catch { return {} }
+}
+function write(schoolId, data) {
+  try { localStorage.setItem(key(schoolId), JSON.stringify(data)) } catch {}
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
  * Record that the user opened a listing.
- * Call this whenever a ListingDetail is mounted.
+ * Pass listing.school_id so data stays scoped to that school.
  */
-export function trackView(listing) {
+export function trackView(listing, schoolId) {
   if (!listing?.id) return
-  const d = read()
+  const d = read(schoolId)
 
   // Category affinity counter
   d.cats = d.cats || {}
@@ -77,15 +80,15 @@ export function trackView(listing) {
   })
   if (d.recent.length > MAX_RECENT) d.recent = d.recent.slice(0, MAX_RECENT)
 
-  write(d)
+  write(schoolId, d)
 }
 
 /**
- * Return true once the user has opened at least MIN_SIGNAL listings —
- * below that threshold the ranking is basically noise, so we don't apply it.
+ * Return true once the user has opened at least MIN_SIGNAL listings for
+ * this school — below that threshold the ranking is noise.
  */
-export function hasSignal() {
-  const d = read()
+export function hasSignal(schoolId) {
+  const d = read(schoolId)
   const total = Object.values(d.cats || {}).reduce((a, b) => a + b, 0)
   return total >= MIN_SIGNAL
 }
@@ -94,9 +97,9 @@ export function hasSignal() {
  * Re-rank an array of listings by relevance to the current user.
  * Boosted listings should be separated out *before* calling this.
  */
-export function scoreListings(listings) {
+export function scoreListings(listings, schoolId) {
   if (!listings?.length) return listings
-  const d        = read()
+  const d        = read(schoolId)
   const cats     = d.cats || {}
   const seen     = new Set(d.seen || [])
   const avgPrice = d.priceCount > 0 ? d.priceSum / d.priceCount : null
@@ -104,14 +107,8 @@ export function scoreListings(listings) {
 
   const score = (l) => {
     let s = 0
-
-    // Category affinity: 0–3 pts
     s += ((cats[l.category] || 0) / maxCat) * 3
-
-    // Already seen: –1.5 pts (gentle push-down, not hidden)
     if (seen.has(l.id)) s -= 1.5
-
-    // Price range match: 0–0.5 pts
     if (avgPrice != null) {
       const p = l.price ?? l.budget
       if (p != null && Number(p) > 0) {
@@ -119,7 +116,6 @@ export function scoreListings(listings) {
         if (diff < 1) s += (1 - diff) * 0.5
       }
     }
-
     return s
   }
 
@@ -127,8 +123,9 @@ export function scoreListings(listings) {
 }
 
 /**
- * Return compact listing stubs for the "Recently Viewed" strip.
+ * Return compact listing stubs for the "Recently Viewed" strip,
+ * scoped to the given school so listings from other schools never appear.
  */
-export function getRecentlyViewed() {
-  return read().recent || []
+export function getRecentlyViewed(schoolId) {
+  return read(schoolId).recent || []
 }

@@ -159,8 +159,8 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
 export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing }) {
   const { school } = useSchool()
   const [previews, setPreviews] = useState({ housing: null, marketplace: [], looking: [] })
-  // Read once on mount — getRecentlyViewed() is synchronous (localStorage)
-  const [recentlyViewed] = useState(() => getRecentlyViewed())
+  // Read once on mount — scoped to current school so other schools' listings never bleed in
+  const [recentlyViewed] = useState(() => getRecentlyViewed(school?.id))
 
   useEffect(() => {
     if (!school) return

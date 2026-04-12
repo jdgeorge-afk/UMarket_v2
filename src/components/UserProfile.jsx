@@ -40,6 +40,7 @@ function LegalModal({ onClose }) {
 }
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { compressImage } from '../lib/compressImage'
 
 // ── Dismissed-item helpers ────────────────────────────────────────────────────
 // RLS delete policies may not exist, so we track dismissed IDs in localStorage
@@ -256,15 +257,15 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    // Validate MIME type and file size before uploading
     const fileErr = validateImageFile(file)
     if (fileErr) { setSaveError(fileErr); e.target.value = ''; return }
     setAvatarUploading(true)
-    const ext = file.name.split('.').pop().toLowerCase()
-    const path = `${user.id}/avatar.${ext}`
+    // Avatars only need 400 px — compress aggressively to save egress
+    const compressed = await compressImage(file, 400, 0.85)
+    const path = `${user.id}/avatar.jpg`
     const { error: uploadErr } = await supabase.storage
       .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, compressed, { upsert: true, contentType: 'image/jpeg' })
     if (uploadErr) { setAvatarUploading(false); setSaveError('Photo upload failed'); return }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     await updateProfile({ avatar_url: publicUrl })

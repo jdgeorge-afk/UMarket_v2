@@ -76,7 +76,7 @@ export default function PostListingModal({ onClose, onPosted }) {
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`
       const { error: upErr } = await supabase.storage
         .from('listing-images')
-        .upload(path, compressed, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' })
+        .upload(path, compressed, { cacheControl: '31536000', upsert: false, contentType: 'image/jpeg' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage
         .from('listing-images')
