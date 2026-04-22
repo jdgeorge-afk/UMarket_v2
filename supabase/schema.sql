@@ -56,12 +56,20 @@ create table if not exists listings (
   -- sublease-specific field
   spots_available int,               -- number of subleasers/spots needed
   sold            boolean default false,
+  save_count      int default 0,         -- maintained by trigger on favorites
+  view_count      int default 0,         -- maintained by trigger on listing_views
   created_at      timestamptz default now()
 );
 
--- Migration: run these if tables already exist
+-- Migrations: run these if listings table already exists
 -- alter table listings add column if not exists boost_expires_at timestamptz;
 -- alter table listings add column if not exists spots_available int;
+-- alter table listings add column if not exists save_count int default 0;
+-- alter table listings add column if not exists view_count int default 0;
+-- -- Backfill save_count from existing favorites:
+-- update listings l set save_count = (select count(*)::int from favorites f where f.listing_id = l.id);
+-- -- Backfill view_count from existing listing_views:
+-- update listings l set view_count = (select count(*)::int from listing_views lv where lv.listing_id = l.id);
 
 -- favorites: users saving listings they like
 create table if not exists favorites (
@@ -242,6 +250,50 @@ create policy "notif_delete_own"    on notifications for delete using (auth.uid(
 
 -- contact_requests DELETE policy (allows buyer to remove from their Contacted tab)
 create policy "cr_delete_buyer"     on contact_requests for delete using (auth.uid() = buyer_id);
+
+-- listing_views: one row per listing open (used for view_count and analytics)
+create table if not exists listing_views (
+  id         uuid primary key default gen_random_uuid(),
+  listing_id uuid references listings(id) on delete cascade,
+  viewer_id  uuid references profiles(id) on delete set null,
+  created_at timestamptz default now()
+);
+alter table listing_views enable row level security;
+-- Allow anyone (including anonymous visitors) to record a view
+create policy "lv_insert_all"   on listing_views for insert with check (true);
+create policy "lv_select_admin" on listing_views for select using (
+  exists (select 1 from profiles where id = auth.uid() and is_admin = true)
+);
+
+-- ── Trigger: keep listings.save_count in sync with favorites ─────────────────
+create or replace function fn_update_save_count()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if (TG_OP = 'INSERT') then
+    update listings set save_count = save_count + 1 where id = new.listing_id;
+  elsif (TG_OP = 'DELETE') then
+    update listings set save_count = greatest(0, save_count - 1) where id = old.listing_id;
+  end if;
+  return null;
+end;
+$$;
+drop trigger if exists trg_save_count on favorites;
+create trigger trg_save_count
+  after insert or delete on favorites
+  for each row execute function fn_update_save_count();
+
+-- ── Trigger: keep listings.view_count in sync with listing_views ─────────────
+create or replace function fn_update_view_count()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  update listings set view_count = view_count + 1 where id = new.listing_id;
+  return null;
+end;
+$$;
+drop trigger if exists trg_view_count on listing_views;
+create trigger trg_view_count
+  after insert on listing_views
+  for each row execute function fn_update_view_count();
 
 -- ── delete_own_account RPC ─────────────────────────────────────────────────────
 -- Allows a user to permanently delete their own account from auth.users.
