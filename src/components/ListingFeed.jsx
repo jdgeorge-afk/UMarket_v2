@@ -389,9 +389,6 @@ export default function ListingFeed({
         </div>
       )}
 
-      {/* ── Mobile sub-category chips ────────────────────────────────────────── */}
-      {!favoritesOnly && <CategoryStrip activeFilter={activeFilter} onFilter={onFilter} />}
-
       {/* ── Section hero (Housing / Marketplace) ─────────────────────────────── */}
       {!favoritesOnly && !searchQuery && (
         <SectionHero
@@ -405,6 +402,9 @@ export default function ListingFeed({
       {activeFilter === 'marketplace:events' && !favoritesOnly && !searchQuery && (
         <EventsBanner />
       )}
+
+      {/* ── Mobile subcategory pills — below the hero, above the listing grid ── */}
+      {!favoritesOnly && <CategoryStrip activeFilter={activeFilter} onFilter={onFilter} />}
 
       {/* ── Filter bar ───────────────────────────────────────────────────────── */}
       <FilterBar
