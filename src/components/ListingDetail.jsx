@@ -7,6 +7,7 @@ import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
 import { getCategoryLabel } from '../constants/categories'
+import { APP_URL } from '../constants/config'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -38,6 +39,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const [contactOpen, setContactOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [markingAsSold, setMarkingAsSold] = useState(false)
+  const [shareToast, setShareToast] = useState(false)
 
   const images = listing.images ?? []
   const isOwner = user?.id === listing.seller_id
@@ -82,6 +84,27 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
     onBack()
   }
 
+  const handleShare = async () => {
+    const url = `${APP_URL}/listing/${listing.id}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: listing.title, url })
+      } catch {
+        // user cancelled — do nothing
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch {
+        // clipboard blocked — last-resort fallback
+        window.prompt('Copy this link:', url)
+        return
+      }
+      setShareToast(true)
+      setTimeout(() => setShareToast(false), 2500)
+    }
+  }
+
   const formatPrice = () => {
     if (listing.is_looking) return listing.budget ? `Budget: $${Number(listing.budget).toLocaleString()}` : 'No budget listed'
     if (!listing.price || Number(listing.price) === 0) return 'Free'
@@ -92,16 +115,36 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Back */}
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-school-primary font-medium mb-4 hover:opacity-75 transition-opacity"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back
-      </button>
+      {/* Top bar: Back ← · · · Share */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-school-primary font-medium hover:opacity-75 transition-opacity"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 text-school-primary font-semibold text-sm border border-school-primary/30 bg-school-primary/5 rounded-full px-3 py-1.5 hover:bg-school-primary/10 active:scale-95 transition-all"
+          aria-label="Share listing"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+          </svg>
+          Share
+        </button>
+      </div>
+
+      {/* "Link copied" toast */}
+      {shareToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-xl pointer-events-none">
+          Link copied
+        </div>
+      )}
 
       {/* Image grid */}
       {images.length > 0 && (

@@ -22,6 +22,33 @@ import AuthModal from './components/AuthModal'
 import PostListingModal from './components/PostListingModal'
 import BoostModal from './components/BoostModal'
 
+// ── Fetch a listing by ID with full seller profile join ──────────────────────
+const LISTING_SELECT = '*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)'
+
+function parseListingPath(pathname) {
+  const m = pathname.match(/^\/listing\/([^/]+)$/)
+  return m ? m[1] : null
+}
+
+// ── "Listing no longer available" fallback screen ────────────────────────────
+function ListingNotFound({ onGoHome }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+      <p className="text-5xl mb-4">🔍</p>
+      <h2 className="text-xl font-bold text-gray-900 mb-2">This listing is no longer available</h2>
+      <p className="text-gray-400 text-sm mb-6 max-w-xs leading-relaxed">
+        It may have been sold, removed, or the link might be incorrect.
+      </p>
+      <button
+        onClick={onGoHome}
+        className="bg-school-primary text-white font-bold px-6 py-3 rounded-2xl hover:opacity-90 transition-opacity shadow-md"
+      >
+        Browse Listings
+      </button>
+    </div>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Inner app — consumes both contexts (which are set up in the App wrapper below)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,6 +61,7 @@ function AppInner() {
   const [currentView, setCurrentView] = useState('feed')
   const [selectedListing, setSelectedListing] = useState(null)
   const [viewedUserId, setViewedUserId] = useState(null)
+  const [listingNotFound, setListingNotFound] = useState(false)
 
   // History stack — each entry: { view, listing, userId }
   const [navHistory, setNavHistory] = useState([])
@@ -57,11 +85,13 @@ function AppInner() {
   const pushNav = (newView, listing = null, userId = null) => {
     setNavHistory(h => [...h, { view: currentView, listing: selectedListing, userId: viewedUserId }])
     setCurrentView(newView)
+    setListingNotFound(false)
     if (listing !== null) setSelectedListing(listing)
     if (userId !== null) setViewedUserId(userId)
   }
 
   const goBack = () => {
+    setListingNotFound(false)
     setNavHistory(h => {
       const prev = h[h.length - 1]
       if (!prev) {
@@ -79,7 +109,12 @@ function AppInner() {
     })
   }
 
-  const openListing = (listing) => pushNav('detail', listing, null)
+  // Opens a listing: pushState so the URL becomes /listing/:id and the browser
+  // back button creates a real history entry to return to.
+  const openListing = (listing) => {
+    window.history.pushState(null, '', `/listing/${listing.id}`)
+    pushNav('detail', listing, null)
+  }
 
   const openProfile = (userId) => pushNav('profile', null, userId)
 
@@ -89,9 +124,15 @@ function AppInner() {
     setSelectedListing(null)
     setViewedUserId(null)
     setActiveFilter('all')
+    setListingNotFound(false)
   }
 
-  const openFavorites = () => { setNavHistory([]); setCurrentView('favorites'); setActiveFilter('all') }
+  const openFavorites = () => {
+    setNavHistory([])
+    setCurrentView('favorites')
+    setActiveFilter('all')
+    setListingNotFound(false)
+  }
 
   // ── Auth gate: run callback if authed, else open sign-in modal ───────────
   const requireAuth = (callback) => {
@@ -116,16 +157,33 @@ function AppInner() {
   // Track whether we've done the one-time URL restore on initial load
   const urlRestoredRef = useRef(false)
 
-  // On first render (once school is available), parse URL and restore state
+  // On first render (once school is available), parse URL and restore state.
+  // Checks /listing/:id path first, then falls back to legacy ?listing= params.
   useEffect(() => {
     if (!mounted || !school || urlRestoredRef.current) return
     urlRestoredRef.current = true
 
+    const listingId = parseListingPath(window.location.pathname)
+    if (listingId) {
+      supabase.from('listings').select(LISTING_SELECT).eq('id', listingId).single()
+        .then(({ data }) => {
+          if (data) {
+            setSelectedListing(data)
+            setCurrentView('detail')
+          } else {
+            setListingNotFound(true)
+            setCurrentView('detail')
+          }
+        })
+      return
+    }
+
     const p = new URLSearchParams(window.location.search)
     if (p.has('listing')) {
-      supabase.from('listings').select('*').eq('id', p.get('listing')).single()
+      supabase.from('listings').select(LISTING_SELECT).eq('id', p.get('listing')).single()
         .then(({ data }) => {
           if (data) { setSelectedListing(data); setCurrentView('detail') }
+          else { setListingNotFound(true); setCurrentView('detail') }
         })
     } else if (p.has('profile')) {
       setViewedUserId(p.get('profile'))
@@ -141,26 +199,56 @@ function AppInner() {
     }
   }, [mounted, school]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep URL in sync with navigation state — replaceState so browser back
-  // button doesn't fight the app's own navHistory stack
+  // Browser back/forward — re-derive state from the URL so native navigation works
+  useEffect(() => {
+    const handlePopState = () => {
+      const listingId = parseListingPath(window.location.pathname)
+      if (listingId) {
+        supabase.from('listings').select(LISTING_SELECT).eq('id', listingId).single()
+          .then(({ data }) => {
+            if (data) {
+              setSelectedListing(data)
+              setCurrentView('detail')
+              setListingNotFound(false)
+            } else {
+              setSelectedListing(null)
+              setListingNotFound(true)
+              setCurrentView('detail')
+            }
+          })
+      } else {
+        setCurrentView('feed')
+        setSelectedListing(null)
+        setListingNotFound(false)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep URL in sync with navigation state.
+  // Detail view uses /listing/:id path; everything else uses query params.
+  // replaceState is used so this effect never fights the pushState in openListing.
   useEffect(() => {
     if (!mounted || !school) return
-    const p = new URLSearchParams()
     if (currentView === 'detail' && selectedListing) {
-      p.set('listing', selectedListing.id)
+      window.history.replaceState(null, '', `/listing/${selectedListing.id}`)
+    } else if (currentView === 'detail' && listingNotFound) {
+      // keep whatever URL the user came in on
     } else if (currentView === 'profile' && viewedUserId) {
-      p.set('profile', viewedUserId)
+      window.history.replaceState(null, '', `?profile=${viewedUserId}`)
     } else if (currentView === 'favorites') {
-      p.set('view', 'favorites')
+      window.history.replaceState(null, '', '?view=favorites')
     } else if (currentView === 'admin') {
-      p.set('view', 'admin')
+      window.history.replaceState(null, '', '?view=admin')
     } else if (currentView === 'feed') {
+      const p = new URLSearchParams()
       if (activeFilter && activeFilter !== 'all') p.set('filter', activeFilter)
       if (searchQuery) p.set('search', searchQuery)
+      const qs = p.toString()
+      window.history.replaceState(null, '', qs ? `?${qs}` : '/')
     }
-    const qs = p.toString()
-    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
-  }, [mounted, school, currentView, selectedListing, viewedUserId, activeFilter, searchQuery])
+  }, [mounted, school, currentView, selectedListing, listingNotFound, viewedUserId, activeFilter, searchQuery])
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
@@ -234,6 +322,10 @@ function AppInner() {
               onOpenProfile={openProfile}
               onRequireAuth={requireAuth}
             />
+          )}
+
+          {currentView === 'detail' && !selectedListing && listingNotFound && (
+            <ListingNotFound onGoHome={goHome} />
           )}
 
           {currentView === 'profile' && (
