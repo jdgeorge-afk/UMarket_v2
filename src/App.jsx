@@ -153,6 +153,17 @@ function AppInner() {
     window.scrollTo(0, 0)
   }, [currentView, activeFilter])
 
+  // Reset sort to 'newest' when the user switches to a different top-level section
+  // (e.g. Housing → Marketplace). Sub-filter changes within a section keep the sort.
+  const prevTopLevelRef = useRef('all')
+  useEffect(() => {
+    const newTop = activeFilter ? activeFilter.split(':')[0] : 'all'
+    if (newTop !== prevTopLevelRef.current) {
+      prevTopLevelRef.current = newTop
+      setSortBy('newest')
+    }
+  }, [activeFilter])
+
   // ── URL ↔ state sync ──────────────────────────────────────────────────────
   // Track whether we've done the one-time URL restore on initial load
   const urlRestoredRef = useRef(false)

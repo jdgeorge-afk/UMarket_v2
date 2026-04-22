@@ -4,6 +4,28 @@ const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
 const GENDERS = ["Men's", "Women's", 'Unisex']
 
+// Build the sort options relevant to the current section.
+// Global sorts always appear; housing/marketplace sorts are context-specific.
+function getSortOptions(activeFilter) {
+  const isHousing    = activeFilter === 'housing'     || activeFilter?.startsWith('housing:')
+  const isMarketplace = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
+  return [
+    { value: 'newest',         label: 'Newest' },
+    { value: 'price_asc',      label: 'Price: Low → High' },
+    { value: 'price_desc',     label: 'Price: High → Low' },
+    { value: 'popular',        label: 'Most Popular' },
+    { value: 'viewed',         label: 'Most Viewed' },
+    ...(isHousing ? [
+      { value: 'avail_asc',    label: 'Available Soonest' },
+      { value: 'beds_asc',     label: 'Beds: Fewest → Most' },
+      { value: 'beds_desc',    label: 'Beds: Most → Fewest' },
+    ] : []),
+    ...(isMarketplace ? [
+      { value: 'condition_best', label: 'Condition: Best First' },
+    ] : []),
+  ]
+}
+
 export default function FilterBar({
   sortBy, onSort,
   activeFilter, onClearFilter,
@@ -15,6 +37,7 @@ export default function FilterBar({
 }) {
   const isClothing = activeFilter === 'marketplace:clothing'
   const hasFilter = (activeFilter && activeFilter !== 'all') || hasExtraFilters
+  const sortOptions = getSortOptions(activeFilter)
   const [open, setOpen] = useState(false)
   const panelRef = useRef(null)
 
@@ -189,9 +212,9 @@ export default function FilterBar({
           onChange={(e) => onSort(e.target.value)}
           className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-school-primary"
         >
-          <option value="newest">Newest</option>
-          <option value="price_asc">Price: Low → High</option>
-          <option value="price_desc">Price: High → Low</option>
+          {sortOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
     </div>

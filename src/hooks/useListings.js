@@ -11,7 +11,10 @@ import { scoreListings, hasSignal } from '../lib/personalization'
  * @param {string[]} opts.categoryIn    - filter by multiple categories (OR)
  * @param {boolean}  opts.noHousing     - exclude is_housing listings (Marketplace section)
  * @param {boolean}  opts.noLooking     - exclude is_looking listings (Marketplace section)
- * @param {string}   opts.sortBy        - 'newest' | 'price_asc' | 'price_desc'
+ * @param {string}   opts.sortBy        - 'newest' | 'price_asc' | 'price_desc' |
+ *                                       'popular' | 'viewed' |
+ *                                       'avail_asc' | 'beds_asc' | 'beds_desc' |
+ *                                       'condition_best'
  * @param {string}   opts.searchQuery   - ilike filter on title
  * @param {boolean}  opts.favoritesOnly - only show listings saved by `userId`
  * @param {string}   opts.userId        - current user's id (needed for favoritesOnly)
@@ -110,12 +113,27 @@ export function useListings({
         query = query.eq('seller_id', sellerId)
       }
 
-      // Sort by user's choice (boosted posts get pulled out and shuffled client-side)
+      // Server-side sort — avail_asc and condition_best are handled client-side
+      // after the fetch because they use free-text / categorical fields.
       if (sortBy === 'price_asc') {
         query = query.order('price', { ascending: true, nullsFirst: false })
       } else if (sortBy === 'price_desc') {
         query = query.order('price', { ascending: false, nullsFirst: false })
+      } else if (sortBy === 'popular') {
+        query = query.order('save_count', { ascending: false, nullsFirst: false })
+                     .order('created_at', { ascending: false })
+      } else if (sortBy === 'viewed') {
+        query = query.order('view_count', { ascending: false, nullsFirst: false })
+                     .order('created_at', { ascending: false })
+      } else if (sortBy === 'beds_asc') {
+        query = query.order('beds', { ascending: true, nullsFirst: false })
+                     .order('created_at', { ascending: false })
+      } else if (sortBy === 'beds_desc') {
+        query = query.order('beds', { ascending: false, nullsFirst: true })
+                     .order('created_at', { ascending: false })
       } else {
+        // 'newest', 'avail_asc', 'condition_best' — fetch newest first,
+        // client-side reorder applied below for the latter two.
         query = query.order('created_at', { ascending: false })
       }
 
@@ -138,12 +156,32 @@ export function useListings({
         const j = Math.floor(Math.random() * (i + 1))
         ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
       }
-      // Personalize the non-boosted portion when on the default "newest" sort
-      // and the user has opened enough listings to have a meaningful signal.
-      // Manual sorts (price asc/desc) are left untouched.
-      const rankedRest = (sortBy === 'newest' && hasSignal(school.id))
-        ? scoreListings(rest, school.id)
-        : rest
+      // Client-side post-processing for sorts that can't be expressed as a simple
+      // column order: avail_asc (free-text date) and condition_best (categorical).
+      // All other sorts are already applied by the server query above.
+      const CONDITION_RANK = { New: 1, 'Like New': 2, Good: 3, Fair: 4, Poor: 5, 'Parts Only': 6 }
+
+      let rankedRest
+      if (sortBy === 'avail_asc') {
+        rankedRest = [...rest].sort((a, b) => {
+          if (!a.avail) return 1   // nulls last
+          if (!b.avail) return -1
+          const da = new Date(a.avail)
+          const db = new Date(b.avail)
+          // Fall back to string compare if date parse fails (e.g. 'ASAP')
+          if (isNaN(da) || isNaN(db)) return String(a.avail).localeCompare(String(b.avail))
+          return da - db
+        })
+      } else if (sortBy === 'condition_best') {
+        rankedRest = [...rest].sort(
+          (a, b) => (CONDITION_RANK[a.condition] ?? 99) - (CONDITION_RANK[b.condition] ?? 99)
+        )
+      } else if (sortBy === 'newest' && hasSignal(school.id)) {
+        // Personalize only when on default newest sort and enough signal exists
+        rankedRest = scoreListings(rest, school.id)
+      } else {
+        rankedRest = rest
+      }
       setListings([...activeBoosted, ...rankedRest])
     } catch (err) {
       setError(err.message)
