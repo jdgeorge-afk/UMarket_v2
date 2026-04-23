@@ -180,12 +180,14 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
 
         {/* Price / Budget */}
         {(isLooking || isLookingHousing) ? (
-          <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
-            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'} min={0}
+          <input type="text" inputMode="numeric" value={budget}
+            onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
         ) : !isHousing && (
-          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price ($)" min={0}
+          <input type="text" inputMode="numeric" value={price}
+            onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder="Price ($)"
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
         )}
 

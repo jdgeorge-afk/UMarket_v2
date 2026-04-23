@@ -10,6 +10,13 @@ import { compressImage } from '../lib/compressImage'
 
 const MAX_IMAGES = 6
 
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
 export default function PostListingModal({ onClose, onPosted }) {
   const { user } = useAuth()
   const { school } = useSchool()
@@ -249,14 +256,16 @@ export default function PostListingModal({ onClose, onPosted }) {
         {/* ── Price or Budget ───────────────────────────────────────────────── */}
         {(isLooking || isLookingHousing) ? (
           <input
-            type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
-            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'} min={0}
+            type="text" inputMode="numeric" value={budget}
+            onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
           />
         ) : (
           <input
-            type="number" value={price} onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price ($) — leave 0 for Free" min={0}
+            type="text" inputMode="numeric" value={price}
+            onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder="Price ($) — leave 0 for Free"
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
           />
         )}
@@ -368,7 +377,14 @@ export default function PostListingModal({ onClose, onPosted }) {
             </select>
             <input
               value={contactValue}
-              onChange={(e) => setContactValue(e.target.value)}
+              onChange={(e) => {
+                if (contactType === 'phone') {
+                  setContactValue(formatPhone(e.target.value))
+                } else {
+                  setContactValue(e.target.value)
+                }
+              }}
+              inputMode={contactType === 'phone' ? 'numeric' : 'text'}
               placeholder={
                 contactType === 'phone' ? '(555) 000-0000'
                 : contactType === 'email' ? 'you@example.com'
