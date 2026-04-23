@@ -3,6 +3,7 @@ import { SchoolProvider, useSchool } from './context/SchoolContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { supabase } from './lib/supabase'
 import { SUPPORT_EMAIL } from './constants/config'
+import ResetPasswordPage from './components/ResetPasswordPage'
 
 // Layout
 import Header from './components/Header'
@@ -412,7 +413,20 @@ function AppInner() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export — wraps AppInner with both providers
 // ─────────────────────────────────────────────────────────────────────────────
+// Root export — intercepts /reset-password before mounting the full app so
+// the reset page works even without a school selection or auth session.
+// ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
+  if (window.location.pathname === '/reset-password') {
+    // SchoolProvider loads the school theme from localStorage so the page
+    // inherits the user's color scheme if they've visited before.
+    return (
+      <SchoolProvider>
+        <ResetPasswordPage />
+      </SchoolProvider>
+    )
+  }
+
   return (
     <SchoolProvider>
       <AuthProvider>

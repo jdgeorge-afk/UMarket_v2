@@ -81,8 +81,11 @@ export function AuthProvider({ children }) {
   }
 
   const resetPassword = async (email) => {
+    // IMPORTANT — add this URL to Supabase dashboard:
+    // Authentication → URL Configuration → Redirect URLs
+    // https://www.u-market.app/reset-password
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
+      redirectTo: 'https://www.u-market.app/reset-password',
     })
     return { error }
   }
