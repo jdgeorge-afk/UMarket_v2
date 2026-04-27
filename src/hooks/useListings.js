@@ -35,6 +35,7 @@ export function useListings({
   conditions = null,
   clothingSizes = null,
   genders = null,
+  userType = null, // 'student' | 'landlord' | null (no filter)
 } = {}) {
   const { school } = useSchool()
   const [listings, setListings] = useState([])
@@ -55,7 +56,7 @@ export function useListings({
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(',')])
+  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), userType])
 
   const fetchListings = async () => {
     setLoading(true)
@@ -80,7 +81,7 @@ export function useListings({
       // ── Build main query ──────────────────────────────────────────────────
       let query = supabase
         .from('listings')
-        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)')
+        .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url, user_type)')
         .eq('school_id', school.id)
         .eq('sold', false)
 
@@ -137,8 +138,13 @@ export function useListings({
         query = query.order('created_at', { ascending: false })
       }
 
-      const { data, error: qErr } = await query
+      const { data: rawData, error: qErr } = await query
       if (qErr) throw qErr
+
+      // Client-side user_type filter (Supabase JS can't filter by joined columns)
+      const data = userType
+        ? (rawData ?? []).filter((l) => l.profiles?.user_type === userType)
+        : rawData
 
       // ── Boost algorithm (Facebook Marketplace-style) ──────────────────────
       // Active boosted posts (not expired) are separated, randomly shuffled for

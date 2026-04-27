@@ -5,6 +5,9 @@ import Modal from './Modal'
 import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, sanitizeEmail, signInSchema, signUpSchema } from '../lib/validation'
 import { SUPPORT_EMAIL } from '../constants/config'
+import { SCHOOLS } from '../constants/schools'
+
+const LIVE_SCHOOLS = SCHOOLS.filter((s) => s.live)
 
 const TERMS_SECTIONS = [
   {
@@ -66,17 +69,31 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const [name, setName]         = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
-  const [step, setStep]         = useState('form') // 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
+  // steps: 'type' | 'school' | 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
+  const [step, setStep]         = useState('form')
   const [termsFromSignup, setTermsFromSignup] = useState(false)
 
+  // New signup state
+  const [userType, setUserType]             = useState('') // 'student' | 'landlord'
+  const [selectedSchools, setSelectedSchools] = useState([]) // array of school IDs
+
   const isEdu = email.toLowerCase().endsWith('.edu')
+
+  const toggleSchool = (id) => {
+    setSelectedSchools((prev) => {
+      if (prev.includes(id)) return prev.filter((s) => s !== id)
+      if (userType === 'student') return [id]
+      if (prev.length >= 5) return prev
+      return [...prev, id]
+    })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
     if (mode === 'signup') {
-      // Validate sign-up fields (name, email format, password ≥ 8 chars)
+      // Validate sign-up fields (name, email format, password ≥ 6 chars)
       const { valid, firstError } = validate(
         { name: name.trim(), email: sanitizeEmail(email), password },
         signUpSchema,
@@ -123,7 +140,15 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     setLoading(true)
     setError('')
     try {
-      const { error: err } = await signUp({ email: sanitizeEmail(email), password, name: name.trim(), schoolId: school?.id })
+      const primarySchool = selectedSchools[0] ?? school?.id
+      const { error: err } = await signUp({
+        email: sanitizeEmail(email),
+        password,
+        name: name.trim(),
+        schoolId: primarySchool,
+        userType,
+        schoolIds: selectedSchools,
+      })
       if (err) {
         // err.message can be undefined, empty, or a raw JSON string like "{}"
         // for certain Supabase error types (email rate limit, CAPTCHA, network errors)
@@ -324,6 +349,120 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     )
   }
 
+  // ── Account type selection ────────────────────────────────────────────────
+  if (step === 'type') {
+    return (
+      <Modal onClose={onClose} title="Create Account">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Create your account</h2>
+        <p className="text-sm text-gray-400 mb-6">What best describes you?</p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {[
+            {
+              id: 'student',
+              icon: '🎒',
+              label: 'Student',
+              desc: 'Buy, sell & find housing at your campus.',
+            },
+            {
+              id: 'landlord',
+              icon: '🏠',
+              label: 'Landlord',
+              desc: 'Post housing near one or more campuses.',
+            },
+          ].map((type) => (
+            <button
+              key={type.id}
+              type="button"
+              onClick={() => {
+                setUserType(type.id)
+                setSelectedSchools([])
+                setStep('school')
+              }}
+              className="flex flex-col items-center text-center gap-2 border-2 border-gray-200 rounded-2xl px-4 py-5 hover:border-school-primary hover:bg-school-primary/5 transition-all"
+            >
+              <span className="text-3xl">{type.icon}</span>
+              <span className="font-bold text-gray-900 text-sm">{type.label}</span>
+              <span className="text-xs text-gray-400 leading-snug">{type.desc}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => { onModeChange('signin'); setStep('form') }}
+          className="w-full text-center text-xs text-gray-400 mt-2"
+        >
+          Already have an account?{' '}
+          <span className="text-school-primary font-semibold">Sign in</span>
+        </button>
+      </Modal>
+    )
+  }
+
+  // ── School selection ──────────────────────────────────────────────────────
+  if (step === 'school') {
+    const isLandlord = userType === 'landlord'
+    const max = isLandlord ? 5 : 1
+    return (
+      <Modal onClose={onClose} title="Select School">
+        <button
+          type="button"
+          onClick={() => setStep('type')}
+          className="text-sm text-gray-400 mb-4 flex items-center gap-1 hover:text-gray-600"
+        >
+          ← Back
+        </button>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">
+          {isLandlord ? 'Which campuses do you operate near?' : "What's your school?"}
+        </h2>
+        {isLandlord && (
+          <p className="text-sm text-gray-400 mb-4">
+            Select up to 5 schools.{' '}
+            <span className="font-semibold text-gray-600">{selectedSchools.length} / {max} selected</span>
+          </p>
+        )}
+        {!isLandlord && <p className="text-sm text-gray-400 mb-4">Select your campus.</p>}
+
+        <div className="grid grid-cols-2 gap-2 mb-6 max-h-72 overflow-y-auto pr-1">
+          {LIVE_SCHOOLS.map((s) => {
+            const selected = selectedSchools.includes(s.id)
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => toggleSchool(s.id)}
+                style={selected ? { borderColor: s.primary, backgroundColor: s.primary + '15' } : {}}
+                className={[
+                  'flex items-center gap-2 border-2 rounded-xl px-3 py-2.5 text-left transition-all text-sm',
+                  selected ? 'border-current' : 'border-gray-200 hover:border-gray-300',
+                ].join(' ')}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: s.primary }}
+                />
+                <span className={`font-medium leading-tight ${selected ? 'text-gray-900' : 'text-gray-600'}`}>
+                  {s.shortName}
+                </span>
+                {selected && isLandlord && (
+                  <span className="ml-auto text-xs" style={{ color: s.primary }}>✓</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        <button
+          type="button"
+          disabled={selectedSchools.length === 0}
+          onClick={() => setStep('form')}
+          className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
+        >
+          Continue →
+        </button>
+      </Modal>
+    )
+  }
+
   // ── Main sign in / sign up form ────────────────────────────────────────────
   return (
     <Modal onClose={onClose}>
@@ -332,7 +471,13 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
         {(['signin', 'signup']).map((m) => (
           <button
             key={m}
-            onClick={() => { onModeChange(m); setError('') }}
+            onClick={() => {
+              onModeChange(m)
+              setError('')
+              setStep(m === 'signup' ? 'type' : 'form')
+              setUserType('')
+              setSelectedSchools([])
+            }}
             className={[
               'flex-1 py-2 rounded-lg text-sm font-semibold transition-all',
               mode === m ? 'bg-white shadow text-gray-900' : 'text-gray-400',
@@ -342,6 +487,16 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
           </button>
         ))}
       </div>
+
+      {mode === 'signup' && userType && (
+        <button
+          type="button"
+          onClick={() => setStep('school')}
+          className="text-sm text-gray-400 mb-2 flex items-center gap-1 hover:text-gray-600"
+        >
+          ← Back
+        </button>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         {mode === 'signup' && (

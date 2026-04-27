@@ -324,6 +324,9 @@ export default function ListingFeed({
   const [conditions, setConditions] = useState([])
   const [clothingSizes, setClothingSizes] = useState([])
   const [genders, setGenders] = useState([])
+  const [housingUserType, setHousingUserType] = useState(null) // null | 'student' | 'landlord'
+
+  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
 
   const toggleCondition = (c) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
@@ -348,6 +351,7 @@ export default function ListingFeed({
     conditions: conditions.length > 0 ? conditions : null,
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
+    userType: isHousingSection ? housingUserType : null,
   })
 
   // Events tab gets its own full-page component
@@ -401,6 +405,31 @@ export default function ListingFeed({
       {/* ── Events banner ────────────────────────────────────────────────────── */}
       {activeFilter === 'marketplace:events' && !favoritesOnly && !searchQuery && (
         <EventsBanner />
+      )}
+
+      {/* ── Housing: poster type filter chips ───────────────────────────────── */}
+      {isHousingSection && !favoritesOnly && !searchQuery && (
+        <div className="flex gap-2 px-4 pb-3">
+          {[
+            { value: null,        label: 'All' },
+            { value: 'student',   label: '🎒 Students' },
+            { value: 'landlord',  label: '🏠 Landlords' },
+          ].map(({ value, label }) => (
+            <button
+              key={String(value)}
+              type="button"
+              onClick={() => setHousingUserType(value)}
+              className={[
+                'px-3 py-1.5 rounded-full text-sm font-medium border transition-all',
+                housingUserType === value
+                  ? 'bg-school-primary text-white border-school-primary'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* ── Mobile subcategory pills — below the hero, above the listing grid ── */}
