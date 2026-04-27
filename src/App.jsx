@@ -69,7 +69,7 @@ function AppInner() {
 
   // ── Feed filter state ─────────────────────────────────────────────────────
   // activeFilter encodes section + sub-filter:
-  //   'all' | 'housing' | 'housing:sublease' | 'housing:looking_for'
+  //   'all' | 'housing' | 'housing:roommates' | 'housing:looking_for'
   //   'looking_for' | 'marketplace' | 'marketplace:misc' | etc.
   const [activeFilter, setActiveFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
