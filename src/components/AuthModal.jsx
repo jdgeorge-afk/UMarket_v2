@@ -125,11 +125,13 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     try {
       const { error: err } = await signUp({ email: sanitizeEmail(email), password, name: name.trim(), schoolId: school?.id })
       if (err) {
-        // err.message can be undefined or empty for certain Supabase error types
-        // (e.g. email rate limit, CAPTCHA failures, network errors)
-        const msg = typeof err?.message === 'string' && err.message.trim()
-          ? err.message.trim()
-          : 'Account creation failed. Please check your connection and try again.'
+        // err.message can be undefined, empty, or a raw JSON string like "{}"
+        // for certain Supabase error types (email rate limit, CAPTCHA, network errors)
+        const raw = typeof err?.message === 'string' ? err.message.trim() : ''
+        const isGarbage = !raw || raw === '{}' || raw.startsWith('{')
+        const msg = isGarbage
+          ? 'Sign up failed. This email may already be registered, or too many attempts were made. Please try again later or contact support.'
+          : raw
         setError(msg)
         setStep('form')
       } else {
