@@ -68,7 +68,7 @@ export const SCHOOLS = [
     light: '#cc2238',
     dark: '#6e101e',
     gradient: 'linear-gradient(135deg, #A6192E, #000000)',
-    live: true,
+    live: false,
   },
   {
     id: 'usd',
@@ -78,7 +78,7 @@ export const SCHOOLS = [
     light: '#005599',
     dark: '#00203a',
     gradient: 'linear-gradient(135deg, #003865, #0071bc)',
-    live: true,
+    live: false,
   },
   {
     id: 'lmu',
@@ -88,7 +88,7 @@ export const SCHOOLS = [
     light: '#0070d6',
     dark: '#003366',
     gradient: 'linear-gradient(135deg, #00539F, #8B0000)',
-    live: true,
+    live: false,
   },
   {
     id: 'usc',
@@ -98,7 +98,7 @@ export const SCHOOLS = [
     light: '#cc0000',
     dark: '#660000',
     gradient: 'linear-gradient(135deg, #990000, #FFCC00)',
-    live: true,
+    live: false,
   },
   {
     id: 'michigan',
@@ -108,10 +108,10 @@ export const SCHOOLS = [
     light: '#004f9a',
     dark: '#00152a',
     gradient: 'linear-gradient(135deg, #00274C, #FFCB05)',
-    live: true,
+    live: false,
   },
 
-  // ── Other launch schools ───────────────────────────────────────────────────
+  // ── Coming soon ───────────────────────────────────────────────────────────
   {
     id: 'ut-austin',
     name: 'University of Texas at Austin',
@@ -120,7 +120,7 @@ export const SCHOOLS = [
     light: '#e07328',
     dark: '#8a3d00',
     gradient: 'linear-gradient(135deg, #BF5700, #e07328)',
-    live: true,
+    live: false,
   },
   {
     id: 'penn-state',
@@ -130,7 +130,7 @@ export const SCHOOLS = [
     light: '#003882',
     dark: '#00112a',
     gradient: 'linear-gradient(135deg, #001E44, #1f4f8a)',
-    live: true,
+    live: false,
   },
   {
     id: 'florida',
@@ -140,7 +140,7 @@ export const SCHOOLS = [
     light: '#0033cc',
     dark: '#001470',
     gradient: 'linear-gradient(135deg, #0021A5, #FA4616)',
-    live: true,
+    live: false,
   },
   {
     id: 'asu',
@@ -150,7 +150,7 @@ export const SCHOOLS = [
     light: '#b5264f',
     dark: '#5e1129',
     gradient: 'linear-gradient(135deg, #8C1D40, #FFC627)',
-    live: true,
+    live: false,
   },
   {
     id: 'washington',
@@ -160,7 +160,7 @@ export const SCHOOLS = [
     light: '#6b46c1',
     dark: '#2d1a52',
     gradient: 'linear-gradient(135deg, #4B2E83, #b7a57a)',
-    live: true,
+    live: false,
   },
   {
     id: 'michigan-state',
@@ -170,7 +170,7 @@ export const SCHOOLS = [
     light: '#267a65',
     dark: '#0d2820',
     gradient: 'linear-gradient(135deg, #18453B, #267a65)',
-    live: true,
+    live: false,
   },
   {
     id: 'purdue',
@@ -180,7 +180,7 @@ export const SCHOOLS = [
     light: '#c49a4e',
     dark: '#5c4728',
     gradient: 'linear-gradient(135deg, #000000, #CEB888)',
-    live: true,
+    live: false,
   },
   {
     id: 'wisconsin',
@@ -190,7 +190,7 @@ export const SCHOOLS = [
     light: '#e53e3e',
     dark: '#8a0308',
     gradient: 'linear-gradient(135deg, #C5050C, #e53e3e)',
-    live: true,
+    live: false,
   },
   {
     id: 'illinois',
@@ -200,7 +200,7 @@ export const SCHOOLS = [
     light: '#1e4d8c',
     dark: '#0a1a30',
     gradient: 'linear-gradient(135deg, #13294B, #FF5F05)',
-    live: true,
+    live: false,
   },
   {
     id: 'tamu',
@@ -210,7 +210,7 @@ export const SCHOOLS = [
     light: '#7a0000',
     dark: '#2d0000',
     gradient: 'linear-gradient(135deg, #500000, #7a0000)',
-    live: true,
+    live: false,
   },
   {
     id: 'indiana',
@@ -220,7 +220,7 @@ export const SCHOOLS = [
     light: '#cc0000',
     dark: '#660000',
     gradient: 'linear-gradient(135deg, #990000, #cc0000)',
-    live: true,
+    live: false,
   },
   {
     id: 'georgia',
@@ -230,7 +230,7 @@ export const SCHOOLS = [
     light: '#e53e5e',
     dark: '#7a0820',
     gradient: 'linear-gradient(135deg, #BA0C2F, #000000)',
-    live: true,
+    live: false,
   },
   {
     id: 'colorado',
@@ -240,7 +240,7 @@ export const SCHOOLS = [
     light: '#333333',
     dark: '#000000',
     gradient: 'linear-gradient(135deg, #000000, #CFB87C)',
-    live: true,
+    live: false,
   },
   {
     id: 'virginia-tech',
@@ -250,7 +250,7 @@ export const SCHOOLS = [
     light: '#b02a57',
     dark: '#531328',
     gradient: 'linear-gradient(135deg, #861F41, #E5751F)',
-    live: true,
+    live: false,
   },
   {
     id: 'nc-state',
@@ -260,7 +260,7 @@ export const SCHOOLS = [
     light: '#e53e3e',
     dark: '#8a0000',
     gradient: 'linear-gradient(135deg, #CC0000, #000000)',
-    live: true,
+    live: false,
   },
   {
     id: 'oregon',
@@ -270,7 +270,7 @@ export const SCHOOLS = [
     light: '#1d6647',
     dark: '#0a2b1e',
     gradient: 'linear-gradient(135deg, #154733, #FEE123)',
-    live: true,
+    live: false,
   },
   {
     id: 'minnesota',
@@ -280,7 +280,7 @@ export const SCHOOLS = [
     light: '#a30022',
     dark: '#4a0010',
     gradient: 'linear-gradient(135deg, #7A0019, #FFCC33)',
-    live: true,
+    live: false,
   },
   {
     id: 'byu',
@@ -290,7 +290,7 @@ export const SCHOOLS = [
     light: '#0052a5',
     dark: '#001a35',
     gradient: 'linear-gradient(135deg, #002E5D, #0052a5)',
-    live: true,
+    live: false,
   },
   {
     id: 'unc',
@@ -300,10 +300,8 @@ export const SCHOOLS = [
     light: '#7ab8e8',
     dark: '#2272a5',
     gradient: 'linear-gradient(135deg, #4B9CD3, #13294B)',
-    live: true,
+    live: false,
   },
-
-  // ── Moved to bottom ────────────────────────────────────────────────────────
   {
     id: 'osu',
     name: 'Ohio State University',
@@ -312,7 +310,7 @@ export const SCHOOLS = [
     light: '#e53e3e',
     dark: '#7a0000',
     gradient: 'linear-gradient(135deg, #BB0000, #e53e3e)',
-    live: true,
+    live: false,
   },
 ]
 
