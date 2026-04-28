@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
@@ -69,13 +69,17 @@ export default function PostListingModal({ onClose, onPosted }) {
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
 
-  const handleLocationBlur = async () => {
-    if (!isHousing || !location.trim()) return
+  // Auto-geocode 800ms after the user stops typing in the address field
+  useEffect(() => {
+    if (!isHousing || !location.trim()) { setMapCoords(null); return }
     setGeocoding(true)
-    const coords = await geocode(location, school?.location ?? '')
-    setMapCoords(coords)
-    setGeocoding(false)
-  }
+    const timer = setTimeout(async () => {
+      const coords = await geocode(location, school?.location ?? '')
+      setMapCoords(coords)
+      setGeocoding(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [location, isHousing]) // eslint-disable-line
 
   const isHousing        = category === 'housing' || category === 'sublease'
   const isSublease       = category === 'sublease'
@@ -384,8 +388,7 @@ export default function PostListingModal({ onClose, onPosted }) {
         {/* ── Location ──────────────────────────────────────────────────────── */}
         <input
           value={location}
-          onChange={(e) => { setLocation(e.target.value); setMapCoords(null) }}
-          onBlur={handleLocationBlur}
+          onChange={(e) => setLocation(e.target.value)}
           placeholder={isHousing ? 'Full address (e.g. 123 Main St, Salt Lake City, UT)' : 'Location (e.g. near Rice-Eccles Stadium)'}
           maxLength={100}
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-school-primary"
