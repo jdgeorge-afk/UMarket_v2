@@ -9,12 +9,15 @@ import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib
 import { compressImage } from '../lib/compressImage'
 import MapPreview from './MapPreview'
 
-async function geocode(address) {
+async function geocode(address, locationHint = '') {
   if (!address?.trim()) return null
+  // Append the school's city/state so vague addresses resolve to the right area
+  // e.g. "123 Main St" → "123 Main St, Salt Lake City, UT"
+  const query = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
-      { headers: { 'Accept-Language': 'en', 'User-Agent': 'UMarket/1.0' } }
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'UMarket/1.0 contact@u-market.app' } }
     )
     const data = await res.json()
     if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
@@ -69,7 +72,7 @@ export default function PostListingModal({ onClose, onPosted }) {
   const handleLocationBlur = async () => {
     if (!isHousing || !location.trim()) return
     setGeocoding(true)
-    const coords = await geocode(location)
+    const coords = await geocode(location, school?.location ?? '')
     setMapCoords(coords)
     setGeocoding(false)
   }
