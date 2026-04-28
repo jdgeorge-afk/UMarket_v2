@@ -11,6 +11,16 @@ export const SCHOOLS = [
     live: true,
   },
   {
+    id: 'calpoly',
+    name: 'Cal Poly San Luis Obispo',
+    shortName: 'Cal Poly',
+    primary: '#154734',
+    light: '#1e6b4a',
+    dark: '#0d2e21',
+    gradient: 'linear-gradient(135deg, #154734, #C69214)',
+    live: true,
+  },
+  {
     id: 'tcu',
     name: 'Texas Christian University',
     shortName: 'TCU',
