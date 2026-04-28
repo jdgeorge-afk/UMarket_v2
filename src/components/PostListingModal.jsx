@@ -11,16 +11,17 @@ import MapPreview from './MapPreview'
 
 async function geocode(address, locationHint = '') {
   if (!address?.trim()) return null
-  // Append the school's city/state so vague addresses resolve to the right area
-  // e.g. "123 Main St" → "123 Main St, Salt Lake City, UT"
+  // Append school city/state so "123 Main St" resolves to the right city
   const query = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`,
-      { headers: { 'Accept-Language': 'en', 'User-Agent': 'UMarket/1.0 contact@u-market.app' } }
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
     )
+    if (!res.ok) return null
     const data = await res.json()
-    if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    if (Array.isArray(data) && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    }
   } catch {}
   return null
 }
@@ -65,6 +66,7 @@ export default function PostListingModal({ onClose, onPosted }) {
   // Map
   const [mapCoords, setMapCoords]   = useState(null) // { lat, lng }
   const [geocoding, setGeocoding]   = useState(false)
+  const [geocodeError, setGeocodeError] = useState(false)
   // UI
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
@@ -78,11 +80,17 @@ export default function PostListingModal({ onClose, onPosted }) {
 
   // Auto-geocode 800ms after the user stops typing in the address field
   useEffect(() => {
-    if (!isHousing || !location.trim()) { setMapCoords(null); return }
+    if (!isHousing || !location.trim()) {
+      setMapCoords(null)
+      setGeocodeError(false)
+      return
+    }
     setGeocoding(true)
+    setGeocodeError(false)
     const timer = setTimeout(async () => {
       const coords = await geocode(location, school?.location ?? '')
       setMapCoords(coords)
+      setGeocodeError(!coords)
       setGeocoding(false)
     }, 800)
     return () => clearTimeout(timer)
@@ -396,13 +404,13 @@ export default function PostListingModal({ onClose, onPosted }) {
         {isHousing && geocoding && (
           <p className="text-xs text-gray-400 mb-2">Finding location…</p>
         )}
-        {isHousing && mapCoords && (
+        {isHousing && mapCoords && !geocoding && (
           <div className="mb-3">
             <MapPreview lat={mapCoords.lat} lng={mapCoords.lng} />
           </div>
         )}
-        {isHousing && !mapCoords && !geocoding && location.trim() && (
-          <p className="text-xs text-gray-400 mb-2">Enter a full address to see it on the map.</p>
+        {isHousing && geocodeError && !geocoding && (
+          <p className="text-xs text-red-400 mb-2">Address not found — try adding the city and state (e.g. 123 Main St, Salt Lake City, UT)</p>
         )}
         {!isHousing && <div className="mb-2" />}
 
