@@ -11,18 +11,45 @@ import MapPreview from './MapPreview'
 
 async function geocode(address, locationHint = '') {
   if (!address?.trim()) return null
-  // Append school city/state so "123 Main St" resolves to the right city
-  const query = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
+
+  // 1️⃣ US Census Geocoder — handles abbreviations like "S", "Dr", "Blvd" natively
   try {
+    const fullAddress = locationHint
+      ? `${address.trim()}, ${locationHint}`
+      : address.trim()
+    const params = new URLSearchParams({
+      address: fullAddress,
+      benchmark: 'Public_AR_Current',
+      format: 'json',
+    })
+    const res = await fetch(
+      `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?${params}`
+    )
+    if (res.ok) {
+      const data = await res.json()
+      const match = data?.result?.addressMatches?.[0]
+      if (match) {
+        return { lat: match.coordinates.y, lng: match.coordinates.x }
+      }
+    }
+  } catch {}
+
+  // 2️⃣ Nominatim fallback
+  try {
+    const query = locationHint
+      ? `${address.trim()}, ${locationHint}`
+      : address.trim()
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
     )
-    if (!res.ok) return null
-    const data = await res.json()
-    if (Array.isArray(data) && data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+      }
     }
   } catch {}
+
   return null
 }
 
