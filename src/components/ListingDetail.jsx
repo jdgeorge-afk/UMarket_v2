@@ -6,6 +6,7 @@ import { trackView } from '../lib/personalization'
 import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
+import MapPreview from './MapPreview'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
 
@@ -218,6 +219,14 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         {listing.boosted && <Chip accent>Featured</Chip>}
         <Chip>{timeAgo(listing.created_at)}</Chip>
       </div>
+
+      {/* Map preview — housing listings with coordinates */}
+      {listing.is_housing && listing.lat && listing.lng && (
+        <div className="mb-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Location</p>
+          <MapPreview lat={listing.lat} lng={listing.lng} />
+        </div>
+      )}
 
       {/* Post ID — for reporting & boost requests */}
       <p className="text-xs text-gray-400 font-mono mb-4 select-all">

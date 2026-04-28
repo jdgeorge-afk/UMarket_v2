@@ -7,6 +7,20 @@ import Modal from './Modal'
 import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib/validation'
 import { compressImage } from '../lib/compressImage'
+import MapPreview from './MapPreview'
+
+async function geocode(address) {
+  if (!address?.trim()) return null
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'UMarket/1.0' } }
+    )
+    const data = await res.json()
+    if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+  } catch {}
+  return null
+}
 
 const MAX_IMAGES = 6
 
@@ -45,9 +59,20 @@ export default function PostListingModal({ onClose, onPosted }) {
   // Images
   const [files, setFiles]           = useState([])
   const [previews, setPreviews]     = useState([])
+  // Map
+  const [mapCoords, setMapCoords]   = useState(null) // { lat, lng }
+  const [geocoding, setGeocoding]   = useState(false)
   // UI
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
+
+  const handleLocationBlur = async () => {
+    if (!isHousing || !location.trim()) return
+    setGeocoding(true)
+    const coords = await geocode(location)
+    setMapCoords(coords)
+    setGeocoding(false)
+  }
 
   const isHousing        = category === 'housing' || category === 'sublease'
   const isSublease       = category === 'sublease'
@@ -157,6 +182,8 @@ export default function PostListingModal({ onClose, onPosted }) {
         spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
         contact_type: contactType,
         contact_value: sanitizeText(contactValue),
+        lat:  mapCoords?.lat ?? null,
+        lng:  mapCoords?.lng ?? null,
       }).select().single()
       if (insertErr) {
         console.error('Listing insert error:', insertErr)
@@ -353,10 +380,25 @@ export default function PostListingModal({ onClose, onPosted }) {
 
         {/* ── Location ──────────────────────────────────────────────────────── */}
         <input
-          value={location} onChange={(e) => setLocation(e.target.value)}
-          placeholder="Location (e.g. near Rice-Eccles Stadium)" maxLength={100}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-school-primary"
+          value={location}
+          onChange={(e) => { setLocation(e.target.value); setMapCoords(null) }}
+          onBlur={handleLocationBlur}
+          placeholder={isHousing ? 'Full address (e.g. 123 Main St, Salt Lake City, UT)' : 'Location (e.g. near Rice-Eccles Stadium)'}
+          maxLength={100}
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-school-primary"
         />
+        {isHousing && geocoding && (
+          <p className="text-xs text-gray-400 mb-2">Finding location…</p>
+        )}
+        {isHousing && mapCoords && (
+          <div className="mb-3">
+            <MapPreview lat={mapCoords.lat} lng={mapCoords.lng} />
+          </div>
+        )}
+        {isHousing && !mapCoords && !geocoding && location.trim() && (
+          <p className="text-xs text-gray-400 mb-2">Enter a full address to see it on the map.</p>
+        )}
+        {!isHousing && <div className="mb-2" />}
 
         {/* ── Contact Info ──────────────────────────────────────────────────── */}
         <div className="mb-4">
