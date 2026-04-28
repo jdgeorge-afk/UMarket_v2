@@ -101,7 +101,7 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
           onClick={async () => {
             if (!window.confirm('Delete this listing? This cannot be undone.')) return
             setDeleting(true)
-            await onDelete(listing.id)
+            await onDelete(listing)
           }}
           className="px-3 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
         >
@@ -322,14 +322,26 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     }
   }
 
-  const handleDelete = async (listingId) => {
+  const handleDelete = async (listing) => {
+    // Clean up storage images before deleting the row so we don't orphan files
+    const imagePaths = (listing.images ?? [])
+      .map((url) => {
+        const marker = '/listing-images/'
+        const idx = url.indexOf(marker)
+        return idx === -1 ? null : decodeURIComponent(url.slice(idx + marker.length))
+      })
+      .filter(Boolean)
+    if (imagePaths.length > 0) {
+      await supabase.storage.from('listing-images').remove(imagePaths)
+    }
+
     const { error } = await supabase
       .from('listings')
       .delete()
-      .eq('id', listingId)
+      .eq('id', listing.id)
       .eq('seller_id', user.id)
     if (!error) {
-      setListings((prev) => prev.filter((l) => l.id !== listingId))
+      setListings((prev) => prev.filter((l) => l.id !== listing.id))
     }
   }
 
