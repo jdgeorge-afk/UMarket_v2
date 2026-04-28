@@ -21,6 +21,16 @@ export const SCHOOLS = [
     live: true,
   },
   {
+    id: 'ucsb',
+    name: 'UC Santa Barbara',
+    shortName: 'UCSB',
+    primary: '#003660',
+    light: '#0064a4',
+    dark: '#002244',
+    gradient: 'linear-gradient(135deg, #003660, #FEBC11)',
+    live: true,
+  },
+  {
     id: 'tcu',
     name: 'Texas Christian University',
     shortName: 'TCU',
