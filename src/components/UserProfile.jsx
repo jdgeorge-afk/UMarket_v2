@@ -350,13 +350,11 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   }
 
   const handleRemoveContacted = async (listingId) => {
-    persistDismissed(DELETED_CONTACTS_KEY, listingId)
     setContactedItems((prev) => prev.filter((item) => item.listing.id !== listingId))
-    const { error } = await supabase.from('contact_requests')
+    await supabase.from('contact_requests')
       .delete()
       .eq('buyer_id', user.id)
       .eq('listing_id', listingId)
-    if (error) console.warn('contact_requests delete blocked (add RLS delete policy):', error.message)
   }
 
   const handleDeleteNotif = async (notifId) => {

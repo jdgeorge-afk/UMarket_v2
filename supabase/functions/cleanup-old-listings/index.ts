@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const CORS = { 'Access-Control-Allow-Origin': '*' }
 const MONTHS_OLD = 8
+const VIEW_RETENTION_DAYS = 45
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
@@ -74,13 +75,22 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log(`[cleanup] Deleted ${count} listings and ${storageDeleted} images (cutoff: ${cutoffISO})`)
+  // 4. Delete listing_views older than 45 days
+  const viewCutoff = new Date()
+  viewCutoff.setDate(viewCutoff.getDate() - VIEW_RETENTION_DAYS)
+  const { count: viewsDeleted } = await supabase
+    .from('listing_views')
+    .delete({ count: 'exact' })
+    .lt('viewed_at', viewCutoff.toISOString())
+
+  console.log(`[cleanup] Deleted ${count} listings, ${storageDeleted} images, ${viewsDeleted} old views`)
 
   return new Response(
     JSON.stringify({
       ok: true,
       listingsDeleted: count,
       storageFilesDeleted: storageDeleted,
+      viewsDeleted: viewsDeleted ?? 0,
       cutoff: cutoffISO,
     }),
     { headers: { ...CORS, 'Content-Type': 'application/json' } },
