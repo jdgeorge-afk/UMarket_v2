@@ -51,41 +51,42 @@ export default function SchoolPicker() {
       {/* School cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-2xl">
         {filtered.map((school) => (
-          <button
-            key={school.id}
-            onClick={() => school.live && selectSchool(school.id)}
-            disabled={!school.live}
-            className={[
-              'relative p-6 rounded-2xl text-left transition-all duration-200',
-              school.live
-                ? 'cursor-pointer hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/40 active:scale-[0.98]'
-                : 'cursor-not-allowed opacity-40 grayscale',
-            ].join(' ')}
-            style={
-              school.live
-                ? { background: school.gradient }
-                : { background: '#374151' }
-            }
-          >
-            {/* Coming soon badge */}
+          <div key={school.id} className="relative">
+            <button
+              onClick={() => school.live && selectSchool(school.id)}
+              disabled={!school.live}
+              className={[
+                'w-full p-6 rounded-2xl text-left transition-all duration-200',
+                school.live
+                  ? 'cursor-pointer hover:scale-[1.03] hover:shadow-2xl hover:shadow-black/40 active:scale-[0.98]'
+                  : 'cursor-not-allowed opacity-40 grayscale',
+              ].join(' ')}
+              style={
+                school.live
+                  ? { background: school.gradient }
+                  : { background: '#374151' }
+              }
+            >
+              {/* School info */}
+              <p className="text-white font-bold text-xl leading-tight">{school.shortName}</p>
+              <p className="text-white/65 text-sm mt-0.5">{school.name}</p>
+
+              {/* Live indicator */}
+              {school.live && (
+                <div className="flex items-center gap-1.5 mt-4">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-white/70 text-xs font-medium">Live</span>
+                </div>
+              )}
+            </button>
+
+            {/* Coming soon badge — outside the grayscale button so red shows */}
             {!school.live && (
-              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase">
+              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase pointer-events-none">
                 Coming Soon
               </span>
             )}
-
-            {/* School info */}
-            <p className="text-white font-bold text-xl leading-tight">{school.shortName}</p>
-            <p className="text-white/65 text-sm mt-0.5">{school.name}</p>
-
-            {/* Live indicator */}
-            {school.live && (
-              <div className="flex items-center gap-1.5 mt-4">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-white/70 text-xs font-medium">Live</span>
-              </div>
-            )}
-          </button>
+          </div>
         ))}
       </div>
 
