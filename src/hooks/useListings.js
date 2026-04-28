@@ -161,12 +161,12 @@ export function useListings({
       const CONDITION_RANK = { New: 1, 'Like New': 2, Good: 3, Fair: 4, Poor: 5, 'Parts Only': 6 }
 
       if (sortBy === 'newest') {
-        // True chronological — merge boosted back in, sort everything by date
+        // Strict chronological — merge boosted back in and sort purely by date.
+        // No personalization here so "Newest" always means newest.
         const all = [...activeBoosted, ...rest].sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         )
-        // Apply personalization on top if enough signal exists
-        setListings(hasSignal(school.id) ? scoreListings(all, school.id) : all)
+        setListings(all)
       } else if (sortBy === 'avail_asc') {
         // Fisher-Yates shuffle boosted for equal visibility, then sort rest by avail
         for (let i = activeBoosted.length - 1; i > 0; i--) {
