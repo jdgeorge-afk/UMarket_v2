@@ -52,7 +52,7 @@ export default function Modal({ children, onClose, fullHeight = false, wide = fa
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Mobile sticky header ────────────────────────────────────────── */}
-        <div className="sm:hidden flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-100 shrink-0">
+        <div className="sm:hidden flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-100 shrink-0 relative z-10 bg-white">
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
