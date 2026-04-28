@@ -147,9 +147,9 @@ export function useListings({
         : rawData
 
       // ── Boost algorithm (Facebook Marketplace-style) ──────────────────────
-      // Active boosted posts (not expired) are separated, randomly shuffled for
-      // equal visibility across all boosted sellers, then placed at the top.
-      // Regular posts keep their sort order below.
+      // When the user explicitly picks "Newest", ignore boost and show true
+      // chronological order across all posts. For every other sort, active
+      // boosted posts are shuffled to the top for equal visibility.
       const now = Date.now()
       const activeBoosted = (data ?? []).filter(
         (l) => l.boosted && (!l.boost_expires_at || new Date(l.boost_expires_at).getTime() > now)
@@ -157,38 +157,48 @@ export function useListings({
       const rest = (data ?? []).filter(
         (l) => !l.boosted || (l.boost_expires_at && new Date(l.boost_expires_at).getTime() <= now)
       )
-      // Fisher-Yates shuffle so every boosted seller gets equal top-page time
-      for (let i = activeBoosted.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
-      }
-      // Client-side post-processing for sorts that can't be expressed as a simple
-      // column order: avail_asc (free-text date) and condition_best (categorical).
-      // All other sorts are already applied by the server query above.
+
       const CONDITION_RANK = { New: 1, 'Like New': 2, Good: 3, Fair: 4, Poor: 5, 'Parts Only': 6 }
 
-      let rankedRest
-      if (sortBy === 'avail_asc') {
-        rankedRest = [...rest].sort((a, b) => {
-          if (!a.avail) return 1   // nulls last
+      if (sortBy === 'newest') {
+        // True chronological — merge boosted back in, sort everything by date
+        const all = [...activeBoosted, ...rest].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        )
+        // Apply personalization on top if enough signal exists
+        setListings(hasSignal(school.id) ? scoreListings(all, school.id) : all)
+      } else if (sortBy === 'avail_asc') {
+        // Fisher-Yates shuffle boosted for equal visibility, then sort rest by avail
+        for (let i = activeBoosted.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
+        }
+        const sorted = [...rest].sort((a, b) => {
+          if (!a.avail) return 1
           if (!b.avail) return -1
           const da = new Date(a.avail)
           const db = new Date(b.avail)
-          // Fall back to string compare if date parse fails (e.g. 'ASAP')
           if (isNaN(da) || isNaN(db)) return String(a.avail).localeCompare(String(b.avail))
           return da - db
         })
+        setListings([...activeBoosted, ...sorted])
       } else if (sortBy === 'condition_best') {
-        rankedRest = [...rest].sort(
+        for (let i = activeBoosted.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
+        }
+        const sorted = [...rest].sort(
           (a, b) => (CONDITION_RANK[a.condition] ?? 99) - (CONDITION_RANK[b.condition] ?? 99)
         )
-      } else if (sortBy === 'newest' && hasSignal(school.id)) {
-        // Personalize only when on default newest sort and enough signal exists
-        rankedRest = scoreListings(rest, school.id)
+        setListings([...activeBoosted, ...sorted])
       } else {
-        rankedRest = rest
+        // All other sorts (price, popular, viewed, beds) — shuffle boosted to top
+        for (let i = activeBoosted.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
+        }
+        setListings([...activeBoosted, ...rest])
       }
-      setListings([...activeBoosted, ...rankedRest])
     } catch (err) {
       setError(err.message)
     } finally {
