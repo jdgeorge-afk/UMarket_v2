@@ -69,6 +69,13 @@ export default function PostListingModal({ onClose, onPosted }) {
   const [uploading, setUploading]   = useState(false)
   const [error, setError]           = useState('')
 
+  const isHousing        = category === 'housing' || category === 'sublease'
+  const isSublease       = category === 'sublease'
+  const isLooking        = category === 'looking_for'
+  const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate'
+  const isClothing       = category === 'clothing'
+  const isEvents         = category === 'events'
+
   // Auto-geocode 800ms after the user stops typing in the address field
   useEffect(() => {
     if (!isHousing || !location.trim()) { setMapCoords(null); return }
@@ -80,13 +87,6 @@ export default function PostListingModal({ onClose, onPosted }) {
     }, 800)
     return () => clearTimeout(timer)
   }, [location, isHousing]) // eslint-disable-line
-
-  const isHousing        = category === 'housing' || category === 'sublease'
-  const isSublease       = category === 'sublease'
-  const isLooking        = category === 'looking_for'
-  const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate'
-  const isClothing       = category === 'clothing'
-  const isEvents         = category === 'events'
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files)
