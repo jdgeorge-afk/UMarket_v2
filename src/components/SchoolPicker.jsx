@@ -82,7 +82,7 @@ export default function SchoolPicker() {
 
             {/* Coming soon badge — outside the grayscale button so red shows */}
             {!school.live && (
-              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase pointer-events-none">
+              <span className="absolute top-3 right-3 bg-gray-200 text-red-500 text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase pointer-events-none">
                 Coming Soon
               </span>
             )}
