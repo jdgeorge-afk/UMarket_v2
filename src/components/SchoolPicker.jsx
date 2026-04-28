@@ -69,7 +69,7 @@ export default function SchoolPicker() {
           >
             {/* Coming soon badge */}
             {!school.live && (
-              <span className="absolute top-3 right-3 bg-black/30 text-white/80 text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase">
+              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase">
                 Coming Soon
               </span>
             )}
