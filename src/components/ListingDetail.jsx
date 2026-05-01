@@ -73,7 +73,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
 
   const markAsSold = async () => {
     setMarkingAsSold(true)
-    await supabase.from('listings').update({ sold: true }).eq('id', listing.id)
+    await supabase.from('listings').update({ sold: true, sold_at: new Date().toISOString() }).eq('id', listing.id)
     // Increment the seller's sold_count — fetch current value first for accuracy
     const { data: profileData } = await supabase
       .from('profiles').select('sold_count').eq('id', user.id).single()
