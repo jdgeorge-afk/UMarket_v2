@@ -14,9 +14,12 @@ function getSellerContact(listing, seller) {
   const type  = listing?.contact_type  || seller?.contact_type
   const value = listing?.contact_value || seller?.contact
   if (!type || !value) return null
+  const sellerName = seller?.name || 'there'
+  const title      = listing?.title || 'your listing'
+  const smsBody    = `Hi ${sellerName}! I saw your listing for "${title}" on https://u-market.app and wanted to reach out — is it still available?`
   switch (type) {
     case 'phone':
-      return { label: 'Phone / Text', display: value, href: `tel:${value}` }
+      return { label: 'Text', display: value, href: `sms:${value}?body=${encodeURIComponent(smsBody)}` }
     case 'email':
       return { label: 'Email', display: value, href: `mailto:${value}` }
     case 'instagram':
