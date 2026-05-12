@@ -1,6 +1,12 @@
 {
+  "functions": {
+    "api/listing/[id].js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "rewrites": [
-    { "source": "/share/:id", "destination": "/api/share/:id" },
-    { "source": "/(.*)",      "destination": "/index.html" }
+    { "source": "/share/:id",   "destination": "/api/share/:id" },
+    { "source": "/listing/:id", "destination": "/api/listing/:id" },
+    { "source": "/(.*)",        "destination": "/index.html" }
   ]
 }

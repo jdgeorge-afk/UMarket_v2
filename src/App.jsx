@@ -54,7 +54,7 @@ function ListingNotFound({ onGoHome }) {
 // Inner app — consumes both contexts (which are set up in the App wrapper below)
 // ─────────────────────────────────────────────────────────────────────────────
 function AppInner() {
-  const { school, mounted } = useSchool()
+  const { school, mounted, selectSchool } = useSchool()
   const { user, profile } = useAuth()
 
   // ── Navigation state ──────────────────────────────────────────────────────
@@ -169,21 +169,25 @@ function AppInner() {
   // Track whether we've done the one-time URL restore on initial load
   const urlRestoredRef = useRef(false)
 
-  // On first render (once school is available), parse URL and restore state.
-  // Checks /listing/:id path first, then falls back to legacy ?listing= params.
+  // On first render, parse URL and restore state.
+  // For /listing/:id and /share/:id paths, runs immediately on mount (before school
+  // is selected) so that share links bypass the school picker entirely — the listing's
+  // own school_id is used to auto-select the school.
   useEffect(() => {
-    if (!mounted || !school || urlRestoredRef.current) return
-    urlRestoredRef.current = true
+    if (!mounted || urlRestoredRef.current) return
 
     const listingId = parseListingPath(window.location.pathname)
     if (listingId) {
-      // Normalize /share/:id → /listing/:id so the URL is canonical from the start
+      urlRestoredRef.current = true
+      // Normalize /share/:id → /listing/:id
       if (window.location.pathname.startsWith('/share/')) {
         window.history.replaceState(null, '', `/listing/${listingId}`)
       }
       supabase.from('listings').select(LISTING_SELECT).eq('id', listingId).single()
         .then(({ data }) => {
           if (data) {
+            // If no school is selected yet, auto-select from the listing itself
+            if (!school && data.school_id) selectSchool(data.school_id)
             setSelectedListing(data)
             setCurrentView('detail')
           } else {
@@ -193,6 +197,10 @@ function AppInner() {
         })
       return
     }
+
+    // All other URL params require school to already be set
+    if (!school) return
+    urlRestoredRef.current = true
 
     const p = new URLSearchParams(window.location.search)
     if (p.has('listing')) {
