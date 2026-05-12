@@ -18,7 +18,7 @@ function getSellerContact(listing, seller) {
   const sellerName = seller?.name || 'there'
   const title      = listing?.title || 'your listing'
   const listingUrl = listing?.id ? `${APP_URL}/listing/${listing.id}` : APP_URL
-  const smsBody    = `Hi ${sellerName}! I saw your listing for "${title}" on U-Market and wanted to reach out — is it still available?\n${listingUrl}`
+  const smsBody    = `Hi ${sellerName}! I saw your listing for "${title}" on UMarket and wanted to reach out — is it still available?\n${listingUrl}`
   switch (type) {
     case 'phone':
       return { label: 'Text', display: value, href: `sms:${value}?body=${encodeURIComponent(smsBody)}` }

@@ -90,7 +90,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
     const price = listing.price != null
       ? ` — $${Number(listing.price).toLocaleString()}${listing.is_housing ? '/mo' : ''}`
       : ''
-    const smsBody = `Check out this listing on U-Market: "${listing.title}"${price}\n${url}`
+    const smsBody = `Check out this listing on UMarket: "${listing.title}"${price}\n${url}`
 
     if (navigator.share) {
       try {

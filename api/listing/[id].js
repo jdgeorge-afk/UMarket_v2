@@ -7,11 +7,14 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY,
 )
 
-// Bundled at deploy time via vercel.json includeFiles
-const INDEX_HTML = fs.readFileSync(
-  path.join(__dirname, '../../dist/index.html'),
-  'utf-8',
-)
+// process.cwd() is /var/task in Vercel Lambdas; includeFiles puts dist/index.html there
+let INDEX_HTML = ''
+try {
+  INDEX_HTML = fs.readFileSync(path.join(process.cwd(), 'dist/index.html'), 'utf-8')
+} catch {
+  // fallback if file not found (local dev)
+  INDEX_HTML = '<!doctype html><html><head></head><body><div id="root"></div></body></html>'
+}
 
 function esc(str) {
   return String(str ?? '')
@@ -51,6 +54,8 @@ module.exports = async function handler(req, res) {
     <meta property="og:title"        content="${esc(title)}" />
     <meta property="og:description"  content="${esc(desc)}" />
     <meta property="og:image"        content="${esc(image)}" />
+    <meta property="og:image:secure_url" content="${esc(image)}" />
+    <meta property="og:image:type"   content="image/jpeg" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card"        content="summary_large_image" />
