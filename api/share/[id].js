@@ -22,11 +22,11 @@ module.exports = async function handler(req, res) {
     .eq('id', id)
     .single()
 
-  const listingUrl = `https://www.u-market.app/listing/${id}`
+  const listingUrl = `https://u-market.app/listing/${id}`
 
   // Listing not found — redirect straight to home
   if (!listing) {
-    res.setHeader('Location', 'https://www.u-market.app')
+    res.setHeader('Location', 'https://u-market.app')
     return res.status(302).end()
   }
 
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
     ? `$${Number(listing.price).toLocaleString()}${listing.is_housing ? '/mo' : ''}`
     : null
   const desc  = [price, listing.description].filter(Boolean).join(' — ').slice(0, 200)
-  const image = listing.images?.[0] ?? 'https://www.u-market.app/og-image.png'
+  const image = listing.images?.[0] ?? 'https://u-market.app/og-image.png'
 
   // Bots (iMessage, WhatsApp, etc.) read the OG tags and stop here.
   // Real users hit the <script> redirect and land on the correct listing page.

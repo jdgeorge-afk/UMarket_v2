@@ -94,7 +94,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.title, text: smsBody, url: shareUrl })
+        await navigator.share({ title: listing.title, text: smsBody })
       } catch {
         // user cancelled — do nothing
       }
