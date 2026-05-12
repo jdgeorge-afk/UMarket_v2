@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
+// "apple" was too broad — matches AppleWebKit in every browser UA.
+// Target only Apple's specific crawler (Applebot) plus known social bots.
+const BOT_RE = /bot|crawl|spider|facebookexternalhit|twitterbot|whatsapp|telegram|slack|discord|linkedinbot|applebot/i
+
 function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -10,15 +14,16 @@ function esc(str) {
 
 module.exports = async function handler(req, res) {
   const { id } = req.query
-  const listingUrl = `https://u-market.app/listing/${id}`
+  const ua = req.headers['user-agent'] || ''
+  const isBot = BOT_RE.test(ua)
 
-  // If no ID, redirect home
-  if (!id) {
-    res.setHeader('Location', 'https://u-market.app')
+  // Real users: 302 directly to the listing page
+  if (!isBot) {
+    res.setHeader('Location', `https://u-market.app/listing/${id}`)
     return res.status(302).end()
   }
 
-  // Try to fetch listing for OG tags — failures are non-fatal
+  // Bots: fetch listing data and serve OG tags
   let listing = null
   try {
     const supabase = createClient(
@@ -40,16 +45,15 @@ module.exports = async function handler(req, res) {
   const desc  = [price, listing?.description].filter(Boolean).join(' — ').slice(0, 200)
             || 'Buy, sell, find housing and subleases near your campus.'
   const image = listing?.images?.[0] ?? 'https://u-market.app/og-image.png'
+  const url   = `https://u-market.app/listing/${id}`
 
-  // Bots read the OG tags. Real users are immediately redirected by the script.
   const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} | UMarket</title>
   <meta property="og:type"             content="website" />
-  <meta property="og:url"              content="${esc(listingUrl)}" />
+  <meta property="og:url"              content="${esc(url)}" />
   <meta property="og:title"            content="${esc(title)}" />
   <meta property="og:description"      content="${esc(desc)}" />
   <meta property="og:image"            content="${esc(image)}" />
@@ -60,12 +64,12 @@ module.exports = async function handler(req, res) {
   <meta name="twitter:title"           content="${esc(title)}" />
   <meta name="twitter:description"     content="${esc(desc)}" />
   <meta name="twitter:image"           content="${esc(image)}" />
-  <script>window.location.replace(${JSON.stringify(listingUrl)})</script>
+  <script>window.location.replace("https://u-market.app/listing/${esc(id)}")</script>
 </head>
-<body><p>Loading…</p></body>
+<body><p>${esc(title)}</p></body>
 </html>`
 
   res.setHeader('Content-Type', 'text/html')
-  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=3600')
   res.status(200).send(html)
 }

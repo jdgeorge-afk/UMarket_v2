@@ -27,8 +27,8 @@ import BoostModal from './components/BoostModal'
 const LISTING_SELECT = '*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)'
 
 function parseListingPath(pathname) {
-  const m = pathname.match(/^\/listing\/([^/]+)$/)
-  return m ? m[1] : null
+  const m = pathname.match(/^\/(listing|share)\/([^/]+)$/)
+  return m ? m[2] : null
 }
 
 // ── "Listing no longer available" fallback screen ────────────────────────────
@@ -177,6 +177,10 @@ function AppInner() {
 
     const listingId = parseListingPath(window.location.pathname)
     if (listingId) {
+      // Normalize /share/:id → /listing/:id so the URL is canonical from the start
+      if (window.location.pathname.startsWith('/share/')) {
+        window.history.replaceState(null, '', `/listing/${listingId}`)
+      }
       supabase.from('listings').select(LISTING_SELECT).eq('id', listingId).single()
         .then(({ data }) => {
           if (data) {
