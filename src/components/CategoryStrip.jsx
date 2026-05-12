@@ -14,6 +14,7 @@ const SECTIONS = [
     label: 'Housing',
     subs: [
       { value: 'housing',             label: 'All Housing'           },
+      { value: 'housing:landlord',    label: 'Housing by Landlord'   },
       { value: 'housing:sublease',    label: 'Sublease by Tenant'    },
       { value: 'housing:roommates',   label: 'Looking for Roommates' },
       { value: 'housing:looking_for', label: 'Looking for Housing'   },
