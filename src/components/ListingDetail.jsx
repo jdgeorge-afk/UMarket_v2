@@ -86,23 +86,23 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   }
 
   const handleShare = async () => {
-    const url  = `${APP_URL}/listing/${listing.id}`
+    const shareUrl = `${APP_URL}/share/${listing.id}`
     const price = listing.price != null
       ? ` — $${Number(listing.price).toLocaleString()}${listing.is_housing ? '/mo' : ''}`
       : ''
-    const smsBody = `Check out this listing on UMarket: "${listing.title}"${price}\n${url}`
+    const smsBody = `Check out this listing on UMarket: "${listing.title}"${price}\n${shareUrl}`
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.title, text: smsBody, url })
+        await navigator.share({ title: listing.title, text: smsBody, url: shareUrl })
       } catch {
         // user cancelled — do nothing
       }
     } else {
       try {
-        await navigator.clipboard.writeText(url)
+        await navigator.clipboard.writeText(shareUrl)
       } catch {
-        window.prompt('Copy this link:', url)
+        window.prompt('Copy this link:', shareUrl)
         return
       }
       setShareToast(true)
