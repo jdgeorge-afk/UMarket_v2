@@ -1,3 +1,11 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "functions": {
+    "api/listing/[id].js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
+  "rewrites": [
+    { "source": "/listing/:id", "destination": "/api/listing/:id" },
+    { "source": "/(.*)",        "destination": "/index.html" }
+  ]
 }

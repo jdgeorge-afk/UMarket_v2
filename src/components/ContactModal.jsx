@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Modal from './Modal'
+import { APP_URL } from '../constants/config'
 
 const CONTACT_TYPES = [
   { value: 'email',     label: 'Email' },
@@ -16,7 +17,8 @@ function getSellerContact(listing, seller) {
   if (!type || !value) return null
   const sellerName = seller?.name || 'there'
   const title      = listing?.title || 'your listing'
-  const smsBody    = `Hi ${sellerName}! I saw your listing for "${title}" on https://u-market.app and wanted to reach out — is it still available?`
+  const listingUrl = listing?.id ? `${APP_URL}/listing/${listing.id}` : APP_URL
+  const smsBody    = `Hi ${sellerName}! I saw your listing for "${title}" on U-Market and wanted to reach out — is it still available?\n${listingUrl}`
   switch (type) {
     case 'phone':
       return { label: 'Text', display: value, href: `sms:${value}?body=${encodeURIComponent(smsBody)}` }

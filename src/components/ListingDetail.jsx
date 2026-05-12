@@ -86,10 +86,15 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   }
 
   const handleShare = async () => {
-    const url = `${APP_URL}/listing/${listing.id}`
+    const url  = `${APP_URL}/listing/${listing.id}`
+    const price = listing.price != null
+      ? ` — $${Number(listing.price).toLocaleString()}${listing.is_housing ? '/mo' : ''}`
+      : ''
+    const smsBody = `Check out this listing on U-Market: "${listing.title}"${price}\n${url}`
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: listing.title, url })
+        await navigator.share({ title: listing.title, text: smsBody, url })
       } catch {
         // user cancelled — do nothing
       }
@@ -97,7 +102,6 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       try {
         await navigator.clipboard.writeText(url)
       } catch {
-        // clipboard blocked — last-resort fallback
         window.prompt('Copy this link:', url)
         return
       }
