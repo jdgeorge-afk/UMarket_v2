@@ -24,6 +24,7 @@ function resolveListingFilter(activeFilter) {
   // Housing section: top-level shows all housing types; sub-tabs drill down
   if (activeFilter === 'housing')
     return { categoryIn: ['housing', 'sublease', 'looking_housing', 'looking_roommate'] }
+  if (activeFilter === 'housing:landlord')    return { category: 'housing' }
   if (activeFilter === 'housing:sublease')    return { category: 'sublease' }
   if (activeFilter === 'housing:roommates')   return { category: 'looking_roommate' }
   if (activeFilter === 'housing:looking_for') return { category: 'looking_housing' }
@@ -48,6 +49,7 @@ function filterToLabel(activeFilter) {
   const map = {
     all:                       'All Listings',
     housing:                          'All Housing',
+    'housing:landlord':               'Housing by Landlord',
     'housing:sublease':               'Sublease by Tenant',
     'housing:roommates':              'Looking for Roommates',
     'housing:looking_for':            'Looking for Housing',
