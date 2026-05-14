@@ -310,14 +310,17 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
 
   const recordOutcome = async (listing, action, soldViaUmarket) => {
     await supabase.from('listing_outcomes').insert({
-      listing_id:       listing.id,
-      seller_id:        user.id,
+      listing_id:          listing.id,
+      seller_id:           user.id,
       action,
-      sold_via_umarket: soldViaUmarket,
-      listing_title:    listing.title,
-      listing_price:    listing.price ?? null,
-      listing_category: listing.category,
-      school_id:        listing.school_id,
+      sold_via_umarket:    soldViaUmarket,
+      listing_title:       listing.title,
+      listing_price:       listing.price ?? null,
+      listing_category:    listing.category,
+      school_id:           listing.school_id,
+      seller_name:         profile?.name ?? null,
+      seller_contact:      profile?.contact ?? null,
+      seller_contact_type: profile?.contact_type ?? null,
     }).then(() => {}).catch(() => {})
   }
 

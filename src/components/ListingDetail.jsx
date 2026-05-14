@@ -90,14 +90,17 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       .eq('id', user.id)
     // Record the survey response
     await supabase.from('listing_outcomes').insert({
-      listing_id:       listing.id,
-      seller_id:        user.id,
-      action:           'sold',
-      sold_via_umarket: soldViaUmarket,
-      listing_title:    listing.title,
-      listing_price:    listing.price ?? null,
-      listing_category: listing.category,
-      school_id:        listing.school_id,
+      listing_id:          listing.id,
+      seller_id:           user.id,
+      action:              'sold',
+      sold_via_umarket:    soldViaUmarket,
+      listing_title:       listing.title,
+      listing_price:       listing.price ?? null,
+      listing_category:    listing.category,
+      school_id:           listing.school_id,
+      seller_name:         seller?.name ?? null,
+      seller_contact:      seller?.contact ?? null,
+      seller_contact_type: seller?.contact_type ?? null,
     }).then(() => {}).catch(() => {})
     setMarkingAsSold(false)
     onBack()

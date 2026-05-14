@@ -43,7 +43,16 @@ function pct(n, total) {
 }
 
 function row(...cells) {
-  return `| ${cells.join(' | ')} |`
+  return `| ${cells.map((c) => String(c ?? '—').replace(/\|/g, '\\|')).join(' | ')} |`
+}
+
+function formatContact(type, value) {
+  if (!value) return '—'
+  if (type === 'phone')     return `📱 ${value}`
+  if (type === 'email')     return `✉️ ${value}`
+  if (type === 'instagram') return `📸 @${value}`
+  if (type === 'snapchat')  return `👻 @${value}`
+  return value
 }
 
 async function main() {
@@ -64,7 +73,11 @@ async function main() {
   const soldRows    = rows.filter((r) => r.action === 'sold')
   const deletedRows = rows.filter((r) => r.action === 'deleted')
 
-  // ── By school ───────────────────────────────────────────────────────────────
+  // ── Outreach lists ───────────────────────────────────────────────────────────
+  const didSellViaUmarket = rows.filter((r) => r.sold_via_umarket === true)
+  const didNotSell        = rows.filter((r) => r.sold_via_umarket === false)
+
+  // ── By school ────────────────────────────────────────────────────────────────
   const bySchool = {}
   rows.forEach((r) => {
     const s = r.school_id || 'Unknown'
@@ -74,7 +87,7 @@ async function main() {
     if (r.sold_via_umarket === false) bySchool[s].not++
   })
 
-  // ── By category ─────────────────────────────────────────────────────────────
+  // ── By category ──────────────────────────────────────────────────────────────
   const byCat = {}
   rows.forEach((r) => {
     const c = r.listing_category || 'Unknown'
@@ -83,20 +96,17 @@ async function main() {
     if (r.sold_via_umarket === true) byCat[c].via++
   })
 
-  // ── Recent 30 days ──────────────────────────────────────────────────────────
+  // ── Last 30 days ─────────────────────────────────────────────────────────────
   const cutoff = new Date()
   cutoff.setDate(cutoff.getDate() - 30)
-  const recent = rows.filter((r) => new Date(r.created_at) > cutoff)
+  const recent    = rows.filter((r) => new Date(r.created_at) > cutoff)
   const recentVia = recent.filter((r) => r.sold_via_umarket === true).length
-
-  // ── Last 10 outcomes ────────────────────────────────────────────────────────
-  const last10 = rows.slice(0, 10)
 
   const now = new Date().toUTCString()
 
   const md = `# UMarket Sales Report
 > Last updated: ${now}
-> Run this report anytime from **Actions → Generate Sales Report → Run workflow**.
+> Auto-runs every Monday. Trigger manually: **Actions → Generate Sales Report → Run workflow**
 
 ---
 
@@ -109,6 +119,7 @@ ${row('✅ Sold via UMarket', `${viaUmarket} (${pct(viaUmarket, total)})`)}
 ${row('👋 Sold elsewhere / removed', `${elsewhere} (${pct(elsewhere, total)})`)}
 ${row('⏭️ Survey skipped', `${skipped} (${pct(skipped, total)})`)}
 ${row('📊 Survey completion rate', pct(viaUmarket + elsewhere, total))}
+${row('📅 Last 30 days', `${recent.length} outcomes, ${recentVia} via UMarket (${pct(recentVia, recent.length)})`)}
 
 ---
 
@@ -135,15 +146,6 @@ ${row(
 
 ---
 
-## Last 30 Days
-
-${row('Metric', 'Value')}
-${row('---', '---')}
-${row('Outcomes', recent.length)}
-${row('Sold via UMarket', `${recentVia} (${pct(recentVia, recent.length)})`)}
-
----
-
 ## By School
 
 ${row('School', 'Total', 'Via UMarket', 'Elsewhere', 'UMarket %')}
@@ -166,25 +168,49 @@ ${Object.entries(byCat)
 
 ---
 
-## Recent Outcomes (Last 10)
+## 🎯 Outreach: Did NOT Sell via UMarket (${didNotSell.length})
 
-${row('Date', 'Title', 'Price', 'Category', 'School', 'Action', 'Via UMarket?')}
+These sellers said their item sold somewhere else, or deleted without selling through UMarket.
+Reach out to understand why and bring them back.
+
+${didNotSell.length === 0
+  ? '_No records yet._'
+  : `${row('Date', 'Seller', 'Contact', 'Listing', 'Price', 'School', 'Action')}
 ${row('---', '---', '---', '---', '---', '---', '---')}
-${last10.map((r) => row(
+${didNotSell.map((r) => row(
   new Date(r.created_at).toLocaleDateString('en-US'),
-  (r.listing_title ?? '—').slice(0, 40),
+  r.seller_name || '—',
+  formatContact(r.seller_contact_type, r.seller_contact),
+  (r.listing_title || '—').slice(0, 35),
   r.listing_price != null ? `$${Number(r.listing_price).toLocaleString()}` : '—',
-  r.listing_category ?? '—',
-  r.school_id ?? '—',
+  r.school_id || '—',
   r.action,
-  r.sold_via_umarket === true ? '✅ Yes' : r.sold_via_umarket === false ? '👋 No' : '⏭️ Skipped',
-)).join('\n')}
+)).join('\n')}`}
+
+---
+
+## ✅ Sold via UMarket (${didSellViaUmarket.length})
+
+These sellers confirmed their item sold through UMarket. Great for testimonials and success tracking.
+
+${didSellViaUmarket.length === 0
+  ? '_No records yet._'
+  : `${row('Date', 'Seller', 'Contact', 'Listing', 'Price', 'School')}
+${row('---', '---', '---', '---', '---', '---')}
+${didSellViaUmarket.map((r) => row(
+  new Date(r.created_at).toLocaleDateString('en-US'),
+  r.seller_name || '—',
+  formatContact(r.seller_contact_type, r.seller_contact),
+  (r.listing_title || '—').slice(0, 35),
+  r.listing_price != null ? `$${Number(r.listing_price).toLocaleString()}` : '—',
+  r.school_id || '—',
+)).join('\n')}`}
 `
 
   const outPath = path.join(process.cwd(), 'data', 'sales-report.md')
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(outPath, md)
-  console.log(`Report written to ${outPath} (${total} rows)`)
+  console.log(`Report written to ${outPath} (${total} rows, ${didNotSell.length} outreach, ${didSellViaUmarket.length} via UMarket)`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })
