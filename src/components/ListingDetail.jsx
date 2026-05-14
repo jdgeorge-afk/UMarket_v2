@@ -6,6 +6,7 @@ import { trackView } from '../lib/personalization'
 import Lightbox from './Lightbox'
 import ContactModal from './ContactModal'
 import ReportModal from './ReportModal'
+import SoldSurveyModal from './SoldSurveyModal'
 import MapPreview from './MapPreview'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
@@ -41,6 +42,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   const [reportOpen, setReportOpen] = useState(false)
   const [markingAsSold, setMarkingAsSold] = useState(false)
   const [shareToast, setShareToast] = useState(false)
+  const [soldSurveyOpen, setSoldSurveyOpen] = useState(false)
 
   const images = listing.images ?? []
   const isOwner = user?.id === listing.seller_id
@@ -71,16 +73,32 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
     setLightboxOpen(true)
   }
 
-  const markAsSold = async () => {
+  const markAsSold = () => {
+    // Show survey before marking — survey onAnswer callback does the actual work
+    setSoldSurveyOpen(true)
+  }
+
+  const doMarkAsSold = async (soldViaUmarket) => {
+    setSoldSurveyOpen(false)
     setMarkingAsSold(true)
     await supabase.from('listings').update({ sold: true, sold_at: new Date().toISOString() }).eq('id', listing.id)
-    // Increment the seller's sold_count — fetch current value first for accuracy
     const { data: profileData } = await supabase
       .from('profiles').select('sold_count').eq('id', user.id).single()
     await supabase
       .from('profiles')
       .update({ sold_count: (profileData?.sold_count ?? 0) + 1 })
       .eq('id', user.id)
+    // Record the survey response
+    await supabase.from('listing_outcomes').insert({
+      listing_id:       listing.id,
+      seller_id:        user.id,
+      action:           'sold',
+      sold_via_umarket: soldViaUmarket,
+      listing_title:    listing.title,
+      listing_price:    listing.price ?? null,
+      listing_category: listing.category,
+      school_id:        listing.school_id,
+    }).then(() => {}).catch(() => {})
     setMarkingAsSold(false)
     onBack()
   }
@@ -309,6 +327,9 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       )}
       {reportOpen && (
         <ReportModal listingId={listing.id} onClose={() => setReportOpen(false)} />
+      )}
+      {soldSurveyOpen && (
+        <SoldSurveyModal action="sold" onAnswer={doMarkAsSold} />
       )}
     </div>
   )

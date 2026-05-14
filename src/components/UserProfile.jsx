@@ -61,6 +61,7 @@ import { GRADES } from '../constants/categories'
 import ListingCard from './ListingCard'
 import EditListingModal from './EditListingModal'
 import BoostModal from './BoostModal'
+import SoldSurveyModal from './SoldSurveyModal'
 import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, validateImageFile, sanitizeText, profileSchema } from '../lib/validation'
 
@@ -99,9 +100,9 @@ function OwnerActions({ listing, onEdit, onToggleSold, onDelete, onBoost }) {
         <button
           disabled={deleting}
           onClick={async () => {
-            if (!window.confirm('Delete this listing? This cannot be undone.')) return
             setDeleting(true)
             await onDelete(listing)
+            setDeleting(false)
           }}
           className="px-3 text-xs font-semibold py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
         >
@@ -163,6 +164,8 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [boostingListing, setBoostingListing] = useState(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [legalOpen, setLegalOpen] = useState(false)
+  // survey = { action: 'sold'|'deleted', listing, onConfirm: fn(soldViaUmarket) }
+  const [survey, setSurvey] = useState(null)
   const avatarInputRef = useRef(null)
 
   const isOwn = user?.id === userId
@@ -305,16 +308,28 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     setEditing(false)
   }
 
-  const handleToggleSold = async (listing) => {
+  const recordOutcome = async (listing, action, soldViaUmarket) => {
+    await supabase.from('listing_outcomes').insert({
+      listing_id:       listing.id,
+      seller_id:        user.id,
+      action,
+      sold_via_umarket: soldViaUmarket,
+      listing_title:    listing.title,
+      listing_price:    listing.price ?? null,
+      listing_category: listing.category,
+      school_id:        listing.school_id,
+    }).then(() => {}).catch(() => {})
+  }
+
+  const doToggleSold = async (listing) => {
     const nowSold = !listing.sold
     const { error } = await supabase
       .from('listings')
-      .update({ sold: nowSold })
+      .update({ sold: nowSold, ...(nowSold ? { sold_at: new Date().toISOString() } : {}) })
       .eq('id', listing.id)
       .eq('seller_id', user.id)
     if (!error) {
       setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, sold: nowSold } : l))
-      // Keep profile sold_count in sync with the listing's sold state
       const delta    = nowSold ? 1 : -1
       const newCount = Math.max(0, (profile?.sold_count ?? 0) + delta)
       await supabase.from('profiles').update({ sold_count: newCount }).eq('id', user.id)
@@ -322,8 +337,25 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     }
   }
 
-  const handleDelete = async (listing) => {
-    // Clean up storage images before deleting the row so we don't orphan files
+  const handleToggleSold = (listing) => {
+    if (listing.sold) {
+      // Unmarking sold — no survey needed
+      doToggleSold(listing)
+      return
+    }
+    // Marking as sold — show survey first
+    setSurvey({
+      action: 'sold',
+      listing,
+      onConfirm: async (soldViaUmarket) => {
+        setSurvey(null)
+        await recordOutcome(listing, 'sold', soldViaUmarket)
+        await doToggleSold(listing)
+      },
+    })
+  }
+
+  const doDelete = async (listing) => {
     const imagePaths = (listing.images ?? [])
       .map((url) => {
         const marker = '/listing-images/'
@@ -334,7 +366,6 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     if (imagePaths.length > 0) {
       await supabase.storage.from('listing-images').remove(imagePaths)
     }
-
     const { error } = await supabase
       .from('listings')
       .delete()
@@ -343,6 +374,18 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     if (!error) {
       setListings((prev) => prev.filter((l) => l.id !== listing.id))
     }
+  }
+
+  const handleDelete = (listing) => {
+    setSurvey({
+      action: 'deleted',
+      listing,
+      onConfirm: async (soldViaUmarket) => {
+        setSurvey(null)
+        await recordOutcome(listing, 'deleted', soldViaUmarket)
+        await doDelete(listing)
+      },
+    })
   }
 
   const handleListingSaved = (updated) => {
@@ -920,6 +963,14 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
 
       {/* Legal modal */}
       {legalOpen && <LegalModal onClose={() => setLegalOpen(false)} />}
+
+      {/* Sold/delete survey modal */}
+      {survey && (
+        <SoldSurveyModal
+          action={survey.action}
+          onAnswer={survey.onConfirm}
+        />
+      )}
     </div>
   )
 }
