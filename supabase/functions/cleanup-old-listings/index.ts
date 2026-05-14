@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const CORS = { 'Access-Control-Allow-Origin': '*' }
 const MONTHS_OLD = 8
 const VIEW_RETENTION_DAYS = 45
-const SOLD_DELETE_DAYS = 3
+const SOLD_DELETE_DAYS = 7
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
