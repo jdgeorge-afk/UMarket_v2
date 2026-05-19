@@ -1,0 +1,16 @@
+# Credentials — never commit these
+.env
+token.json
+gmail_oauth_credentials.json
+
+# Scraped data
+data/raw/
+data/processed/
+data/google_api_spend.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
