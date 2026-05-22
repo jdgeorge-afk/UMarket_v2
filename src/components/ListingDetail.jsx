@@ -79,6 +79,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
   }
 
   const doMarkAsSold = async (soldViaUmarket) => {
+    if (soldViaUmarket === null || soldViaUmarket === undefined) return // must pick an option
     setSoldSurveyOpen(false)
     setMarkingAsSold(true)
     await supabase.from('listings').update({ sold: true, sold_at: new Date().toISOString() }).eq('id', listing.id)
