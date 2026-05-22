@@ -9,11 +9,21 @@ import ListingCard from './ListingCard'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
   if (!dateStr) return ''
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000)
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
+  const diff   = Date.now() - new Date(dateStr).getTime()
+  const mins   = Math.floor(diff / 60000)
+  const hours  = Math.floor(diff / 3600000)
+  const days   = Math.floor(diff / 86400000)
+  const weeks  = Math.floor(days / 7)
+  const months = Math.floor(days / 30)
+  if (mins < 1)     return 'just now'
+  if (mins < 60)    return `${mins}m ago`
+  if (hours < 24)   return `${hours}h ago`
+  if (days === 1)   return 'yesterday'
+  if (days < 7)     return 'this week'
+  if (weeks === 1)  return 'a week ago'
+  if (weeks < 4)    return `${weeks} weeks ago`
+  if (months === 1) return 'a month ago'
+  return `${months} months ago`
 }
 
 // Static fallback shown before data loads (or if db is empty)
