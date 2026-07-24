@@ -104,18 +104,24 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
     try {
       const newUrls   = newFiles.length ? await uploadNewImages() : []
       const allImages = [...existingImages, ...newUrls]
+      const newPrice = (isLooking || isLookingHousing) ? null : (Number(price) || 0)
+      const oldPrice = Number(listing.price) || 0
+      const now = new Date().toISOString()
+      const priceDrop = newPrice !== null && newPrice < oldPrice ? now : (newPrice > oldPrice ? null : listing.price_dropped_at ?? null)
       const updates = {
         title:       sanitizeText(title),
         description: sanitizeText(description),
         location:    sanitizeText(location),
         images:      allImages,
-        price:       (isLooking || isLookingHousing) ? null : (Number(price) || 0),
+        price:       newPrice,
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
         condition:   (isLooking || isLookingHousing || isHousing) ? null : condition,
         beds:            (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
         size:            isHousing ? sanitizeText(size) : null,
         avail:           (isHousing || isLookingHousing || isEvents) ? sanitizeText(avail) : null,
         spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
+        updated_at:      now,
+        price_dropped_at: priceDrop,
       }
       const { error: updateErr } = await supabase
         .from('listings')

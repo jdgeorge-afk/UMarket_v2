@@ -11,20 +11,6 @@ import MapPreview from './MapPreview'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
 
-function timeAgo(dateStr) {
-  const diff  = Date.now() - new Date(dateStr).getTime()
-  const days  = Math.floor(diff / 86400000)
-  const weeks = Math.floor(days / 7)
-  const months = Math.floor(days / 30)
-  if (days < 1)    return 'Today'
-  if (days === 1)  return 'Yesterday'
-  if (days < 7)    return 'This week'
-  if (weeks === 1) return 'A week ago'
-  if (weeks < 4)   return `${weeks} weeks ago`
-  if (months === 1) return 'A month ago'
-  return `${months} months ago`
-}
-
 function Chip({ children, accent }) {
   return (
     <span
@@ -248,7 +234,6 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         )}
         {listing.category === 'events' && listing.avail && <Chip>{listing.avail}</Chip>}
         {listing.boosted && <Chip accent>Featured</Chip>}
-        <Chip>{timeAgo(listing.created_at)}</Chip>
       </div>
 
       {/* Map preview — housing listings with coordinates */}

@@ -79,7 +79,7 @@ function HousingCard({ listing, onOpen }) {
             {sellerInitial}
           </div>
           <p className="text-xs text-gray-400">
-            {l.profiles?.name ?? 'Student'} · {timeAgo(l.created_at)}
+            {l.profiles?.name ?? 'Student'}
           </p>
         </div>
       </div>

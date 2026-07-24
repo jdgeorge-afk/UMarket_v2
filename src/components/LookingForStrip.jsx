@@ -80,7 +80,7 @@ export default function LookingForStrip({ onOpenListing, onFilter, onPostOpen })
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
               <p className="text-xs text-gray-400">
-                {item.profiles?.name?.split(' ')[0] ?? 'Someone'} · {timeAgo(item.created_at)}
+                {item.profiles?.name?.split(' ')[0] ?? 'Someone'}
               </p>
             </div>
             {item.budget && (
