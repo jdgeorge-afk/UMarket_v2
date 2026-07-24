@@ -172,73 +172,112 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
         </div>
 
         {/* Title */}
-        <input
-          value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100}
-          placeholder="Title *"
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary"
-        />
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Title *</label>
+          <input
+            value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100}
+            placeholder="Title"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+          />
+        </div>
 
         {/* Price / Budget */}
         {(isLooking || isLookingHousing) ? (
-          <input type="text" inputMode="numeric" value={budget}
-            onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 5))}
-            placeholder={isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
-        ) : !isHousing && (
-          <input type="text" inputMode="numeric" value={price}
-            onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 5))}
-            placeholder="Price ($)"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+              {isLookingHousing ? 'Max Monthly Rent ($)' : 'Max Budget ($)'}
+            </label>
+            <input type="text" inputMode="numeric" value={budget}
+              onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              placeholder="0"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          </div>
+        ) : (
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+              {isHousing ? 'Monthly Rent ($)' : 'Price ($)'}
+            </label>
+            <input type="text" inputMode="numeric" value={price}
+              onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              placeholder="0"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          </div>
         )}
 
         {/* Housing fields */}
         {(isHousing || isLookingHousing) && (
           <div className={`grid gap-2 mb-3 ${isHousing ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <input type="number" value={beds} onChange={(e) => setBeds(e.target.value)}
-              placeholder="# Beds" min={0}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Bedrooms</label>
+              <input type="number" value={beds} onChange={(e) => setBeds(e.target.value)} min={0}
+                placeholder="0"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+            </div>
             {isHousing && (
-              <input value={size} onChange={(e) => setSize(e.target.value)} placeholder="Size (1BR/1BA)"
-                className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Bathrooms</label>
+                <input value={size} onChange={(e) => setSize(e.target.value)} placeholder="e.g. 1.5"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+              </div>
             )}
-            <input value={avail} onChange={(e) => setAvail(e.target.value)}
-              placeholder={isLookingHousing ? 'Move-in Date' : 'Available'}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                {isLookingHousing ? 'Move-in Date' : 'Available'}
+              </label>
+              <input value={avail} onChange={(e) => setAvail(e.target.value)}
+                placeholder={isLookingHousing ? 'e.g. Aug 2025' : 'e.g. Aug 2025'}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+            </div>
           </div>
         )}
 
         {/* Sublease — spots available */}
         {isSublease && (
-          <input type="number" value={spotsAvailable} onChange={(e) => setSpotsAvailable(e.target.value)}
-            placeholder="Spots available (# of subleasers needed)" min={1}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Spots Available</label>
+            <input type="number" value={spotsAvailable} onChange={(e) => setSpotsAvailable(e.target.value)} min={1}
+              placeholder="# of subleasers needed"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          </div>
         )}
 
         {/* Events — date & time */}
         {isEvents && (
-          <input value={avail} onChange={(e) => setAvail(e.target.value)}
-            placeholder="Date & Time (e.g. Sat Mar 15, 7PM)"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Date & Time</label>
+            <input value={avail} onChange={(e) => setAvail(e.target.value)}
+              placeholder="e.g. Sat Mar 15, 7PM"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+          </div>
         )}
 
         {/* Condition */}
         {!isLooking && !isLookingHousing && !isHousing && (
-          <select value={condition} onChange={(e) => setCondition(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary bg-white">
-            <option value="">Condition (optional)</option>
-            {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
-          </select>
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Condition</label>
+            <select value={condition} onChange={(e) => setCondition(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary bg-white">
+              <option value="">Select condition</option>
+              {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
         )}
 
         {/* Description */}
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description" rows={3} maxLength={2000}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 resize-none focus:outline-none focus:ring-1 focus:ring-school-primary" />
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe your listing" rows={3} maxLength={2000}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-school-primary" />
+        </div>
 
         {/* Location */}
-        <input value={location} onChange={(e) => setLocation(e.target.value)}
-          placeholder="Location" maxLength={100}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+        <div className="mb-4">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Location</label>
+          <input value={location} onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. near campus" maxLength={100}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+        </div>
 
         {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2 mb-3">{error}</p>}
 
