@@ -9,47 +9,21 @@ import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib
 import { compressImage } from '../lib/compressImage'
 import MapPreview from './MapPreview'
 
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
+
 async function geocode(address, locationHint = '') {
-  if (!address?.trim()) return null
-
-  // 1️⃣ US Census Geocoder — handles abbreviations like "S", "Dr", "Blvd" natively
+  if (!address?.trim() || !MAPS_KEY) return null
   try {
-    const fullAddress = locationHint
-      ? `${address.trim()}, ${locationHint}`
-      : address.trim()
-    const params = new URLSearchParams({
-      address: fullAddress,
-      benchmark: 'Public_AR_Current',
-      format: 'json',
-    })
+    const full = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
     const res = await fetch(
-      `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?${params}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(full)}&key=${MAPS_KEY}`
     )
     if (res.ok) {
       const data = await res.json()
-      const match = data?.result?.addressMatches?.[0]
-      if (match) {
-        return { lat: match.coordinates.y, lng: match.coordinates.x }
-      }
+      const loc = data?.results?.[0]?.geometry?.location
+      if (loc) return { lat: loc.lat, lng: loc.lng }
     }
   } catch {}
-
-  // 2️⃣ Nominatim fallback
-  try {
-    const query = locationHint
-      ? `${address.trim()}, ${locationHint}`
-      : address.trim()
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
-    )
-    if (res.ok) {
-      const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
-      }
-    }
-  } catch {}
-
   return null
 }
 
