@@ -35,6 +35,8 @@ export function useListings({
   conditions = null,
   clothingSizes = null,
   genders = null,
+  minBeds = null,
+  listedWithin = null, // 'today' | 'week' | 'month' | null
   userType = null, // 'student' | 'landlord' | null (no filter)
 } = {}) {
   const { school } = useSchool()
@@ -56,7 +58,7 @@ export function useListings({
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), userType])
+  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), minBeds, listedWithin, userType])
 
   const fetchListings = async () => {
     setLoading(true)
@@ -105,6 +107,12 @@ export function useListings({
       if (conditions && conditions.length > 0) query = query.in('condition', conditions)
       if (clothingSizes && clothingSizes.length > 0) query = query.in('size', clothingSizes)
       if (genders && genders.length > 0) query = query.in('gender', genders)
+      if (minBeds !== null) query = query.gte('beds', minBeds)
+      if (listedWithin) {
+        const DAY = 86400000
+        const cutoffs = { today: Date.now() - DAY, week: Date.now() - 7 * DAY, month: Date.now() - 30 * DAY }
+        query = query.gte('created_at', new Date(cutoffs[listedWithin]).toISOString())
+      }
 
       if (favoriteIds) {
         query = query.in('id', favoriteIds)

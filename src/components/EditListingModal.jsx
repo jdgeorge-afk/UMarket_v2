@@ -99,6 +99,11 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
     )
     if (!valid) { setError(firstError); return }
 
+    if (isHousing && (!price || Number(price) < 1)) {
+      setError('Please enter a monthly rent amount greater than $0.')
+      return
+    }
+
     setSaving(true)
     setError('')
     try {

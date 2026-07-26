@@ -188,6 +188,12 @@ export default function PostListingModal({ onClose, onPosted }) {
     )
     if (!valid) { setError(firstError); return }
 
+    // Housing and sublease listings must have a real price (no $0 rent)
+    if ((isHousing) && (!price || Number(price) < 1)) {
+      setError('Please enter a monthly rent amount greater than $0.')
+      return
+    }
+
     setUploading(true)
     setError('')
     try {

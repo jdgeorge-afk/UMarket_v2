@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
 const GENDERS = ["Men's", "Women's", 'Unisex']
+const BED_OPTIONS = [{ label: '1+', value: 1 }, { label: '2+', value: 2 }, { label: '3+', value: 3 }, { label: '4+', value: 4 }]
+const LISTED_WITHIN = [{ label: 'Today', value: 'today' }, { label: 'This Week', value: 'week' }, { label: 'This Month', value: 'month' }]
 
 // Build the sort options relevant to the current section.
 // Global sorts always appear; housing/marketplace sorts are context-specific.
@@ -33,9 +35,14 @@ export default function FilterBar({
   minPrice, maxPrice, conditions,
   onMinPrice, onMaxPrice, onToggleCondition,
   clothingSizes, genders, onToggleClothingSize, onToggleGender,
+  minBeds, onMinBeds,
+  listedWithin, onListedWithin,
+  verifiedOnly, onVerifiedOnly,
+  hasPhotos, onHasPhotos,
   onClearExtraFilters, hasExtraFilters,
 }) {
   const isClothing = activeFilter === 'marketplace:clothing'
+  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
   const hasFilter = (activeFilter && activeFilter !== 'all') || hasExtraFilters
   const sortOptions = getSortOptions(activeFilter)
   const [open, setOpen] = useState(false)
@@ -188,6 +195,76 @@ export default function FilterBar({
                 </div>
               </div>
             )}
+
+            {/* Min beds — housing only */}
+            {isHousingSection && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Min Bedrooms</p>
+                <div className="flex flex-wrap gap-2">
+                  {BED_OPTIONS.map((b) => (
+                    <button
+                      key={b.value}
+                      onClick={() => onMinBeds(minBeds === b.value ? null : b.value)}
+                      className={[
+                        'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                        minBeds === b.value
+                          ? 'bg-school-primary text-white border-school-primary'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                      ].join(' ')}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Listed within */}
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Listed Within</p>
+              <div className="flex flex-wrap gap-2">
+                {LISTED_WITHIN.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => onListedWithin(listedWithin === t.value ? null : t.value)}
+                    className={[
+                      'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                      listedWithin === t.value
+                        ? 'bg-school-primary text-white border-school-primary'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                    ].join(' ')}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Toggles row */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => onHasPhotos(!hasPhotos)}
+                className={[
+                  'flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors',
+                  hasPhotos
+                    ? 'bg-school-primary text-white border-school-primary'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                ].join(' ')}
+              >
+                Has Photos
+              </button>
+              <button
+                onClick={() => onVerifiedOnly(!verifiedOnly)}
+                className={[
+                  'flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors',
+                  verifiedOnly
+                    ? 'bg-school-primary text-white border-school-primary'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                ].join(' ')}
+              >
+                Verified Sellers
+              </button>
+            </div>
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-1 border-t border-gray-100">

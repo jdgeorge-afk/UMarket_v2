@@ -323,7 +323,10 @@ export default function ListingFeed({
   const [conditions, setConditions] = useState([])
   const [clothingSizes, setClothingSizes] = useState([])
   const [genders, setGenders] = useState([])
-  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
+  const [minBeds, setMinBeds] = useState(null)
+  const [listedWithin, setListedWithin] = useState(null)
+  const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [hasPhotos, setHasPhotos] = useState(false)
 
   const toggleCondition = (c) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
@@ -332,12 +335,15 @@ export default function ListingFeed({
   const toggleGender = (g) =>
     setGenders((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])
 
-  const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([]) }
-  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0
+  const clearExtraFilters = () => {
+    setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([])
+    setMinBeds(null); setListedWithin(null); setVerifiedOnly(false); setHasPhotos(false)
+  }
+  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || listedWithin !== null || verifiedOnly || hasPhotos
 
   // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
-  const { listings, loading, error } = useListings({
+  const { listings: rawListings, loading, error } = useListings({
     ...listingFilter,
     sortBy,
     searchQuery,
@@ -348,7 +354,16 @@ export default function ListingFeed({
     conditions: conditions.length > 0 ? conditions : null,
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
+    minBeds,
+    listedWithin,
     userType: null,
+  })
+
+  // Client-side filters that can't easily be done server-side
+  const listings = rawListings.filter((l) => {
+    if (verifiedOnly && !l.profiles?.verified) return false
+    if (hasPhotos && (!l.images || l.images.length === 0)) return false
+    return true
   })
 
   // Events tab gets its own full-page component
@@ -425,6 +440,14 @@ export default function ListingFeed({
         genders={genders}
         onToggleClothingSize={toggleClothingSize}
         onToggleGender={toggleGender}
+        minBeds={minBeds}
+        onMinBeds={setMinBeds}
+        listedWithin={listedWithin}
+        onListedWithin={setListedWithin}
+        verifiedOnly={verifiedOnly}
+        onVerifiedOnly={setVerifiedOnly}
+        hasPhotos={hasPhotos}
+        onHasPhotos={setHasPhotos}
         onClearExtraFilters={clearExtraFilters}
         hasExtraFilters={hasExtraFilters}
       />
