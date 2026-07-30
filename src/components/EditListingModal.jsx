@@ -99,6 +99,11 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
     )
     if (!valid) { setError(firstError); return }
 
+    if (isHousing && !location.trim()) {
+      setError('Please enter the full address so we can show it on the map.')
+      return
+    }
+
     if (isHousing && (!price || Number(price) < 1)) {
       setError('Please enter a monthly rent amount greater than $0.')
       return
@@ -284,7 +289,7 @@ export default function EditListingModal({ listing, onClose, onSaved }) {
 
         {/* Location */}
         <div className="mb-4">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Location</label>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">{isHousing ? 'Address *' : 'Location'}</label>
           <input value={location} onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. near campus" maxLength={100}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />

@@ -163,8 +163,14 @@ export default function PostListingModal({ onClose, onPosted }) {
     )
     if (!valid) { setError(firstError); return }
 
+    // Housing listings must have an address for the map
+    if (isHousing && !location.trim()) {
+      setError('Please enter the full address so we can show it on the map.')
+      return
+    }
+
     // Housing and sublease listings must have a real price (no $0 rent)
-    if ((isHousing) && (!price || Number(price) < 1)) {
+    if (isHousing && (!price || Number(price) < 1)) {
       setError('Please enter a monthly rent amount greater than $0.')
       return
     }
@@ -403,6 +409,9 @@ export default function PostListingModal({ onClose, onPosted }) {
         />
 
         {/* ── Location ──────────────────────────────────────────────────────── */}
+        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+          {isHousing ? 'Address *' : 'Location'}
+        </label>
         <input
           value={location}
           onChange={(e) => setLocation(e.target.value)}
