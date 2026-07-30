@@ -1,4 +1,4 @@
-export default function SectionTabs({ activeFilter, onFilter }) {
+export default function SectionTabs({ activeFilter, onFilter, onAdvertiseOpen }) {
   const tabs = [
     { label: 'Home',        value: 'all'         },
     { label: 'Housing',     value: 'housing'     },
@@ -34,6 +34,14 @@ export default function SectionTabs({ activeFilter, onFilter }) {
           </button>
         )
       })}
+
+      {/* Advertise tab — always visible, red */}
+      <button
+        onClick={onAdvertiseOpen}
+        className="ml-1 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shrink-0 transition-colors bg-red-500 hover:bg-red-600 text-white border border-red-500"
+      >
+        Advertise with Us
+      </button>
     </div>
   )
 }

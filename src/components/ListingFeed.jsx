@@ -316,6 +316,7 @@ export default function ListingFeed({
   onOpenListing,
   onRequireAuth,
   onPostOpen,
+  onAdvertiseOpen,
 }) {
   const { user } = useAuth()
   const [minPrice, setMinPrice] = useState('')
@@ -370,7 +371,7 @@ export default function ListingFeed({
   if (!favoritesOnly && !searchQuery && activeFilter === 'events') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
         <EventsPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -384,7 +385,7 @@ export default function ListingFeed({
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
         <LookingForPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -401,7 +402,7 @@ export default function ListingFeed({
       {/* ── Section tabs ─────────────────────────────────────────────────────── */}
       {!favoritesOnly && (
         <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
-          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
         </div>
       )}
 

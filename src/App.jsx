@@ -22,6 +22,7 @@ import AdminDashboard from './components/AdminDashboard'
 import AuthModal from './components/AuthModal'
 import PostListingModal from './components/PostListingModal'
 import BoostModal from './components/BoostModal'
+import AdApplicationModal from './components/AdApplicationModal'
 
 // ── Fetch a listing by ID with full seller profile join ──────────────────────
 const LISTING_SELECT = '*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)'
@@ -81,6 +82,7 @@ function AppInner() {
   const [postModalOpen, setPostModalOpen] = useState(false)
   const [boostAfterPost, setBoostAfterPost] = useState(false)
   const [boostListing, setBoostListing] = useState(null)
+  const [adModalOpen, setAdModalOpen] = useState(false)
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const pushNav = (newView, listing = null, userId = null) => {
@@ -334,6 +336,7 @@ function AppInner() {
               onSort={setSortBy}
               searchQuery={searchQuery}
               onOpenListing={openListing}
+              onAdvertiseOpen={() => setAdModalOpen(true)}
               onRequireAuth={requireAuth}
               onPostOpen={openPost}
             />
@@ -417,6 +420,10 @@ function AppInner() {
 
       {boostListing && (
         <BoostModal listing={boostListing} onClose={() => setBoostListing(null)} />
+      )}
+
+      {adModalOpen && (
+        <AdApplicationModal onClose={() => setAdModalOpen(false)} />
       )}
     </div>
   )
