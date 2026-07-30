@@ -3,6 +3,21 @@ import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
 import { scoreListings, hasSignal } from '../lib/personalization'
 
+// In-memory cache — persists across re-renders and section switches
+const _cache = new Map()
+const CACHE_TTL = 15_000 // 15 seconds
+
+function cacheGet(key) {
+  const entry = _cache.get(key)
+  if (!entry) return null
+  if (Date.now() - entry.ts > CACHE_TTL) { _cache.delete(key); return null }
+  return entry.data
+}
+function cacheSet(key, data) { _cache.set(key, { data, ts: Date.now() }) }
+
+// Call after posting a listing so the feed refreshes immediately
+export function clearListingsCache() { _cache.clear() }
+
 /**
  * Fetches listings for the current school with optional filters.
  *
@@ -50,17 +65,23 @@ export function useListings({
   useEffect(() => {
     if (!school) return
 
+    const cacheKey = JSON.stringify([school?.id, category, categoryIn, noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions, clothingSizes, genders, minBeds, listedWithin, userType])
+
     const delay = searchQuery ? 300 : 0
     clearTimeout(searchTimer.current)
     searchTimer.current = setTimeout(() => {
-      fetchListings()
+      fetchListings(cacheKey)
     }, delay)
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), minBeds, listedWithin, userType])
 
-  const fetchListings = async () => {
+  const fetchListings = async (cacheKey) => {
+    // Return cached result immediately if fresh
+    const cached = cacheGet(cacheKey)
+    if (cached) { setListings(cached); setLoading(false); return }
+
     setLoading(true)
     setError(null)
     try {
@@ -86,6 +107,7 @@ export function useListings({
         .select('*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url, user_type)')
         .eq('school_id', school.id)
         .eq('sold', false)
+        .limit(120)
 
       // Category filters — categoryIn takes precedence over single category
       if (categoryIn && categoryIn.length > 0) {
@@ -168,15 +190,12 @@ export function useListings({
 
       const CONDITION_RANK = { New: 1, 'Like New': 2, Good: 3, Fair: 4, Poor: 5, 'Parts Only': 6 }
 
+      let finalListings
       if (sortBy === 'newest') {
-        // Strict chronological — merge boosted back in and sort purely by date.
-        // No personalization here so "Newest" always means newest.
-        const all = [...activeBoosted, ...rest].sort(
+        finalListings = [...activeBoosted, ...rest].sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         )
-        setListings(all)
       } else if (sortBy === 'avail_asc') {
-        // Fisher-Yates shuffle boosted for equal visibility, then sort rest by avail
         for (let i = activeBoosted.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
           ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
@@ -189,24 +208,25 @@ export function useListings({
           if (isNaN(da) || isNaN(db)) return String(a.avail).localeCompare(String(b.avail))
           return da - db
         })
-        setListings([...activeBoosted, ...sorted])
+        finalListings = [...activeBoosted, ...sorted]
       } else if (sortBy === 'condition_best') {
         for (let i = activeBoosted.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
           ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
         }
-        const sorted = [...rest].sort(
+        finalListings = [...activeBoosted, ...rest].sort(
           (a, b) => (CONDITION_RANK[a.condition] ?? 99) - (CONDITION_RANK[b.condition] ?? 99)
         )
-        setListings([...activeBoosted, ...sorted])
       } else {
-        // All other sorts (price, popular, viewed, beds) — shuffle boosted to top
         for (let i = activeBoosted.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
           ;[activeBoosted[i], activeBoosted[j]] = [activeBoosted[j], activeBoosted[i]]
         }
-        setListings([...activeBoosted, ...rest])
+        finalListings = [...activeBoosted, ...rest]
       }
+
+      cacheSet(cacheKey, finalListings)
+      setListings(finalListings)
     } catch (err) {
       setError(err.message)
     } finally {

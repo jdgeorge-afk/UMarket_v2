@@ -8,6 +8,7 @@ import { checkRateLimit, rateLimitMessage } from '../lib/rateLimit'
 import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib/validation'
 import { compressImage } from '../lib/compressImage'
 import MapPreview from './MapPreview'
+import { clearListingsCache } from '../hooks/useListings'
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
 
@@ -211,6 +212,7 @@ export default function PostListingModal({ onClose, onPosted }) {
         console.error('Listing insert error:', insertErr)
         throw new Error(insertErr.message + (insertErr.hint ? ` — ${insertErr.hint}` : '') + (insertErr.details ? ` (${insertErr.details})` : ''))
       }
+      clearListingsCache()
       if (onPosted && newListing) onPosted(newListing)
       else onClose()
     } catch (err) {
