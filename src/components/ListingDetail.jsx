@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useSchool } from '../context/SchoolContext'
 import { useFavorites } from '../hooks/useFavorites'
 import { trackView } from '../lib/personalization'
 import Lightbox from './Lightbox'
@@ -10,6 +11,25 @@ import SoldSurveyModal from './SoldSurveyModal'
 import MapPreview from './MapPreview'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
+import { SCHOOLS } from '../constants/schools'
+
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
+
+async function geocodeLocation(address, locationHint = '') {
+  if (!address?.trim() || !MAPS_KEY) return null
+  try {
+    const full = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(full)}&key=${MAPS_KEY}`
+    )
+    if (res.ok) {
+      const data = await res.json()
+      const loc = data?.results?.[0]?.geometry?.location
+      if (loc) return { lat: loc.lat, lng: loc.lng }
+    }
+  } catch {}
+  return null
+}
 
 function Chip({ children, accent }) {
   return (
@@ -25,9 +45,13 @@ function Chip({ children, accent }) {
 
 export default function ListingDetail({ listing, onBack, onOpenProfile, onRequireAuth }) {
   const { user } = useAuth()
+  const { school } = useSchool()
   const { isFavorited, toggleFavorite } = useFavorites()
   const [seller, setSeller] = useState(listing.profiles ?? null)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [coords, setCoords] = useState(
+    listing.lat && listing.lng ? { lat: listing.lat, lng: listing.lng } : null
+  )
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [contactOpen, setContactOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
@@ -48,6 +72,19 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         .then(({ data }) => { if (data) setSeller(data) })
     }
   }, [listing.seller_id]) // eslint-disable-line
+
+  // Geocode on-the-fly for housing listings that have a location but no coordinates
+  useEffect(() => {
+    if (!listing.is_housing || coords || !listing.location) return
+    const hint = SCHOOLS.find((s) => s.id === listing.school_id)?.location ?? ''
+    geocodeLocation(listing.location, hint).then((result) => {
+      if (!result) return
+      setCoords(result)
+      // Save back to DB so we don't geocode again next time
+      supabase.from('listings').update({ lat: result.lat, lng: result.lng })
+        .eq('id', listing.id).then(() => {})
+    })
+  }, [listing.id]) // eslint-disable-line
 
   // Track listing view — record to Supabase for analytics and to localStorage
   // for client-side personalization (feed re-ranking, recently viewed strip)
@@ -236,11 +273,11 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         {listing.boosted && <Chip accent>Featured</Chip>}
       </div>
 
-      {/* Map preview — housing listings with coordinates */}
-      {listing.is_housing && listing.lat && listing.lng && (
+      {/* Map preview — housing listings */}
+      {listing.is_housing && coords && (
         <div className="mb-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Location</p>
-          <MapPreview lat={listing.lat} lng={listing.lng} />
+          <MapPreview lat={coords.lat} lng={coords.lng} />
         </div>
       )}
 
