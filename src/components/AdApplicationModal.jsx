@@ -3,6 +3,16 @@ import { supabase } from '../lib/supabase'
 import Modal from './Modal'
 import { sanitizeText } from '../lib/validation'
 
+const LIVE_SCHOOLS = [
+  'University of Utah',
+  'Cal Poly San Luis Obispo',
+  'UC Santa Barbara',
+  'Texas Christian University',
+  'University of California, Los Angeles',
+  'UC San Diego',
+  'San Diego State University',
+]
+
 const INDUSTRIES = [
   'Food & Drink',
   'Retail & Shopping',
@@ -19,23 +29,24 @@ const INDUSTRIES = [
 ]
 
 const BUDGETS = [
-  'Under $500/mo',
+  'Under $100/mo',
+  '$100 – $250/mo',
+  '$250 – $500/mo',
   '$500 – $1,000/mo',
-  '$1,000 – $2,500/mo',
-  '$2,500 – $5,000/mo',
-  '$5,000+/mo',
+  '$1,000+/mo',
 ]
 
 const AD_TYPES = [
   'Banner ad in the feed',
   'Sponsored listing (pinned to top)',
-  'Email blast to students',
-  'Multiple placements',
-  'Not sure yet',
+  'Other',
 ]
 
+// Ad types that require creative assets
+const NEEDS_CREATIVE = ['Banner ad in the feed', 'Sponsored listing (pinned to top)']
+
 export default function AdApplicationModal({ onClose }) {
-  const [step, setStep] = useState(1) // 1 = form, 2 = success
+  const [step, setStep] = useState(1)
 
   const [contactName, setContactName]   = useState('')
   const [companyName, setCompanyName]   = useState('')
@@ -44,18 +55,29 @@ export default function AdApplicationModal({ onClose }) {
   const [website, setWebsite]           = useState('')
   const [industry, setIndustry]         = useState('')
   const [adType, setAdType]             = useState('')
+  const [adTypeOther, setAdTypeOther]   = useState('')
+  const [creativeUrl, setCreativeUrl]   = useState('')
   const [description, setDescription]   = useState('')
   const [budget, setBudget]             = useState('')
-  const [targetSchools, setTargetSchools] = useState('')
+  const [targetSchools, setTargetSchools] = useState([])
   const [notes, setNotes]               = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
 
+  const toggleSchool = (school) =>
+    setTargetSchools((prev) =>
+      prev.includes(school) ? prev.filter((s) => s !== school) : [...prev, school]
+    )
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry || !description.trim()) {
+    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry || !adType || !description.trim()) {
       setError('Please fill in all required fields.')
+      return
+    }
+    if (adType === 'Other' && !adTypeOther.trim()) {
+      setError('Please describe the type of advertising you have in mind.')
       return
     }
 
@@ -69,10 +91,11 @@ export default function AdApplicationModal({ onClose }) {
         phone:          sanitizeText(phone),
         website:        sanitizeText(website),
         industry,
-        ad_type:        adType,
+        ad_type:        adType === 'Other' ? `Other: ${sanitizeText(adTypeOther)}` : adType,
+        creative_url:   sanitizeText(creativeUrl),
         description:    sanitizeText(description),
         budget_range:   budget,
-        target_schools: sanitizeText(targetSchools),
+        target_schools: targetSchools.join(', '),
         notes:          sanitizeText(notes),
         status:         'pending',
       })
@@ -98,10 +121,7 @@ export default function AdApplicationModal({ onClose }) {
           <p className="text-gray-500 text-sm max-w-xs mb-6">
             We'll review your application and reach out to <strong>{email}</strong> within 1–2 business days.
           </p>
-          <button
-            onClick={onClose}
-            className="bg-red-500 text-white font-bold px-8 py-3 rounded-2xl hover:bg-red-600 transition-colors"
-          >
+          <button onClick={onClose} className="bg-red-500 text-white font-bold px-8 py-3 rounded-2xl hover:bg-red-600 transition-colors">
             Done
           </button>
         </div>
@@ -166,14 +186,35 @@ export default function AdApplicationModal({ onClose }) {
             </select>
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Ad Type</label>
-            <select value={adType} onChange={(e) => setAdType(e.target.value)}
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Ad Type *</label>
+            <select value={adType} onChange={(e) => { setAdType(e.target.value); setAdTypeOther('') }} required
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
               <option value="">Select type</option>
               {AD_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
         </div>
+
+        {/* Other ad type text box */}
+        {adType === 'Other' && (
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Describe your ad type *</label>
+            <input value={adTypeOther} onChange={(e) => setAdTypeOther(e.target.value)} maxLength={200}
+              placeholder="e.g. QR code flyers on campus, social media shoutout, etc."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400" />
+          </div>
+        )}
+
+        {/* Creative asset link — shown for banner/sponsored */}
+        {NEEDS_CREATIVE.includes(adType) && (
+          <div className="mb-3">
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Link to your ad creative (image or video)</label>
+            <input value={creativeUrl} onChange={(e) => setCreativeUrl(e.target.value)} maxLength={500}
+              placeholder="Google Drive, Dropbox, or direct image URL"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400" />
+            <p className="text-[10px] text-gray-400 mt-1">Upload to Google Drive/Dropbox and paste the share link. We'll review before anything goes live.</p>
+          </div>
+        )}
 
         <div className="mb-3">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">What do you want to promote? *</label>
@@ -182,27 +223,44 @@ export default function AdApplicationModal({ onClose }) {
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-red-400" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Monthly Budget</label>
-            <select value={budget} onChange={(e) => setBudget(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
-              <option value="">Select range</option>
-              {BUDGETS.map((b) => <option key={b}>{b}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Target Schools</label>
-            <input value={targetSchools} onChange={(e) => setTargetSchools(e.target.value)}
-              placeholder="e.g. U of U, Cal Poly, UCLA" maxLength={200}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400" />
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-gray-500 mb-1 block">Monthly Budget</label>
+          <select value={budget} onChange={(e) => setBudget(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
+            <option value="">Select range</option>
+            {BUDGETS.map((b) => <option key={b}>{b}</option>)}
+          </select>
+        </div>
+
+        {/* Target schools — multi-select chips */}
+        <div className="mb-4">
+          <label className="text-xs font-semibold text-gray-500 mb-2 block">Target Schools <span className="font-normal text-gray-400">(select all that apply)</span></label>
+          <div className="flex flex-wrap gap-2">
+            {LIVE_SCHOOLS.map((school) => {
+              const active = targetSchools.includes(school)
+              return (
+                <button
+                  type="button"
+                  key={school}
+                  onClick={() => toggleSchool(school)}
+                  className={[
+                    'px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
+                    active
+                      ? 'bg-red-500 text-white border-red-500'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                  ].join(' ')}
+                >
+                  {school}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <div className="mb-5">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Anything else?</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={500}
-            placeholder="Timeline, creative assets you have, questions, etc."
+            placeholder="Timeline, questions, anything we should know"
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-red-400" />
         </div>
 
