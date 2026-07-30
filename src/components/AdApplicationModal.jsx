@@ -5,12 +5,6 @@ import { sanitizeText } from '../lib/validation'
 
 const LIVE_SCHOOLS = [
   'University of Utah',
-  'Cal Poly San Luis Obispo',
-  'UC Santa Barbara',
-  'Texas Christian University',
-  'University of California, Los Angeles',
-  'UC San Diego',
-  'San Diego State University',
 ]
 
 const INDUSTRIES = [
