@@ -218,10 +218,11 @@ function AppInner() {
       setCurrentView('favorites')
     } else if (p.get('view') === 'admin') {
       setCurrentView('admin')
-    } else if (p.has('filter')) {
-      setActiveFilter(p.get('filter'))
-    } else if (p.has('search')) {
-      setSearchQuery(p.get('search'))
+    } else {
+      // Feed view — restore tab, search, and sort simultaneously
+      if (p.has('filter')) setActiveFilter(p.get('filter'))
+      if (p.has('search')) setSearchQuery(p.get('search'))
+      if (p.has('sort')) setSortBy(p.get('sort'))
     }
   }, [mounted, school]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -268,13 +269,19 @@ function AppInner() {
     } else if (currentView === 'admin') {
       window.history.replaceState(null, '', '?view=admin')
     } else if (currentView === 'feed') {
-      const p = new URLSearchParams()
+      // Start from current URL so ListingFeed's filter params (min, max, beds, etc.) are preserved
+      const p = new URLSearchParams(window.location.search)
+      p.delete('listing'); p.delete('profile'); p.delete('view')
       if (activeFilter && activeFilter !== 'all') p.set('filter', activeFilter)
+      else p.delete('filter')
       if (searchQuery) p.set('search', searchQuery)
+      else p.delete('search')
+      if (sortBy && sortBy !== 'newest') p.set('sort', sortBy)
+      else p.delete('sort')
       const qs = p.toString()
       window.history.replaceState(null, '', qs ? `?${qs}` : '/')
     }
-  }, [mounted, school, currentView, selectedListing, listingNotFound, viewedUserId, activeFilter, searchQuery])
+  }, [mounted, school, currentView, selectedListing, listingNotFound, viewedUserId, activeFilter, searchQuery, sortBy])
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery

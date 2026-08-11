@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import { useListings } from '../hooks/useListings'
@@ -319,18 +319,41 @@ export default function ListingFeed({
   onAdvertiseOpen,
 }) {
   const { user } = useAuth()
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [conditions, setConditions] = useState([])
-  const [clothingSizes, setClothingSizes] = useState([])
-  const [genders, setGenders] = useState([])
-  const [minBeds, setMinBeds] = useState(null)
-  const [minBaths, setMinBaths] = useState(null)
-  const [minSpots, setMinSpots] = useState(null)
-  const [genderPref, setGenderPref] = useState(null)
-  const [listedWithin, setListedWithin] = useState(null)
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
-  const [hasPhotos, setHasPhotos] = useState(false)
+  // Initialize filter state from URL params so shareable links work
+  const [minPrice, setMinPrice]       = useState(() => new URLSearchParams(window.location.search).get('min') ?? '')
+  const [maxPrice, setMaxPrice]       = useState(() => new URLSearchParams(window.location.search).get('max') ?? '')
+  const [conditions, setConditions]   = useState(() => { const v = new URLSearchParams(window.location.search).get('cond'); return v ? v.split(',') : [] })
+  const [clothingSizes, setClothingSizes] = useState(() => { const v = new URLSearchParams(window.location.search).get('sizes'); return v ? v.split(',') : [] })
+  const [genders, setGenders]         = useState(() => { const v = new URLSearchParams(window.location.search).get('cg'); return v ? v.split(',') : [] })
+  const [minBeds, setMinBeds]         = useState(() => { const v = new URLSearchParams(window.location.search).get('beds'); return v ? Number(v) : null })
+  const [minBaths, setMinBaths]       = useState(() => { const v = new URLSearchParams(window.location.search).get('baths'); return v ? Number(v) : null })
+  const [minSpots, setMinSpots]       = useState(() => { const v = new URLSearchParams(window.location.search).get('spots'); return v ? Number(v) : null })
+  const [genderPref, setGenderPref]   = useState(() => new URLSearchParams(window.location.search).get('gender') ?? null)
+  const [listedWithin, setListedWithin] = useState(() => new URLSearchParams(window.location.search).get('within') ?? null)
+  const [verifiedOnly, setVerifiedOnly] = useState(() => new URLSearchParams(window.location.search).get('verified') === '1')
+  const [hasPhotos, setHasPhotos]     = useState(() => new URLSearchParams(window.location.search).get('photos') === '1')
+
+  // Sync filter state → URL so filters are shareable and survive refresh
+  const FILTER_PARAMS = ['min', 'max', 'beds', 'baths', 'spots', 'within', 'gender', 'photos', 'verified', 'cond', 'sizes', 'cg']
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    FILTER_PARAMS.forEach((k) => p.delete(k))
+    if (minPrice !== '') p.set('min', minPrice)
+    if (maxPrice !== '') p.set('max', maxPrice)
+    if (minBeds !== null) p.set('beds', String(minBeds))
+    if (minBaths !== null) p.set('baths', String(minBaths))
+    if (minSpots !== null) p.set('spots', String(minSpots))
+    if (listedWithin) p.set('within', listedWithin)
+    if (genderPref) p.set('gender', genderPref)
+    if (hasPhotos) p.set('photos', '1')
+    if (verifiedOnly) p.set('verified', '1')
+    if (conditions.length > 0) p.set('cond', conditions.join(','))
+    if (clothingSizes.length > 0) p.set('sizes', clothingSizes.join(','))
+    if (genders.length > 0) p.set('cg', genders.join(','))
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minPrice, maxPrice, minBeds, minBaths, minSpots, listedWithin, genderPref, hasPhotos, verifiedOnly, conditions.join(','), clothingSizes.join(','), genders.join(',')])
 
   const toggleCondition = (c) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
