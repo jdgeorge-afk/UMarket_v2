@@ -325,6 +325,9 @@ export default function ListingFeed({
   const [clothingSizes, setClothingSizes] = useState([])
   const [genders, setGenders] = useState([])
   const [minBeds, setMinBeds] = useState(null)
+  const [minBaths, setMinBaths] = useState(null)
+  const [minSpots, setMinSpots] = useState(null)
+  const [genderPref, setGenderPref] = useState(null)
   const [listedWithin, setListedWithin] = useState(null)
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [hasPhotos, setHasPhotos] = useState(false)
@@ -338,9 +341,10 @@ export default function ListingFeed({
 
   const clearExtraFilters = () => {
     setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([])
-    setMinBeds(null); setListedWithin(null); setVerifiedOnly(false); setHasPhotos(false)
+    setMinBeds(null); setMinBaths(null); setMinSpots(null); setGenderPref(null)
+    setListedWithin(null); setVerifiedOnly(false); setHasPhotos(false)
   }
-  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || listedWithin !== null || verifiedOnly || hasPhotos
+  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || minBaths !== null || minSpots !== null || genderPref !== null || listedWithin !== null || verifiedOnly || hasPhotos
 
   // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
@@ -356,14 +360,20 @@ export default function ListingFeed({
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
     minBeds,
+    minSpots,
     listedWithin,
     userType: null,
   })
 
-  // Client-side filters that can't easily be done server-side
+  // Client-side filters
   const listings = rawListings.filter((l) => {
     if (verifiedOnly && !l.profiles?.verified) return false
     if (hasPhotos && (!l.images || l.images.length === 0)) return false
+    if (minBaths !== null) {
+      const b = parseFloat(l.size)
+      if (isNaN(b) || b < minBaths) return false
+    }
+    if (genderPref !== null && l.gender !== genderPref) return false
     return true
   })
 
@@ -443,6 +453,12 @@ export default function ListingFeed({
         onToggleGender={toggleGender}
         minBeds={minBeds}
         onMinBeds={setMinBeds}
+        minBaths={minBaths}
+        onMinBaths={setMinBaths}
+        minSpots={minSpots}
+        onMinSpots={setMinSpots}
+        genderPref={genderPref}
+        onGenderPref={setGenderPref}
         listedWithin={listedWithin}
         onListedWithin={setListedWithin}
         verifiedOnly={verifiedOnly}

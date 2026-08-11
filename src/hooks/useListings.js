@@ -51,6 +51,7 @@ export function useListings({
   clothingSizes = null,
   genders = null,
   minBeds = null,
+  minSpots = null,
   listedWithin = null, // 'today' | 'week' | 'month' | null
   userType = null, // 'student' | 'landlord' | null (no filter)
 } = {}) {
@@ -65,7 +66,7 @@ export function useListings({
   useEffect(() => {
     if (!school) return
 
-    const cacheKey = JSON.stringify([school?.id, category, categoryIn, noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions, clothingSizes, genders, minBeds, listedWithin, userType])
+    const cacheKey = JSON.stringify([school?.id, category, categoryIn, noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions, clothingSizes, genders, minBeds, minSpots, listedWithin, userType])
 
     const delay = searchQuery ? 300 : 0
     clearTimeout(searchTimer.current)
@@ -75,7 +76,7 @@ export function useListings({
 
     return () => clearTimeout(searchTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), minBeds, listedWithin, userType])
+  }, [school?.id, category, categoryIn?.join(','), noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions?.join(','), clothingSizes?.join(','), genders?.join(','), minBeds, minSpots, listedWithin, userType])
 
   const fetchListings = async (cacheKey) => {
     // Return cached result immediately if fresh
@@ -130,6 +131,7 @@ export function useListings({
       if (clothingSizes && clothingSizes.length > 0) query = query.in('size', clothingSizes)
       if (genders && genders.length > 0) query = query.in('gender', genders)
       if (minBeds !== null) query = query.gte('beds', minBeds)
+      if (minSpots !== null) query = query.gte('spots_available', minSpots)
       if (listedWithin) {
         const DAY = 86400000
         const cutoffs = { today: Date.now() - DAY, week: Date.now() - 7 * DAY, month: Date.now() - 30 * DAY }
