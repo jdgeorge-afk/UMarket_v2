@@ -101,24 +101,69 @@ function BoostRow({ boost, onActivate, onReject, activating }) {
 }
 
 // ── Report row ───────────────────────────────────────────────────────────────
-function ReportRow({ report }) {
-  const listing = report.listings
+function ReportRow({ report, onRemove, onDismiss, working }) {
+  const [expanded, setExpanded] = useState(false)
+  const listing  = report.listings
   const reporter = report.profiles
+  const isDeleted = !listing
+
   return (
-    <div className="border border-gray-100 rounded-xl p-3 flex items-start gap-3">
-      {listing?.images?.[0]
-        ? <img src={listing.images[0]} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
-        : <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-300 text-base"></div>
-      }
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-gray-900 truncate">{listing?.title ?? '(deleted)'}</p>
-        <p className="text-xs text-gray-500">
-          Reported by {reporter?.name ?? '—'} · {schoolName(listing?.school_id)} · {timeAgo(report.created_at)}
-        </p>
-        <p className="text-xs font-semibold text-red-500 mt-1">{report.reason}</p>
-        {report.note && <p className="text-xs text-gray-400 italic mt-0.5">"{report.note}"</p>}
+    <div className="border border-gray-100 rounded-xl overflow-hidden">
+      <div
+        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setExpanded((p) => !p)}
+      >
+        {listing?.images?.[0]
+          ? <img src={listing.images[0]} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
+          : <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-300 text-base">🗑️</div>
+        }
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-gray-900 truncate">{listing?.title ?? '(listing deleted)'}</p>
+          <p className="text-xs text-gray-500 truncate">
+            {reporter?.name ?? '—'} · {schoolName(listing?.school_id)} · {timeAgo(report.created_at)}
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-red-500 shrink-0 max-w-[100px] truncate">{report.reason}</span>
       </div>
-      <span className="text-xs font-mono text-gray-300 shrink-0">{listing?.id?.slice(0, 8)}</span>
+
+      {expanded && (
+        <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-100 space-y-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+            <div><span className="text-xs text-gray-400">Reporter</span><br /><span>{reporter?.name ?? '—'}</span></div>
+            <div><span className="text-xs text-gray-400">School</span><br /><span>{schoolName(listing?.school_id)}</span></div>
+            <div><span className="text-xs text-gray-400">Reason</span><br /><span className="font-semibold text-red-500">{report.reason}</span></div>
+            <div><span className="text-xs text-gray-400">Listing ID</span><br /><span className="font-mono text-gray-500">{listing?.id?.slice(0, 8) ?? '—'}</span></div>
+          </div>
+          {report.note && (
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Reporter note</p>
+              <p className="text-sm italic text-gray-600 bg-white rounded-lg px-3 py-2 border border-gray-200">"{report.note}"</p>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            {!isDeleted && (
+              <button
+                disabled={working}
+                onClick={() => onRemove(report)}
+                className="flex-1 bg-red-500 text-white text-sm font-bold py-2 rounded-lg hover:bg-red-600 disabled:opacity-40 transition-colors"
+              >
+                {working ? 'Removing…' : 'Remove Listing'}
+              </button>
+            )}
+            <button
+              disabled={working}
+              onClick={() => onDismiss(report)}
+              className={[
+                'text-sm font-bold py-2 rounded-lg disabled:opacity-40 transition-colors border',
+                isDeleted ? 'flex-1 border-gray-300 text-gray-600 hover:bg-gray-100' : 'px-4 border-gray-300 text-gray-600 hover:bg-gray-100',
+              ].join(' ')}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -225,8 +270,9 @@ export default function AdminDashboard({ onBack }) {
   const [adApps, setAdApps]   = useState([])
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activatingId, setActivatingId] = useState(null)
-  const [adWorkingId, setAdWorkingId]   = useState(null)
+  const [activatingId, setActivatingId]     = useState(null)
+  const [adWorkingId, setAdWorkingId]       = useState(null)
+  const [reportWorkingId, setReportWorkingId] = useState(null)
   const [boostFilter, setBoostFilter] = useState('pending') // 'pending' | 'active' | 'rejected' | 'all'
   const [adFilter, setAdFilter]       = useState('pending') // 'pending' | 'approved' | 'rejected' | 'all'
 
@@ -327,7 +373,24 @@ export default function AdminDashboard({ onBack }) {
     window.open(`mailto:${app.email}?subject=${subject}&body=${body}`)
   }
 
-  const pendingCount  = boosts.filter((b) => b.status === 'pending').length
+  const removeListingFromReport = async (report) => {
+    setReportWorkingId(report.id)
+    if (report.listings?.id) {
+      await supabase.from('listings').delete().eq('id', report.listings.id)
+    }
+    await supabase.from('reports').delete().eq('id', report.id)
+    setReportWorkingId(null)
+    fetchAll()
+  }
+
+  const dismissReport = async (report) => {
+    setReportWorkingId(report.id)
+    await supabase.from('reports').delete().eq('id', report.id)
+    setReportWorkingId(null)
+    fetchAll()
+  }
+
+  const pendingCount   = boosts.filter((b) => b.status === 'pending').length
   const adPendingCount = adApps.filter((a) => a.status === 'pending').length
   const filteredBoosts = boostFilter === 'all' ? boosts : boosts.filter((b) => b.status === boostFilter)
 
@@ -485,7 +548,15 @@ export default function AdminDashboard({ onBack }) {
             </div>
           ) : (
             <div className="space-y-2">
-              {reports.map((r) => <ReportRow key={r.id} report={r} />)}
+              {reports.map((r) => (
+                <ReportRow
+                  key={r.id}
+                  report={r}
+                  onRemove={removeListingFromReport}
+                  onDismiss={dismissReport}
+                  working={reportWorkingId === r.id}
+                />
+              ))}
             </div>
           )}
         </>
