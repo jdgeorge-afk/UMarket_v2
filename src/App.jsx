@@ -355,6 +355,7 @@ function AppInner() {
               onBack={goBack}
               onOpenProfile={openProfile}
               onRequireAuth={requireAuth}
+              onAdminDelete={goHome}
             />
           )}
 

@@ -43,8 +43,8 @@ function Chip({ children, accent }) {
   )
 }
 
-export default function ListingDetail({ listing, onBack, onOpenProfile, onRequireAuth }) {
-  const { user } = useAuth()
+export default function ListingDetail({ listing, onBack, onOpenProfile, onRequireAuth, onAdminDelete }) {
+  const { user, profile } = useAuth()
   const { school } = useSchool()
   const { isFavorited, toggleFavorite } = useFavorites()
   const [seller, setSeller] = useState(listing.profiles ?? null)
@@ -61,6 +61,7 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
 
   const images = listing.images ?? []
   const isOwner = user?.id === listing.seller_id
+  const isAdmin = profile?.is_admin === true
 
   useEffect(() => {
     if (!seller || !seller.contact) {
@@ -133,6 +134,16 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
     }).then(() => {}).catch(() => {})
     setMarkingAsSold(false)
     onBack()
+  }
+
+  const [adminDeleting, setAdminDeleting] = useState(false)
+  const adminDeleteListing = async () => {
+    if (!window.confirm(`Remove "${listing.title}" from the platform? This cannot be undone.`)) return
+    setAdminDeleting(true)
+    await supabase.from('listings').delete().eq('id', listing.id)
+    setAdminDeleting(false)
+    if (onAdminDelete) onAdminDelete()
+    else onBack()
   }
 
   const handleShare = async () => {
@@ -346,6 +357,17 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
           className="w-full border-2 border-school-primary text-school-primary font-bold py-3 rounded-2xl hover:bg-school-primary hover:text-white transition-colors disabled:opacity-40"
         >
           {listing.sold ? 'Marked as Sold' : markingAsSold ? 'Marking…' : 'Mark as Sold'}
+        </button>
+      )}
+
+      {/* Admin: remove any listing */}
+      {isAdmin && (
+        <button
+          onClick={adminDeleteListing}
+          disabled={adminDeleting}
+          className="w-full mt-3 border-2 border-red-400 text-red-500 font-bold py-3 rounded-2xl hover:bg-red-500 hover:text-white transition-colors disabled:opacity-40 text-sm"
+        >
+          {adminDeleting ? 'Removing…' : '🛡️ Admin: Remove Listing'}
         </button>
       )}
 
