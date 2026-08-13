@@ -169,12 +169,32 @@ function ReportRow({ report, onRemove, onDismiss, working }) {
 }
 
 // ── Ad Application row ───────────────────────────────────────────────────────
-function AdAppRow({ app, onApprove, onReject, onContact, working }) {
+function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, working }) {
   const [expanded, setExpanded] = useState(false)
+  const [amount, setAmount]     = useState(app.ad_price ? String(app.ad_price) : '')
+  const [payLink, setPayLink]   = useState(null)
+  const [copying, setCopying]   = useState(false)
+  const [generating, setGenerating] = useState(false)
+
   const statusColors = {
     pending:  'bg-yellow-100 text-yellow-700',
     approved: 'bg-green-100 text-green-700',
+    paid:     'bg-blue-100 text-blue-700',
     rejected: 'bg-red-100 text-red-600',
+  }
+
+  const handleGenerate = async () => {
+    if (!amount || isNaN(Number(amount))) return
+    setGenerating(true)
+    const url = await onGenerateLink(app, Number(amount))
+    if (url) setPayLink(url)
+    setGenerating(false)
+  }
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(payLink)
+    setCopying(true)
+    setTimeout(() => setCopying(false), 2000)
   }
 
   return (
@@ -246,7 +266,55 @@ function AdAppRow({ app, onApprove, onReject, onContact, working }) {
               </button>
             </div>
           )}
-          {app.status !== 'pending' && (
+
+          {app.status === 'approved' && (
+            <div className="pt-1 space-y-2">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Send Payment Link</p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Amount"
+                    value={amount}
+                    onChange={(e) => { setAmount(e.target.value); setPayLink(null) }}
+                    className="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+                  />
+                </div>
+                <button
+                  disabled={generating || !amount}
+                  onClick={handleGenerate}
+                  className="px-4 bg-school-primary text-white text-sm font-bold rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity whitespace-nowrap"
+                >
+                  {generating ? 'Generating…' : 'Generate Link'}
+                </button>
+              </div>
+              {payLink && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3 space-y-2">
+                  <p className="text-xs text-green-700 font-semibold">Payment link ready — send this to the advertiser:</p>
+                  <p className="text-xs font-mono text-green-800 break-all bg-white rounded-lg px-2 py-1.5 border border-green-200">{payLink}</p>
+                  <div className="flex gap-2">
+                    <button onClick={copyLink}
+                      className="flex-1 bg-green-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-green-600 transition-colors">
+                      {copying ? 'Copied!' : 'Copy Link'}
+                    </button>
+                    <button onClick={() => onContact(app, payLink)}
+                      className="flex-1 bg-school-primary text-white text-xs font-bold py-2 rounded-lg hover:opacity-90 transition-opacity">
+                      Email with Link
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button onClick={() => onContact(app)}
+                className="w-full border border-gray-200 text-gray-600 text-sm font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                Email Them (no link)
+              </button>
+            </div>
+          )}
+
+          {(app.status === 'paid' || app.status === 'rejected') && (
             <div className="flex gap-2 pt-1">
               <button onClick={() => onContact(app)}
                 className="flex-1 bg-school-primary text-white text-sm font-bold py-2 rounded-lg hover:opacity-90 transition-colors">
@@ -367,10 +435,31 @@ export default function AdminDashboard({ onBack }) {
     fetchAll()
   }
 
-  const contactAd = (app) => {
+  const contactAd = (app, payLink = null) => {
     const subject = encodeURIComponent(`UMarket Advertising — ${app.company_name}`)
-    const body = encodeURIComponent(`Hi ${app.contact_name},\n\nThanks for your interest in advertising on UMarket!\n\n`)
-    window.open(`mailto:${app.email}?subject=${subject}&body=${body}`)
+    const bodyText = payLink
+      ? `Hi ${app.contact_name},\n\nGreat news — your ad application has been approved! You can complete your payment here:\n\n${payLink}\n\nOnce payment is received we'll get your campaign set up.\n\nThanks,\nUMarket Team`
+      : `Hi ${app.contact_name},\n\nThanks for your interest in advertising on UMarket!\n\n`
+    window.open(`mailto:${app.email}?subject=${subject}&body=${encodeURIComponent(bodyText)}`)
+  }
+
+  const generatePaymentLink = async (app, amountDollars) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-ad-checkout', {
+        body: {
+          application_id: app.id,
+          amount_dollars:  amountDollars,
+          email:           app.email,
+          company_name:    app.company_name,
+        },
+      })
+      if (error) throw error
+      fetchAll()
+      return data.url
+    } catch (err) {
+      alert(`Failed to generate payment link: ${err.message}`)
+      return null
+    }
   }
 
   const removeListingFromReport = async (report) => {
@@ -487,6 +576,7 @@ export default function AdminDashboard({ onBack }) {
                   onApprove={approveAd}
                   onReject={rejectAd}
                   onContact={contactAd}
+                  onGenerateLink={generatePaymentLink}
                   working={adWorkingId === a.id}
                 />
               ))}
