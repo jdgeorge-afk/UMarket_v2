@@ -331,6 +331,7 @@ function AppInner() {
               onPostOpen={openPost}
               onRequireAuth={requireAuth}
               onOpenListing={openListing}
+              onAdvertiseOpen={() => setAdModalOpen(true)}
             />
           )}
 

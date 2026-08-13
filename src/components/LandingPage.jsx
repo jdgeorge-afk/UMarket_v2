@@ -166,7 +166,7 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
 }
 
 // ── Landing page ──────────────────────────────────────────────────────────────
-export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing }) {
+export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing, onAdvertiseOpen }) {
   const { school } = useSchool()
   const [previews, setPreviews] = useState({ housing: null, marketplace: [], looking: [] })
   // Read once on mount — scoped to current school so other schools' listings never bleed in
@@ -212,7 +212,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
 
       {/* ── Sticky section tabs ─────────────────────────────────────────── */}
       <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
-        <SectionTabs activeFilter="all" onFilter={onFilter} />
+        <SectionTabs activeFilter="all" onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
       </div>
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
