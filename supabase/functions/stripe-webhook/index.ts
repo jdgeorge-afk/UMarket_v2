@@ -46,6 +46,22 @@ Respond with valid JSON only, no explanation outside the JSON:
   }
 }
 
+async function activateAdRecords(supabase: any, app: any, applicationId: string) {
+  const schools = (app.target_schools ?? '').split(',').map((s: string) => s.trim()).filter(Boolean)
+  for (const schoolId of schools) {
+    await supabase.from('ads').insert({
+      application_id: applicationId,
+      school_id:      schoolId,
+      company_name:   app.company_name,
+      tagline:        (app.description ?? '').substring(0, 150),
+      website_url:    app.website || 'https://u-market.app',
+      tier:           app.ad_type,
+      active:         true,
+      starts_at:      new Date().toISOString(),
+    })
+  }
+}
+
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
@@ -89,64 +105,66 @@ Deno.serve(async (req) => {
 
     // New subscription flow
     if (session.mode === 'subscription') {
-      const applicationId = session.subscription_data?.metadata?.application_id
-        ?? session.metadata?.application_id
       const subscriptionId = session.subscription as string
       const customerId     = session.customer as string
 
-      if (!applicationId) {
-        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
-      }
+      // Fetch subscription to get metadata (stored there, not on session)
+      const sub     = await stripe.subscriptions.retrieve(subscriptionId)
+      const meta    = sub.metadata ?? {}
+      const accountType = meta.account_type ?? 'other'
 
-      // Save subscription + customer IDs
-      await supabase.from('ad_applications').update({
+      // Create the application record now that payment method is confirmed
+      const { data: app, error: insertErr } = await supabase.from('ad_applications').insert({
+        contact_name:           meta.contact_name ?? '',
+        company_name:           meta.company_name ?? '',
+        email:                  meta.email ?? '',
+        phone:                  meta.phone ?? '',
+        website:                meta.website ?? '',
+        industry:               meta.industry ?? '',
+        ad_type:                meta.tier ?? '',
+        description:            meta.description ?? '',
+        budget_range:           meta.budget_range ?? '',
+        target_schools:         meta.target_schools ?? '',
+        notes:                  meta.notes ?? '',
         stripe_session_id:      session.id,
         stripe_subscription_id: subscriptionId,
         stripe_customer_id:     customerId,
         status:                 'reviewing',
-      }).eq('id', applicationId)
+      }).select().single()
 
-      // Fetch the application for AI moderation
-      const { data: app } = await supabase.from('ad_applications').select('*').eq('id', applicationId).single()
+      if (insertErr || !app) {
+        console.error('Failed to insert ad application:', insertErr?.message)
+        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+      }
 
-      if (app) {
+      const applicationId = app.id
+
+      // Update subscription metadata with the new application_id for future webhooks
+      await stripe.subscriptions.update(subscriptionId, {
+        metadata: { ...meta, application_id: applicationId },
+      })
+
+      if (accountType === 'business') {
+        // Business account → AI moderation
         const { approved, reason } = await moderateAd(app.company_name, app.industry, app.description)
 
         if (approved) {
-          // End trial immediately → billing starts now
           await stripe.subscriptions.update(subscriptionId, { trial_end: 'now' })
-
           await supabase.from('ad_applications').update({
-            status:          'active',
-            ai_flag_reason:  reason,
+            status: 'active', ai_flag_reason: reason,
           }).eq('id', applicationId)
-
-          // Create the live ad record (uses first school from target_schools)
-          const schools = (app.target_schools ?? '').split(',').map((s: string) => s.trim()).filter(Boolean)
-          for (const schoolShortName of schools) {
-            const schoolRecord = await supabase.from('ad_applications').select('*').eq('id', applicationId).single()
-            // Insert one ad per school — use school short name to find id if needed
-            await supabase.from('ads').insert({
-              application_id: applicationId,
-              school_id:      schoolShortName, // admin can correct via dashboard if needed
-              company_name:   app.company_name,
-              tagline:        app.description.substring(0, 150),
-              website_url:    app.website || 'https://u-market.app',
-              tier:           app.ad_type,
-              active:         true,
-              starts_at:      new Date().toISOString(),
-            })
-          }
+          await activateAdRecords(supabase, app, applicationId)
         } else {
-          // AI flagged — cancel subscription immediately (no charge)
-          await stripe.subscriptions.cancel(subscriptionId)
-
+          // AI flagged — leave subscription in trial, send to admin for review
           await supabase.from('ad_applications').update({
-            status:         'needs_review',
-            ai_flagged:     true,
-            ai_flag_reason: reason,
+            status: 'needs_review', ai_flagged: true, ai_flag_reason: reason,
           }).eq('id', applicationId)
         }
+      } else {
+        // Non-business → manual admin review, leave subscription in trial
+        await supabase.from('ad_applications').update({
+          status: 'needs_review', ai_flag_reason: 'Manual review required — non-business account',
+        }).eq('id', applicationId)
       }
     }
   }

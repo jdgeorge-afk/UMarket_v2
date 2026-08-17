@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import Modal from './Modal'
 import { sanitizeText } from '../lib/validation'
 import { SCHOOLS } from '../constants/schools'
@@ -56,6 +57,7 @@ function formatCents(cents) {
 }
 
 export default function AdApplicationModal({ onClose }) {
+  const { profile } = useAuth()
   const [step, setStep] = useState(1)
 
   const [contactName, setContactName] = useState('')
@@ -125,6 +127,7 @@ export default function AdApplicationModal({ onClose }) {
           description:    sanitizeText(description),
           target_schools: targetSchools,
           notes:          sanitizeText(notes),
+          account_type:   profile?.account_type ?? 'other',
         },
       })
 

@@ -169,7 +169,7 @@ function ReportRow({ report, onRemove, onDismiss, working }) {
 }
 
 // ── Ad Application row ───────────────────────────────────────────────────────
-function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActivate, working }) {
+function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActivate, onAdminAction, working }) {
   const [expanded, setExpanded]   = useState(false)
   const [amount, setAmount]       = useState(app.ad_price ? String(app.ad_price) : '')
   const [payLink, setPayLink]     = useState(null)
@@ -187,8 +187,11 @@ function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActiv
   const statusColors = {
     pending:  'bg-yellow-100 text-yellow-700',
     approved: 'bg-green-100 text-green-700',
-    paid:     'bg-blue-100 text-blue-700',
-    rejected: 'bg-red-100 text-red-600',
+    paid:         'bg-blue-100 text-blue-700',
+    needs_review: 'bg-orange-100 text-orange-700',
+    active:       'bg-green-100 text-green-700',
+    cancelling:   'bg-gray-100 text-gray-500',
+    rejected:     'bg-red-100 text-red-600',
   }
 
   const handleGenerate = async () => {
@@ -319,6 +322,29 @@ function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActiv
                 className="w-full border border-gray-200 text-gray-600 text-sm font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">
                 Email Them (no link)
               </button>
+            </div>
+          )}
+
+          {app.status === 'needs_review' && (
+            <div className="pt-1 space-y-2">
+              <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2">
+                <p className="text-xs font-semibold text-orange-700">Needs manual review</p>
+                {app.ai_flag_reason && <p className="text-xs text-orange-600 mt-0.5">{app.ai_flag_reason}</p>}
+              </div>
+              <div className="flex gap-2">
+                <button disabled={working} onClick={() => onAdminAction(app, 'approve')}
+                  className="flex-1 bg-green-500 text-white text-sm font-bold py-2 rounded-lg hover:bg-green-600 disabled:opacity-40 transition-colors">
+                  {working ? 'Working…' : 'Approve & Go Live'}
+                </button>
+                <button disabled={working} onClick={() => onContact(app)}
+                  className="px-3 border border-gray-200 text-gray-600 text-sm font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                  Email
+                </button>
+                <button disabled={working} onClick={() => onAdminAction(app, 'reject')}
+                  className="px-3 border border-red-200 text-red-500 text-sm font-bold py-2 rounded-lg hover:bg-red-50 disabled:opacity-40 transition-colors">
+                  Reject
+                </button>
+              </div>
             </div>
           )}
 
@@ -541,6 +567,21 @@ export default function AdminDashboard({ onBack }) {
     }
   }
 
+  const adminAdAction = async (app, action) => {
+    setAdWorkingId(app.id)
+    try {
+      const { error } = await supabase.functions.invoke('admin-approve-ad', {
+        body: { application_id: app.id, action },
+      })
+      if (error) throw error
+      fetchAll()
+    } catch (err) {
+      alert(`Failed to ${action} ad: ${err.message}`)
+    } finally {
+      setAdWorkingId(null)
+    }
+  }
+
   const activateAd = async (app, { tier, tagline, logoUrl, website, weeks, schoolId }) => {
     try {
       const startsAt = new Date()
@@ -583,7 +624,7 @@ export default function AdminDashboard({ onBack }) {
   }
 
   const pendingCount   = boosts.filter((b) => b.status === 'pending').length
-  const adPendingCount = adApps.filter((a) => a.status === 'pending').length
+  const adPendingCount = adApps.filter((a) => a.status === 'pending' || a.status === 'needs_review').length
   const filteredBoosts = boostFilter === 'all' ? boosts : boosts.filter((b) => b.status === boostFilter)
 
   return (
@@ -648,7 +689,7 @@ export default function AdminDashboard({ onBack }) {
       {!loading && tab === 'ads' && (
         <>
           <div className="flex gap-1.5 mb-4 flex-wrap">
-            {['pending', 'approved', 'rejected', 'all'].map((f) => (
+            {['pending', 'needs_review', 'approved', 'active', 'rejected', 'all'].map((f) => (
               <button
                 key={f}
                 onClick={() => setAdFilter(f)}
@@ -681,6 +722,7 @@ export default function AdminDashboard({ onBack }) {
                   onContact={contactAd}
                   onGenerateLink={generatePaymentLink}
                   onActivate={activateAd}
+                  onAdminAction={adminAdAction}
                   working={adWorkingId === a.id}
                 />
               ))}

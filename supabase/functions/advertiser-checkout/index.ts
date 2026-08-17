@@ -7,7 +7,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   httpClient: Stripe.createFetchHttpClient(),
 })
 
-const TIER_PRICES: Record<string, number> = { base: 1000, pinned: 1750, premium: 2750 } // cents (50% off founding rate)
+const TIER_PRICES: Record<string, number> = { base: 1000, pinned: 1750, premium: 2750 }
 const TIER_LABELS: Record<string, string> = { base: 'Base Rotating', pinned: 'Pinned Top', premium: 'Premium Full-Width' }
 
 function calcPrice(tier: string, numSchools: number): number {
@@ -19,15 +19,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
-
     const body = await req.json()
     const {
       contact_name, company_name, email, phone, website,
-      industry, tier, description, target_schools, notes,
+      industry, tier, description, target_schools, notes, account_type,
     } = body
 
     if (!tier || !description || !target_schools?.length || !email || !company_name) {
@@ -36,61 +31,48 @@ Deno.serve(async (req) => {
       })
     }
 
-    const numSchools = target_schools.length
+    const numSchools  = target_schools.length
     const weeklyPrice = calcPrice(tier, numSchools)
-    const schoolStr = Array.isArray(target_schools) ? target_schools.join(', ') : target_schools
+    const schoolStr   = Array.isArray(target_schools) ? target_schools.join(', ') : String(target_schools)
 
-    // Insert ad application record
-    const { data: app, error: insertError } = await supabase.from('ad_applications').insert({
-      contact_name,
-      company_name,
-      email,
-      phone:          phone ?? '',
-      website:        website ?? '',
-      industry,
-      ad_type:        tier,
-      description,
-      budget_range:   `$${(weeklyPrice / 100).toFixed(2)}/week`,
-      target_schools: schoolStr,
-      notes:          notes ?? '',
-      status:         'pending',
-    }).select().single()
-
-    if (insertError) throw new Error(insertError.message)
-
-    // Create Stripe Checkout Session (subscription with 1-day trial for AI review)
+    // All form data stored in Stripe metadata — the DB record is created in the
+    // webhook only after checkout.session.completed fires, so failed/declined
+    // cards never create an application record.
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer_email: email,
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency:    'usd',
           unit_amount: weeklyPrice,
-          recurring: { interval: 'week' },
+          recurring:   { interval: 'week' },
           product_data: {
-            name: `UMarket ${TIER_LABELS[tier] ?? tier} Ad`,
+            name:        `UMarket ${TIER_LABELS[tier] ?? tier} Ad`,
             description: `${numSchools} school${numSchools > 1 ? 's' : ''} · Founding advertiser rate`,
           },
         },
         quantity: 1,
       }],
       subscription_data: {
-        trial_period_days: 1,
+        trial_period_days: 7,
         metadata: {
-          application_id: app.id,
+          contact_name:   (contact_name ?? '').substring(0, 200),
+          company_name:   (company_name ?? '').substring(0, 200),
+          email:          (email        ?? '').substring(0, 200),
+          phone:          (phone        ?? '').substring(0, 50),
+          website:        (website      ?? '').substring(0, 300),
+          industry:       (industry     ?? '').substring(0, 100),
           tier,
-          school_count:   String(numSchools),
-          company_name,
+          target_schools: schoolStr.substring(0, 400),
+          description:    (description  ?? '').substring(0, 450),
+          notes:          (notes        ?? '').substring(0, 300),
+          budget_range:   `$${(weeklyPrice / 100).toFixed(2)}/week`,
+          account_type:   account_type ?? 'other',
         },
       },
       success_url: 'https://u-market.app/?ad_status=review',
       cancel_url:  'https://u-market.app/?ad_status=cancelled',
     })
-
-    // Save stripe session id
-    await supabase.from('ad_applications').update({
-      stripe_session_id: session.id,
-    }).eq('id', app.id)
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
