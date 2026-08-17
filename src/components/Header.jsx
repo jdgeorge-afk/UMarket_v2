@@ -77,15 +77,21 @@ export default function Header({
           onClick={onGoHome}
           className="shrink-0 flex items-center gap-2 leading-none"
         >
-          {/* Icon mark — rounded square with bold U */}
-          <span
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-white font-black text-lg shrink-0"
-            style={{ background: school?.primary ?? '#CC0000' }}
-          >
-            U
-          </span>
+          {/* UMarket logo — diagonal red/blue split with white U */}
+          <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+            <defs>
+              <clipPath id="um-clip">
+                <rect width="100" height="100" rx="22" ry="22"/>
+              </clipPath>
+            </defs>
+            <g clipPath="url(#um-clip)">
+              <rect width="100" height="100" fill="#CC0000"/>
+              <polygon points="100,0 100,100 0,100" fill="#1a3fc4"/>
+            </g>
+            <text x="50" y="76" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="66" fill="white" textAnchor="middle">U</text>
+          </svg>
           <span className="font-extrabold text-2xl tracking-tight" style={{ color: school?.primary ?? '#CC0000' }}>
-            Market™
+            UMarket™
           </span>
         </button>
 
