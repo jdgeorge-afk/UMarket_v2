@@ -122,7 +122,21 @@ export function useListings({
       if (noLooking) query = query.eq('is_looking', false)
 
       if (searchQuery.trim()) {
-        query = query.ilike('title', `%${searchQuery.trim()}%`)
+        const raw = searchQuery.trim()
+
+        // Parse bedroom count from query, e.g. "2 bedroom", "3br", "2 bed", "2bd"
+        const bedMatch = raw.match(/\b(\d+)\s*(?:bed(?:room)?s?|br|bd)\b/i)
+        const parsedBeds = bedMatch ? parseInt(bedMatch[1], 10) : null
+        // Strip the bed phrase from the text term so it doesn't confuse title search
+        const textTerm = raw.replace(/\b\d+\s*(?:bed(?:room)?s?|br|bd)\b/gi, '').trim()
+
+        if (textTerm) {
+          // Search title OR description
+          query = query.or(`title.ilike.%${textTerm}%,description.ilike.%${textTerm}%`)
+        }
+        if (parsedBeds !== null && minBeds === null) {
+          query = query.gte('beds', parsedBeds)
+        }
       }
 
       if (minPrice !== null && minPrice !== '') query = query.gte('price', minPrice)

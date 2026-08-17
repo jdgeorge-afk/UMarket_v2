@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
 import { getRecentlyViewed } from '../lib/personalization'
@@ -208,14 +208,21 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
   }, [school?.id])
 
   const [heroSearch, setHeroSearch] = useState('')
+  const debounceRef = useRef(null)
 
   const handleHeroSearch = () => {
+    clearTimeout(debounceRef.current)
     const q = heroSearch.trim()
-    if (q) {
-      onSearch?.(q)
-    } else {
-      onFilter('all')
-    }
+    if (q) onSearch?.(q)
+    else onFilter('all')
+  }
+
+  const handleHeroType = (value) => {
+    setHeroSearch(value)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      if (value.trim()) onSearch?.(value.trim())
+    }, 350)
   }
 
   return (
@@ -259,7 +266,7 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
             <input
               type="text"
               value={heroSearch}
-              onChange={(e) => setHeroSearch(e.target.value)}
+              onChange={(e) => handleHeroType(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleHeroSearch()}
               placeholder="Search listings, housing, textbooks…"
               className="flex-1 px-4 py-4 text-gray-900 text-[15px] outline-none bg-transparent placeholder:text-gray-400"
