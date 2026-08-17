@@ -22,22 +22,32 @@ const INDUSTRIES = [
   'Other',
 ]
 
-const BUDGETS = [
-  'Under $100/mo',
-  '$100 – $250/mo',
-  '$250 – $500/mo',
-  '$500 – $1,000/mo',
-  '$1,000+/mo',
+const AD_TIERS = [
+  {
+    id:          'base',
+    label:       'Base',
+    price:       '$20',
+    unit:        '/ week',
+    tagline:     'Rotating card in the feed',
+    description: 'Your ad appears as a sponsored card injected throughout the listing feed, rotating with other base ads.',
+  },
+  {
+    id:          'pinned',
+    label:       'Pinned',
+    price:       '$35',
+    unit:        '/ week',
+    tagline:     'Locked at the top of the feed',
+    description: 'Your card stays permanently at the top of the feed — always the first thing students see when they browse.',
+  },
+  {
+    id:          'premium',
+    label:       'Premium',
+    price:       '$55',
+    unit:        '/ week',
+    tagline:     'Full-width block in the feed',
+    description: 'A large banner that spans the entire listing grid after the 6th post — maximum visibility with your logo, message, and a link.',
+  },
 ]
-
-const AD_TYPES = [
-  'Banner ad in the feed',
-  'Sponsored listing (pinned to top)',
-  'Other',
-]
-
-// Ad types that require creative assets
-const NEEDS_CREATIVE = ['Banner ad in the feed', 'Sponsored listing (pinned to top)']
 
 export default function AdApplicationModal({ onClose }) {
   const [step, setStep] = useState(1)
@@ -47,14 +57,11 @@ export default function AdApplicationModal({ onClose }) {
   const [email, setEmail]               = useState('')
   const [phone, setPhone]               = useState('')
   const [website, setWebsite]           = useState('')
-  const [industry, setIndustry]         = useState('')
-  const [adType, setAdType]             = useState('')
-  const [adTypeOther, setAdTypeOther]   = useState('')
-  const [creativeUrl, setCreativeUrl]   = useState('')
-  const [description, setDescription]   = useState('')
-  const [budget, setBudget]             = useState('')
+  const [industry, setIndustry]           = useState('')
+  const [adTier, setAdTier]               = useState('')
+  const [description, setDescription]     = useState('')
   const [targetSchools, setTargetSchools] = useState([])
-  const [notes, setNotes]               = useState('')
+  const [notes, setNotes]                 = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -66,18 +73,15 @@ export default function AdApplicationModal({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry || !adType || !description.trim()) {
+    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry || !adTier || !description.trim()) {
       setError('Please fill in all required fields.')
-      return
-    }
-    if (adType === 'Other' && !adTypeOther.trim()) {
-      setError('Please describe the type of advertising you have in mind.')
       return
     }
 
     setSaving(true)
     setError('')
     try {
+      const tier = AD_TIERS.find((t) => t.id === adTier)
       const { error: insertErr } = await supabase.from('ad_applications').insert({
         contact_name:   sanitizeText(contactName),
         company_name:   sanitizeText(companyName),
@@ -85,10 +89,9 @@ export default function AdApplicationModal({ onClose }) {
         phone:          sanitizeText(phone),
         website:        sanitizeText(website),
         industry,
-        ad_type:        adType === 'Other' ? `Other: ${sanitizeText(adTypeOther)}` : adType,
-        creative_url:   sanitizeText(creativeUrl),
+        ad_type:        `${tier.label} — ${tier.tagline} (${tier.price}/wk)`,
         description:    sanitizeText(description),
-        budget_range:   budget,
+        budget_range:   `${tier.price}/week`,
         target_schools: targetSchools.join(', '),
         notes:          sanitizeText(notes),
         status:         'pending',
@@ -170,60 +173,51 @@ export default function AdApplicationModal({ onClose }) {
         {/* Ad details */}
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-1">Ad Details</p>
 
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Industry *</label>
-            <select value={industry} onChange={(e) => setIndustry(e.target.value)} required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
-              <option value="">Select industry</option>
-              {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Ad Type *</label>
-            <select value={adType} onChange={(e) => { setAdType(e.target.value); setAdTypeOther('') }} required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
-              <option value="">Select type</option>
-              {AD_TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
-          </div>
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-gray-500 mb-1 block">Industry *</label>
+          <select value={industry} onChange={(e) => setIndustry(e.target.value)} required
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
+            <option value="">Select industry</option>
+            {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
+          </select>
         </div>
 
-        {/* Other ad type text box */}
-        {adType === 'Other' && (
-          <div className="mb-3">
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Describe your ad type *</label>
-            <input value={adTypeOther} onChange={(e) => setAdTypeOther(e.target.value)} maxLength={200}
-              placeholder="e.g. QR code flyers on campus, social media shoutout, etc."
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400" />
+        {/* Tier picker */}
+        <div className="mb-3">
+          <label className="text-xs font-semibold text-gray-500 mb-2 block">Weekly Budget *</label>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 mb-2 flex items-center gap-2">
+            <span className="text-yellow-600 text-sm">🎉</span>
+            <p className="text-xs text-yellow-700 font-medium">Founding advertiser deal: first 2 weeks at 50% off all tiers.</p>
           </div>
-        )}
-
-        {/* Creative asset link — shown for banner/sponsored */}
-        {NEEDS_CREATIVE.includes(adType) && (
-          <div className="mb-3">
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Link to your ad creative (image or video)</label>
-            <input value={creativeUrl} onChange={(e) => setCreativeUrl(e.target.value)} maxLength={500}
-              placeholder="Google Drive, Dropbox, or direct image URL"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400" />
-            <p className="text-[10px] text-gray-400 mt-1">Upload to Google Drive/Dropbox and paste the share link. We'll review before anything goes live.</p>
+          <div className="space-y-2">
+            {AD_TIERS.map((tier) => (
+              <button
+                type="button"
+                key={tier.id}
+                onClick={() => setAdTier(tier.id)}
+                className={[
+                  'w-full text-left rounded-xl border-2 px-4 py-3 transition-colors',
+                  adTier === tier.id
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300',
+                ].join(' ')}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-bold text-gray-900 text-sm">{tier.label}</span>
+                  <span className="font-bold text-red-500 text-sm">{tier.price}<span className="text-gray-400 font-normal text-xs">{tier.unit}</span></span>
+                </div>
+                <p className="text-xs font-semibold text-gray-500">{tier.tagline}</p>
+                <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{tier.description}</p>
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
         <div className="mb-3">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">What do you want to promote? *</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={1000}
             placeholder="Describe your product, service, or event and what you'd like students to do (visit your store, use a promo code, sign up, etc.)"
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-red-400" />
-        </div>
-
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-gray-500 mb-1 block">Monthly Budget</label>
-          <select value={budget} onChange={(e) => setBudget(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-400 bg-white">
-            <option value="">Select range</option>
-            {BUDGETS.map((b) => <option key={b}>{b}</option>)}
-          </select>
         </div>
 
         {/* Target schools — multi-select chips */}

@@ -169,12 +169,20 @@ function ReportRow({ report, onRemove, onDismiss, working }) {
 }
 
 // ── Ad Application row ───────────────────────────────────────────────────────
-function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, working }) {
-  const [expanded, setExpanded] = useState(false)
-  const [amount, setAmount]     = useState(app.ad_price ? String(app.ad_price) : '')
-  const [payLink, setPayLink]   = useState(null)
-  const [copying, setCopying]   = useState(false)
+function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActivate, working }) {
+  const [expanded, setExpanded]   = useState(false)
+  const [amount, setAmount]       = useState(app.ad_price ? String(app.ad_price) : '')
+  const [payLink, setPayLink]     = useState(null)
+  const [copying, setCopying]     = useState(false)
   const [generating, setGenerating] = useState(false)
+
+  const [activating, setActivating] = useState(false)
+  const [adTier, setAdTier]         = useState('base')
+  const [adTagline, setAdTagline]   = useState(app.description ?? '')
+  const [adLogoUrl, setAdLogoUrl]   = useState('')
+  const [adWebsite, setAdWebsite]   = useState(app.website ?? '')
+  const [adDuration, setAdDuration] = useState('2')
+  const [adSchool, setAdSchool]     = useState(SCHOOLS.find((s) => s.live)?.id ?? '')
 
   const statusColors = {
     pending:  'bg-yellow-100 text-yellow-700',
@@ -314,12 +322,83 @@ function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, working
             </div>
           )}
 
-          {(app.status === 'paid' || app.status === 'rejected') && (
+          {app.status === 'rejected' && (
             <div className="flex gap-2 pt-1">
               <button onClick={() => onContact(app)}
                 className="flex-1 bg-school-primary text-white text-sm font-bold py-2 rounded-lg hover:opacity-90 transition-colors">
                 Email Them
               </button>
+            </div>
+          )}
+
+          {app.status === 'paid' && (
+            <div className="pt-1 space-y-3">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Activate Ad Campaign</p>
+              <div className="grid grid-cols-1 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Tier</label>
+                  <select value={adTier} onChange={(e) => setAdTier(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary">
+                    <option value="base">Base — Rotating card ($20/wk)</option>
+                    <option value="pinned">Pinned — Always top ($35/wk)</option>
+                    <option value="premium">Premium — Full-width block ($55/wk)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Tagline / Campaign message</label>
+                  <input type="text" value={adTagline} onChange={(e) => setAdTagline(e.target.value)}
+                    placeholder="e.g. 50% off your first month, mention UMarket"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Logo URL (optional)</label>
+                  <input type="url" value={adLogoUrl} onChange={(e) => setAdLogoUrl(e.target.value)}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Website URL</label>
+                  <input type="url" value={adWebsite} onChange={(e) => setAdWebsite(e.target.value)}
+                    placeholder="https://theirsite.com"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Duration</label>
+                  <select value={adDuration} onChange={(e) => setAdDuration(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary">
+                    <option value="1">1 week</option>
+                    <option value="2">2 weeks (founding — 50% off)</option>
+                    <option value="4">4 weeks</option>
+                    <option value="8">8 weeks</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">School</label>
+                  <select value={adSchool} onChange={(e) => setAdSchool(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary">
+                    {SCHOOLS.filter((s) => s.live).map((s) => (
+                      <option key={s.id} value={s.id}>{s.shortName}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  disabled={activating || !adTagline || !adWebsite}
+                  onClick={async () => {
+                    setActivating(true)
+                    await onActivate(app, { tier: adTier, tagline: adTagline, logoUrl: adLogoUrl, website: adWebsite, weeks: Number(adDuration), schoolId: adSchool })
+                    setActivating(false)
+                  }}
+                  className="flex-1 bg-green-500 text-white text-sm font-bold py-2 rounded-lg hover:bg-green-600 disabled:opacity-40 transition-colors"
+                >
+                  {activating ? 'Activating…' : 'Activate Campaign'}
+                </button>
+                <button onClick={() => onContact(app)}
+                  className="px-4 border border-gray-200 text-gray-600 text-sm font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                  Email
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -462,6 +541,30 @@ export default function AdminDashboard({ onBack }) {
     }
   }
 
+  const activateAd = async (app, { tier, tagline, logoUrl, website, weeks, schoolId }) => {
+    try {
+      const startsAt = new Date()
+      const endsAt   = new Date(startsAt.getTime() + weeks * 7 * 86400000)
+      const { error } = await supabase.from('ads').insert({
+        application_id: app.id,
+        school_id:      schoolId,
+        company_name:   app.company_name,
+        logo_url:       logoUrl || null,
+        tagline,
+        website_url:    website,
+        tier,
+        active:         true,
+        starts_at:      startsAt.toISOString(),
+        ends_at:        endsAt.toISOString(),
+      })
+      if (error) throw error
+      alert(`Ad campaign activated! "${app.company_name}" will run as a ${tier} ad for ${weeks} week(s).`)
+      fetchAll()
+    } catch (err) {
+      alert(`Failed to activate ad: ${err.message}`)
+    }
+  }
+
   const removeListingFromReport = async (report) => {
     setReportWorkingId(report.id)
     if (report.listings?.id) {
@@ -577,6 +680,7 @@ export default function AdminDashboard({ onBack }) {
                   onReject={rejectAd}
                   onContact={contactAd}
                   onGenerateLink={generatePaymentLink}
+                  onActivate={activateAd}
                   working={adWorkingId === a.id}
                 />
               ))}

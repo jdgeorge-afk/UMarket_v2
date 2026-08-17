@@ -6,7 +6,9 @@ import CategoryStrip from './CategoryStrip'
 import FilterBar from './FilterBar'
 import ListingCard from './ListingCard'
 import AdCard from './AdCard'
+import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
+import { useAds } from '../hooks/useAds'
 
 const AD_INTERVAL = 8
 
@@ -88,13 +90,17 @@ function EventsBanner() {
   )
 }
 
-function injectAds(listings) {
+function injectAds(listings, baseAds, premiumAd) {
   const result = []
   let adCount = 0
   listings.forEach((listing, i) => {
     result.push({ type: 'listing', data: listing, key: listing.id })
-    if ((i + 1) % AD_INTERVAL === 0) {
-      result.push({ type: 'ad', adIndex: adCount++, key: `ad-${adCount}` })
+    if (i === 5 && premiumAd) {
+      result.push({ type: 'premium', data: premiumAd, key: 'premium-ad' })
+    }
+    if (baseAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
+      result.push({ type: 'ad', data: baseAds[adCount % baseAds.length], key: `ad-${adCount}` })
+      adCount++
     }
   })
   return result
@@ -369,6 +375,8 @@ export default function ListingFeed({
   }
   const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || minBaths !== null || minSpots !== null || genderPref !== null || listedWithin !== null || verifiedOnly || hasPhotos
 
+  const { baseAds, pinnedAd, premiumAd } = useAds()
+
   // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
   const { listings: rawListings, loading, error } = useListings({
@@ -428,7 +436,7 @@ export default function ListingFeed({
     )
   }
 
-  const items = injectAds(listings)
+  const items = injectAds(listings, baseAds, premiumAd)
 
   return (
     <div>
@@ -527,9 +535,12 @@ export default function ListingFeed({
 
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
+          {pinnedAd && <AdCard ad={pinnedAd} />}
           {items.map((item) =>
-            item.type === 'ad' ? (
-              <AdCard key={item.key} index={item.adIndex} />
+            item.type === 'premium' ? (
+              <PremiumAdBlock key={item.key} ad={item.data} />
+            ) : item.type === 'ad' ? (
+              <AdCard key={item.key} ad={item.data} />
             ) : (
               <ListingCard
                 key={item.key}
