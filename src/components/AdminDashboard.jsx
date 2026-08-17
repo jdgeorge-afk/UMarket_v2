@@ -437,17 +437,20 @@ function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActiv
 export default function AdminDashboard({ onBack }) {
   const { profile } = useAuth()
 
-  const [tab, setTab] = useState('ads') // 'ads' | 'boosts' | 'reports' | 'stats'
+  const [tab, setTab] = useState('ads') // 'ads' | 'advertisers' | 'users' | 'boosts' | 'reports' | 'stats'
   const [boosts, setBoosts]   = useState([])
   const [reports, setReports] = useState([])
   const [adApps, setAdApps]   = useState([])
+  const [users, setUsers]     = useState([])
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId]     = useState(null)
   const [adWorkingId, setAdWorkingId]       = useState(null)
   const [reportWorkingId, setReportWorkingId] = useState(null)
-  const [boostFilter, setBoostFilter] = useState('pending') // 'pending' | 'active' | 'rejected' | 'all'
-  const [adFilter, setAdFilter]       = useState('pending') // 'pending' | 'approved' | 'rejected' | 'all'
+  const [boostFilter, setBoostFilter] = useState('pending')
+  const [adFilter, setAdFilter]       = useState('pending')
+  const [userFilter, setUserFilter]   = useState('all') // 'all' | 'student' | 'landlord' | 'business'
+  const [userSearch, setUserSearch]   = useState('')
 
   // Guard
   if (!profile?.is_admin) {
@@ -463,7 +466,7 @@ export default function AdminDashboard({ onBack }) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const fetchAll = useCallback(async () => {
     setLoading(true)
-    const [boostRes, reportRes, adRes, listingCount, userCount] = await Promise.all([
+    const [boostRes, reportRes, adRes, userRes, listingCount] = await Promise.all([
       supabase
         .from('boosts')
         .select('*, listings(id, title, images, school_id), profiles(id, name)')
@@ -477,21 +480,30 @@ export default function AdminDashboard({ onBack }) {
         .from('ad_applications')
         .select('*')
         .order('created_at', { ascending: false }),
+      supabase
+        .from('profiles')
+        .select('id, name, email, school_id, account_type, company_name, company_website, created_at, is_admin')
+        .order('created_at', { ascending: false })
+        .limit(500),
       supabase.from('listings').select('id', { count: 'exact', head: true }),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
     ])
     setBoosts(boostRes.data ?? [])
     setReports(reportRes.data ?? [])
     setAdApps(adRes.data ?? [])
+    setUsers(userRes.data ?? [])
+    const ads = adRes.data ?? []
     setStats({
-      listings:    listingCount.count ?? 0,
-      users:       userCount.count ?? 0,
-      schools:     SCHOOLS.filter((s) => s.live).length,
-      revenue:     (boostRes.data ?? [])
+      listings:   listingCount.count ?? 0,
+      users:      (userRes.data ?? []).length,
+      students:   (userRes.data ?? []).filter((u) => !u.account_type || u.account_type === 'student').length,
+      landlords:  (userRes.data ?? []).filter((u) => u.account_type === 'landlord').length,
+      businesses: (userRes.data ?? []).filter((u) => u.account_type === 'business').length,
+      schools:    SCHOOLS.filter((s) => s.live).length,
+      revenue:    (boostRes.data ?? [])
         .filter((b) => b.status === 'active')
         .reduce((sum, b) => sum + Number(b.total_price), 0),
-      adPending:   (adRes.data ?? []).filter((a) => a.status === 'pending').length,
-      adApproved:  (adRes.data ?? []).filter((a) => a.status === 'approved').length,
+      adPending:  ads.filter((a) => a.status === 'pending').length,
+      adActive:   ads.filter((a) => a.status === 'active').length,
     })
     setLoading(false)
   }, [])
@@ -657,18 +669,20 @@ export default function AdminDashboard({ onBack }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-5 gap-0.5">
+      <div className="grid grid-cols-3 gap-1 bg-gray-100 rounded-xl p-1 mb-5">
         {[
-          { id: 'ads',     label: `Ads${adPendingCount ? ` (${adPendingCount})` : ''}` },
-          { id: 'boosts',  label: `Boosts${pendingCount ? ` (${pendingCount})` : ''}` },
-          { id: 'reports', label: `Reports${reports.length ? ` (${reports.length})` : ''}` },
-          { id: 'stats',   label: 'Stats' },
+          { id: 'ads',         label: `Ads${adPendingCount ? ` (${adPendingCount})` : ''}` },
+          { id: 'advertisers', label: 'Advertisers' },
+          { id: 'users',       label: `Users (${users.length})` },
+          { id: 'boosts',      label: `Boosts${pendingCount ? ` (${pendingCount})` : ''}` },
+          { id: 'reports',     label: `Reports${reports.length ? ` (${reports.length})` : ''}` },
+          { id: 'stats',       label: 'Stats' },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={[
-              'flex-1 py-2 rounded-lg text-xs font-semibold transition-all',
+              'py-2 rounded-lg text-xs font-semibold transition-all',
               tab === t.id ? 'bg-white shadow text-gray-900' : 'text-gray-400',
             ].join(' ')}
           >
@@ -730,6 +744,167 @@ export default function AdminDashboard({ onBack }) {
           )}
         </>
       )}
+
+      {/* ── Advertisers CRM tab ──────────────────────────────────────────── */}
+      {!loading && tab === 'advertisers' && (() => {
+        const active  = adApps.filter((a) => a.status === 'active')
+        const past    = adApps.filter((a) => ['cancelled', 'rejected'].includes(a.status))
+        const pending = adApps.filter((a) => ['pending', 'needs_review', 'reviewing'].includes(a.status))
+
+        const parseWeeklyRate = (budgetRange) => {
+          if (!budgetRange) return 0
+          const match = budgetRange.match(/\$([\d.]+)/)
+          return match ? parseFloat(match[1]) : 0
+        }
+        const weeksActive = (createdAt) => {
+          const ms = Date.now() - new Date(createdAt).getTime()
+          return Math.max(1, Math.floor(ms / (7 * 86400000)))
+        }
+        const estSpend = (app) => parseWeeklyRate(app.budget_range) * (app.status === 'active' ? weeksActive(app.created_at) : 1)
+
+        const totalRevenue = [...active, ...past].reduce((sum, a) => sum + estSpend(a), 0)
+
+        const AdvertiserRow = ({ app, badge, badgeColor }) => {
+          const rate  = parseWeeklyRate(app.budget_range)
+          const weeks = app.status === 'active' ? weeksActive(app.created_at) : 1
+          const spent = rate * weeks
+          return (
+            <div className="border border-gray-100 rounded-xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-school-primary/10 flex items-center justify-center text-school-primary text-base font-bold shrink-0">
+                {app.company_name?.[0]?.toUpperCase() ?? '?'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 text-sm truncate">{app.company_name}</p>
+                <p className="text-xs text-gray-400 truncate">{app.contact_name} · {app.email}</p>
+                <p className="text-xs text-gray-400">{app.ad_type} · {app.target_schools}</p>
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+                <p className="text-xs font-bold text-gray-900">${spent.toFixed(2)}</p>
+                <p className="text-[10px] text-gray-400">${rate}/wk · {weeks}wk</p>
+                <a href={`mailto:${app.email}?subject=UMarket Advertising — ${encodeURIComponent(app.company_name)}`}
+                  className="text-xs text-school-primary font-semibold hover:underline">Email</a>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <>
+            {/* Revenue summary */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-green-50 rounded-2xl p-4">
+                <p className="text-xs text-green-600 font-semibold mb-1">Total Ad Revenue</p>
+                <p className="text-2xl font-bold text-green-700">${totalRevenue.toFixed(2)}</p>
+                <p className="text-xs text-green-500 mt-0.5">All time (est.)</p>
+              </div>
+              <div className="bg-blue-50 rounded-2xl p-4">
+                <p className="text-xs text-blue-600 font-semibold mb-1">Active Weekly Run Rate</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  ${active.reduce((s, a) => s + parseWeeklyRate(a.budget_range), 0).toFixed(2)}
+                </p>
+                <p className="text-xs text-blue-500 mt-0.5">per week</p>
+              </div>
+            </div>
+
+            {active.length > 0 && (
+              <div className="mb-5">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">🟢 Active ({active.length})</p>
+                <div className="space-y-2">
+                  {active.map((a) => <AdvertiserRow key={a.id} app={a} badge="Active" badgeColor="bg-green-100 text-green-700" />)}
+                </div>
+              </div>
+            )}
+            {pending.length > 0 && (
+              <div className="mb-5">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">🟡 In Review ({pending.length})</p>
+                <div className="space-y-2">
+                  {pending.map((a) => <AdvertiserRow key={a.id} app={a} badge={a.status} badgeColor="bg-yellow-100 text-yellow-700" />)}
+                </div>
+              </div>
+            )}
+            {past.length > 0 && (
+              <div className="mb-5">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">🔴 Past / Re-engage ({past.length})</p>
+                <div className="space-y-2">
+                  {past.map((a) => <AdvertiserRow key={a.id} app={a} badge={a.status} badgeColor="bg-gray-100 text-gray-500" />)}
+                </div>
+              </div>
+            )}
+            {adApps.length === 0 && (
+              <div className="text-center py-16 text-gray-400">
+                <p className="text-4xl mb-3">📣</p>
+                <p className="font-semibold">No advertisers yet</p>
+              </div>
+            )}
+          </>
+        )
+      })()}
+
+      {/* ── Users tab ─────────────────────────────────────────────────────── */}
+      {!loading && tab === 'users' && (() => {
+        const typeColors = {
+          student:  'bg-blue-100 text-blue-700',
+          landlord: 'bg-purple-100 text-purple-700',
+          business: 'bg-yellow-100 text-yellow-700',
+        }
+        const filtered = users.filter((u) => {
+          const type = u.account_type || 'student'
+          if (userFilter !== 'all' && type !== userFilter) return false
+          if (userSearch) {
+            const q = userSearch.toLowerCase()
+            return (u.name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q) || (u.company_name ?? '').toLowerCase().includes(q)
+          }
+          return true
+        })
+
+        return (
+          <>
+            {/* Counts */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {[
+                { label: 'Students',   count: stats?.students ?? 0,   type: 'student',  color: 'bg-blue-50 text-blue-700' },
+                { label: 'Landlords',  count: stats?.landlords ?? 0,  type: 'landlord', color: 'bg-purple-50 text-purple-700' },
+                { label: 'Businesses', count: stats?.businesses ?? 0, type: 'business', color: 'bg-yellow-50 text-yellow-700' },
+              ].map((s) => (
+                <button key={s.type} onClick={() => setUserFilter(userFilter === s.type ? 'all' : s.type)}
+                  className={`rounded-xl p-3 text-center border-2 transition-colors ${userFilter === s.type ? 'border-school-primary' : 'border-transparent'} ${s.color}`}>
+                  <p className="text-xl font-bold">{s.count}</p>
+                  <p className="text-xs font-semibold">{s.label}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <input value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="Search by name, email, or company…"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary" />
+
+            <p className="text-xs text-gray-400 mb-2">{filtered.length} user{filtered.length !== 1 ? 's' : ''}</p>
+
+            <div className="space-y-1.5">
+              {filtered.map((u) => {
+                const type = u.account_type || 'student'
+                return (
+                  <div key={u.id} className="flex items-center gap-3 border border-gray-100 rounded-xl px-3 py-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500 shrink-0">
+                      {(u.name ?? u.email ?? '?')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{u.name ?? '—'}{u.company_name ? ` · ${u.company_name}` : ''}</p>
+                      <p className="text-xs text-gray-400 truncate">{u.email} · {schoolName(u.school_id)}</p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      {u.is_admin && <span className="text-xs bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded-full">Admin</span>}
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${typeColors[type] ?? 'bg-gray-100 text-gray-500'}`}>{type}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )
+      })()}
 
       {/* ── Boosts tab ────────────────────────────────────────────────────── */}
       {!loading && tab === 'boosts' && (
