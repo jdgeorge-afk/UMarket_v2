@@ -349,6 +349,7 @@ function AppInner() {
             <ListingDetail
               listing={selectedListing}
               onBack={goBack}
+              onOpenListing={openListing}
               onOpenProfile={openProfile}
               onRequireAuth={requireAuth}
               onAdminDelete={goHome}
