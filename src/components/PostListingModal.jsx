@@ -336,8 +336,8 @@ export default function PostListingModal({ onClose, onPosted }) {
             />
           )}
 
-          {/* Address — required for housing, shown inline under Required */}
-          {(isHousing || isLookingHousing) && (
+          {/* Address — required for housing/sublease listings only */}
+          {isHousing && (
             <>
               <input
                 className={I}
@@ -479,7 +479,7 @@ export default function PostListingModal({ onClose, onPosted }) {
         </div>
 
         {/* ── Location (non-housing only — optional general area) ── */}
-        {!isHousing && !isLookingHousing && (
+        {!isHousing && (
           <>
             <div className="border-t border-gray-100 px-4 pt-5 pb-2">
               <h2 className="text-xl font-bold text-gray-900">Location</h2>
