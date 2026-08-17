@@ -20,7 +20,7 @@ export const SCHOOLS = [
     dark: '#0d2e21',
     gradient: 'linear-gradient(135deg, #154734, #C69214)',
     location: 'San Luis Obispo, CA',
-    live: true,
+    live: false,
   },
   {
     id: 'ucsb',
@@ -31,7 +31,7 @@ export const SCHOOLS = [
     dark: '#002244',
     gradient: 'linear-gradient(135deg, #003660, #FEBC11)',
     location: 'Santa Barbara, CA',
-    live: true,
+    live: false,
   },
   {
     id: 'tcu',
@@ -42,7 +42,7 @@ export const SCHOOLS = [
     dark: '#2d0f47',
     gradient: 'linear-gradient(135deg, #4D1979, #7c3aed)',
     location: 'Fort Worth, TX',
-    live: true,
+    live: false,
   },
   {
     id: 'ucla',
@@ -53,7 +53,7 @@ export const SCHOOLS = [
     dark: '#1a5480',
     gradient: 'linear-gradient(135deg, #2774AE, #FFD100)',
     location: 'Los Angeles, CA',
-    live: true,
+    live: false,
   },
   {
     id: 'ucsd',
@@ -64,7 +64,7 @@ export const SCHOOLS = [
     dark: '#003d61',
     gradient: 'linear-gradient(135deg, #00629B, #00b4d8)',
     location: 'La Jolla, CA',
-    live: true,
+    live: false,
   },
   {
     id: 'sdsu',

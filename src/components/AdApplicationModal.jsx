@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { sanitizeText } from '../lib/validation'
 import { SCHOOLS } from '../constants/schools'
 
-const LIVE_SCHOOLS = SCHOOLS.filter((s) => s.live)
+const AD_SCHOOLS = SCHOOLS.filter((s) => s.id === 'utah')
 
 const INDUSTRIES = [
   'Food & Drink',
@@ -139,8 +139,8 @@ export default function AdApplicationModal({ onClose }) {
         <div className="mx-4 mt-4 mb-2 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex items-center gap-3">
           <span className="text-xl">🎉</span>
           <div>
-            <p className="text-sm font-semibold text-yellow-800">Founding advertiser rate</p>
-            <p className="text-xs text-yellow-600">50% off all tiers — limited time</p>
+            <p className="text-sm font-semibold text-yellow-800">50% off your first 2 weeks — founding advertiser rate</p>
+            <p className="text-xs text-yellow-600">Limited time offer for early advertisers</p>
           </div>
         </div>
 
@@ -240,7 +240,7 @@ export default function AdApplicationModal({ onClose }) {
         </div>
 
         <div className="px-4 pb-4 flex flex-wrap gap-2">
-          {LIVE_SCHOOLS.map((school) => {
+          {AD_SCHOOLS.map((school) => {
             const on = targetSchools.includes(school.id)
             return (
               <button
@@ -268,7 +268,7 @@ export default function AdApplicationModal({ onClose }) {
             </div>
             <div className="text-right">
               <p className="text-xs text-gray-400 line-through">{fmt(fullPrice)}/wk regular</p>
-              <span className="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">50% off</span>
+              <span className="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">50% off first 2 wks</span>
             </div>
           </div>
         )}
