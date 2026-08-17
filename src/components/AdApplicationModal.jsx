@@ -24,28 +24,28 @@ const INDUSTRIES = [
 
 const AD_TIERS = [
   {
-    id:          'base',
-    label:       'Base',
-    price:       '$20',
-    unit:        '/ week',
-    tagline:     'Rotating card in the feed',
-    description: 'Your ad appears as a sponsored card injected throughout the listing feed, rotating with other base ads.',
+    id:            'base',
+    label:         'Base',
+    price:         '$20',
+    discountPrice: '$10',
+    tagline:       'Rotating card in the feed',
+    description:   'Your ad appears as a sponsored card injected throughout the listing feed, rotating with other base ads.',
   },
   {
-    id:          'pinned',
-    label:       'Pinned',
-    price:       '$35',
-    unit:        '/ week',
-    tagline:     'Locked at the top of the feed',
-    description: 'Your card stays permanently at the top of the feed — always the first thing students see when they browse.',
+    id:            'pinned',
+    label:         'Pinned',
+    price:         '$35',
+    discountPrice: '$17.50',
+    tagline:       'Locked at the top of the feed',
+    description:   'Your card stays permanently at the top of the feed — always the first thing students see when they browse.',
   },
   {
-    id:          'premium',
-    label:       'Premium',
-    price:       '$55',
-    unit:        '/ week',
-    tagline:     'Full-width block in the feed',
-    description: 'A large banner that spans the entire listing grid after the 6th post — maximum visibility with your logo, message, and a link.',
+    id:            'premium',
+    label:         'Premium',
+    price:         '$55',
+    discountPrice: '$27.50',
+    tagline:       'Full-width block in the feed',
+    description:   'A large banner that spans the entire listing grid after the 6th post — maximum visibility with your logo, message, and a link.',
   },
 ]
 
@@ -204,7 +204,10 @@ export default function AdApplicationModal({ onClose }) {
               >
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="font-bold text-gray-900 text-sm">{tier.label}</span>
-                  <span className="font-bold text-red-500 text-sm">{tier.price}<span className="text-gray-400 font-normal text-xs">{tier.unit}</span></span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-gray-300 line-through text-xs font-medium">{tier.price}/wk</span>
+                    <span className="font-bold text-red-500 text-sm">{tier.discountPrice}<span className="text-gray-400 font-normal text-xs">/wk</span></span>
+                  </div>
                 </div>
                 <p className="text-xs font-semibold text-gray-500">{tier.tagline}</p>
                 <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{tier.description}</p>
