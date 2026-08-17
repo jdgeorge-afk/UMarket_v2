@@ -335,6 +335,28 @@ export default function PostListingModal({ onClose, onPosted }) {
               onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 5))}
             />
           )}
+
+          {/* Address — required for housing, shown inline under Required */}
+          {(isHousing || isLookingHousing) && (
+            <>
+              <input
+                className={I}
+                placeholder="Full address (e.g. 123 Main St, Salt Lake City, UT)"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                maxLength={100}
+              />
+              {geocoding && (
+                <p className="text-xs text-gray-400 px-1">Finding location on map…</p>
+              )}
+              {geocodeError && !geocoding && (
+                <p className="text-xs text-red-400 px-1">Address not found — try adding city and state (e.g. 123 Main St, Salt Lake City, UT)</p>
+              )}
+              {mapCoords && !geocoding && (
+                <MapPreview lat={mapCoords.lat} lng={mapCoords.lng} />
+              )}
+            </>
+          )}
         </div>
 
         {/* ── Category-specific fields ─────────────────────────── */}
@@ -456,35 +478,24 @@ export default function PostListingModal({ onClose, onPosted }) {
           />
         </div>
 
-        {/* ── Location ─────────────────────────────────────────── */}
-        <div className="border-t border-gray-100 px-4 pt-5 pb-2">
-          <h2 className="text-xl font-bold text-gray-900">{isHousing ? 'Address' : 'Location'}</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {isHousing
-              ? 'Required — used to show the property on the map.'
-              : 'Optional — general area, landmark, or neighborhood.'}
-          </p>
-        </div>
-        <div className="px-4 pb-4 space-y-3">
-          <input
-            className={I}
-            placeholder={isHousing
-              ? 'Full address (e.g. 123 Main St, Logan, UT)'
-              : 'Location (e.g. near campus, downtown)'}
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            maxLength={100}
-          />
-          {isHousing && geocoding && (
-            <p className="text-xs text-gray-400 px-1">Finding location on map…</p>
-          )}
-          {isHousing && geocodeError && !geocoding && (
-            <p className="text-xs text-red-400 px-1">Address not found — try adding city and state (e.g. 123 Main St, Logan, UT)</p>
-          )}
-          {isHousing && mapCoords && !geocoding && (
-            <MapPreview lat={mapCoords.lat} lng={mapCoords.lng} />
-          )}
-        </div>
+        {/* ── Location (non-housing only — optional general area) ── */}
+        {!isHousing && !isLookingHousing && (
+          <>
+            <div className="border-t border-gray-100 px-4 pt-5 pb-2">
+              <h2 className="text-xl font-bold text-gray-900">Location</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Optional — general area, landmark, or neighborhood.</p>
+            </div>
+            <div className="px-4 pb-4">
+              <input
+                className={I}
+                placeholder="Location (e.g. near campus, downtown)"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                maxLength={100}
+              />
+            </div>
+          </>
+        )}
 
         {/* ── Contact ──────────────────────────────────────────── */}
         <div className="border-t border-gray-100 px-4 pt-5 pb-2">
