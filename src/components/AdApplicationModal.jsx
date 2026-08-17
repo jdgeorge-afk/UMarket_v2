@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import Modal from './Modal'
 import { sanitizeText } from '../lib/validation'
+import { SCHOOLS } from '../constants/schools'
 
-const LIVE_SCHOOLS = [
-  'University of Utah',
-]
+const LIVE_SCHOOLS = SCHOOLS.filter((s) => s.live)
 
 const INDUSTRIES = [
   'Food & Drink',
@@ -22,46 +21,53 @@ const INDUSTRIES = [
   'Other',
 ]
 
+// Weekly prices in cents (discounted 50% — founding advertiser rate)
+const TIER_PRICES = { base: 1000, pinned: 1750, premium: 2750 }
+const TIER_FULL   = { base: 2000, pinned: 3500, premium: 5500 }
+
 const AD_TIERS = [
   {
-    id:            'base',
-    label:         'Base',
-    price:         '$20',
-    discountPrice: '$10',
-    tagline:       'Rotating card in the feed',
-    description:   'Your ad appears as a sponsored card injected throughout the listing feed, rotating with other base ads.',
+    id:    'base',
+    label: 'Base',
+    tagline: 'Rotating card in the feed',
+    description: 'Your sponsored card rotates throughout the listing feed every 8 posts.',
   },
   {
-    id:            'pinned',
-    label:         'Pinned',
-    price:         '$35',
-    discountPrice: '$17.50',
-    tagline:       'Locked at the top of the feed',
-    description:   'Your card stays permanently at the top of the feed — always the first thing students see when they browse.',
+    id:    'pinned',
+    label: 'Pinned',
+    tagline: 'Locked at the top of the feed',
+    description: 'Your card stays permanently at the top — always the first thing students see.',
   },
   {
-    id:            'premium',
-    label:         'Premium',
-    price:         '$55',
-    discountPrice: '$27.50',
-    tagline:       'Full-width block in the feed',
-    description:   'A large banner that spans the entire listing grid after the 6th post — maximum visibility with your logo, message, and a link.',
+    id:      'premium',
+    label:   'Premium',
+    tagline: 'Full-width block in the feed',
+    description: 'A large banner spanning the entire feed after the 6th listing — logo, message, and link.',
   },
 ]
+
+function calcPrice(tierId, numSchools) {
+  const base = TIER_PRICES[tierId] ?? 0
+  return Math.round(base * (1 + 0.5 * (numSchools - 1)))
+}
+
+function formatCents(cents) {
+  return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`
+}
 
 export default function AdApplicationModal({ onClose }) {
   const [step, setStep] = useState(1)
 
-  const [contactName, setContactName]   = useState('')
-  const [companyName, setCompanyName]   = useState('')
-  const [email, setEmail]               = useState('')
-  const [phone, setPhone]               = useState('')
-  const [website, setWebsite]           = useState('')
-  const [industry, setIndustry]           = useState('')
-  const [adTier, setAdTier]               = useState('')
-  const [description, setDescription]     = useState('')
+  const [contactName, setContactName] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [email, setEmail]             = useState('')
+  const [phone, setPhone]             = useState('')
+  const [website, setWebsite]         = useState('')
+  const [industry, setIndustry]       = useState('')
+  const [adTier, setAdTier]           = useState('')
+  const [description, setDescription] = useState('')
   const [targetSchools, setTargetSchools] = useState([])
-  const [notes, setNotes]                 = useState('')
+  const [notes, setNotes]             = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -71,36 +77,64 @@ export default function AdApplicationModal({ onClose }) {
       prev.includes(school) ? prev.filter((s) => s !== school) : [...prev, school]
     )
 
-  const handleSubmit = async (e) => {
+  const weeklyPrice = useMemo(
+    () => adTier ? calcPrice(adTier, Math.max(1, targetSchools.length)) : 0,
+    [adTier, targetSchools.length],
+  )
+
+  const fullPrice = useMemo(
+    () => adTier ? Math.round((TIER_FULL[adTier] ?? 0) * (1 + 0.5 * (Math.max(1, targetSchools.length) - 1))) : 0,
+    [adTier, targetSchools.length],
+  )
+
+  const handleCheckout = async (e) => {
     e.preventDefault()
-    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry || !adTier || !description.trim()) {
+    if (!contactName.trim() || !companyName.trim() || !email.trim() || !industry) {
       setError('Please fill in all required fields.')
+      return
+    }
+    if (!adTier) {
+      setError('Please select an ad tier.')
+      return
+    }
+    if (targetSchools.length === 0) {
+      setError('Please select at least one target school.')
+      return
+    }
+    if (!description.trim()) {
+      setError('Please describe what you want to promote.')
       return
     }
 
     setSaving(true)
     setError('')
     try {
-      const tier = AD_TIERS.find((t) => t.id === adTier)
-      const { error: insertErr } = await supabase.from('ad_applications').insert({
-        contact_name:   sanitizeText(contactName),
-        company_name:   sanitizeText(companyName),
-        email:          email.trim().toLowerCase(),
-        phone:          sanitizeText(phone),
-        website:        sanitizeText(website),
-        industry,
-        ad_type:        `${tier.label} — ${tier.tagline} (${tier.price}/wk)`,
-        description:    sanitizeText(description),
-        budget_range:   `${tier.price}/week`,
-        target_schools: targetSchools.join(', '),
-        notes:          sanitizeText(notes),
-        status:         'pending',
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers = { 'Content-Type': 'application/json' }
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
+
+      const res = await supabase.functions.invoke('advertiser-checkout', {
+        body: {
+          contact_name:   sanitizeText(contactName),
+          company_name:   sanitizeText(companyName),
+          email:          email.trim().toLowerCase(),
+          phone:          sanitizeText(phone),
+          website:        sanitizeText(website),
+          industry,
+          tier:           adTier,
+          description:    sanitizeText(description),
+          target_schools: targetSchools,
+          notes:          sanitizeText(notes),
+        },
       })
-      if (insertErr) throw insertErr
-      setStep(2)
+
+      if (res.error) throw new Error(res.error.message ?? 'Checkout failed')
+      const { url } = res.data
+      if (!url) throw new Error('No checkout URL returned')
+
+      window.location.href = url
     } catch (err) {
-      setError(err.message)
-    } finally {
+      setError(err.message || 'Something went wrong. Please try again.')
       setSaving(false)
     }
   }
@@ -128,11 +162,11 @@ export default function AdApplicationModal({ onClose }) {
 
   return (
     <Modal onClose={onClose} fullHeight wide title="Advertise with Us">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleCheckout}>
         {/* Header blurb */}
         <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-5">
           <p className="text-sm text-red-700 font-medium">Reach thousands of college students on UMarket.</p>
-          <p className="text-xs text-red-500 mt-0.5">Fill out the form below and our team will follow up within 1–2 business days.</p>
+          <p className="text-xs text-red-500 mt-0.5">Select your tier, enter payment info on the next screen, and your ad goes live once reviewed.</p>
         </div>
 
         {/* Contact info */}
@@ -190,29 +224,32 @@ export default function AdApplicationModal({ onClose }) {
             <p className="text-xs text-yellow-700 font-medium">Founding advertiser deal: first 2 weeks at 50% off all tiers.</p>
           </div>
           <div className="space-y-2">
-            {AD_TIERS.map((tier) => (
-              <button
-                type="button"
-                key={tier.id}
-                onClick={() => setAdTier(tier.id)}
-                className={[
-                  'w-full text-left rounded-xl border-2 px-4 py-3 transition-colors',
-                  adTier === tier.id
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300',
-                ].join(' ')}
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-bold text-gray-900 text-sm">{tier.label}</span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-gray-300 line-through text-xs font-medium">{tier.price}/wk</span>
-                    <span className="font-bold text-red-500 text-sm">{tier.discountPrice}<span className="text-gray-400 font-normal text-xs">/wk</span></span>
+            {AD_TIERS.map((tier) => {
+              const schools = Math.max(1, targetSchools.length)
+              const price = calcPrice(tier.id, schools)
+              const full  = Math.round((TIER_FULL[tier.id] ?? 0) * (1 + 0.5 * (schools - 1)))
+              return (
+                <button
+                  type="button"
+                  key={tier.id}
+                  onClick={() => setAdTier(tier.id)}
+                  className={[
+                    'w-full text-left rounded-xl border-2 px-4 py-3 transition-colors',
+                    adTier === tier.id ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-bold text-gray-900 text-sm">{tier.label}</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-gray-300 line-through text-xs font-medium">{formatCents(full)}/wk</span>
+                      <span className="font-bold text-red-500 text-sm">{formatCents(price)}<span className="text-gray-400 font-normal text-xs">/wk</span></span>
+                    </div>
                   </div>
-                </div>
-                <p className="text-xs font-semibold text-gray-500">{tier.tagline}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{tier.description}</p>
-              </button>
-            ))}
+                  <p className="text-xs font-semibold text-gray-500">{tier.tagline}</p>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{tier.description}</p>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -223,29 +260,35 @@ export default function AdApplicationModal({ onClose }) {
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-red-400" />
         </div>
 
-        {/* Target schools — multi-select chips */}
+        {/* Target schools — required */}
         <div className="mb-4">
-          <label className="text-xs font-semibold text-gray-500 mb-2 block">Target Schools <span className="font-normal text-gray-400">(select all that apply)</span></label>
+          <label className="text-xs font-semibold text-gray-500 mb-1 block">
+            Target Schools * <span className="font-normal text-gray-400">— each additional school adds 50%</span>
+          </label>
           <div className="flex flex-wrap gap-2">
             {LIVE_SCHOOLS.map((school) => {
-              const active = targetSchools.includes(school)
+              const active = targetSchools.includes(school.id)
               return (
                 <button
                   type="button"
-                  key={school}
-                  onClick={() => toggleSchool(school)}
+                  key={school.id}
+                  onClick={() => toggleSchool(school.id)}
                   className={[
                     'px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
-                    active
-                      ? 'bg-red-500 text-white border-red-500'
-                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                    active ? 'bg-red-500 text-white border-red-500' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
                   ].join(' ')}
                 >
-                  {school}
+                  {school.shortName}
                 </button>
               )
             })}
           </div>
+          {targetSchools.length > 1 && adTier && (
+            <p className="text-xs text-gray-500 mt-1.5">
+              {targetSchools.length} schools selected → <span className="font-semibold text-red-500">{formatCents(weeklyPrice)}/wk</span>
+              <span className="text-gray-400"> (was {formatCents(fullPrice)}/wk)</span>
+            </p>
+          )}
         </div>
 
         <div className="mb-5">
@@ -257,10 +300,25 @@ export default function AdApplicationModal({ onClose }) {
 
         {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2 mb-3">{error}</p>}
 
+        {/* Price summary + checkout button */}
+        {adTier && targetSchools.length > 0 && (
+          <div className="bg-gray-50 rounded-xl px-4 py-3 mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-400">Weekly total ({targetSchools.length} school{targetSchools.length > 1 ? 's' : ''})</p>
+              <div className="flex items-baseline gap-2">
+                <p className="font-bold text-gray-900 text-lg">{formatCents(weeklyPrice)}<span className="text-gray-400 font-normal text-sm">/wk</span></p>
+                <p className="text-xs text-gray-400 line-through">{formatCents(fullPrice)}/wk</p>
+              </div>
+            </div>
+            <span className="text-xs bg-yellow-100 text-yellow-700 font-bold px-2 py-1 rounded-full">50% off</span>
+          </div>
+        )}
+
         <button type="submit" disabled={saving}
           className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl text-base disabled:opacity-40 transition-colors">
-          {saving ? 'Submitting…' : 'Submit Application →'}
+          {saving ? 'Redirecting to checkout…' : 'Checkout →'}
         </button>
+        <p className="text-center text-xs text-gray-400 mt-2">Secured by Stripe · Card not charged until ad is approved</p>
       </form>
     </Modal>
   )

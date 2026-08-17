@@ -23,6 +23,7 @@ import AuthModal from './components/AuthModal'
 import PostListingModal from './components/PostListingModal'
 import BoostModal from './components/BoostModal'
 import AdApplicationModal from './components/AdApplicationModal'
+import AdStatusPage from './components/AdStatusPage'
 
 // ── Fetch a listing by ID with full seller profile join ──────────────────────
 const LISTING_SELECT = '*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)'
@@ -218,6 +219,8 @@ function AppInner() {
       setCurrentView('favorites')
     } else if (p.get('view') === 'admin') {
       setCurrentView('admin')
+    } else if (p.has('ad_status')) {
+      setCurrentView('ad_status')
     } else {
       // Feed view — restore tab, search, and sort simultaneously
       if (p.has('filter')) setActiveFilter(p.get('filter'))
@@ -376,6 +379,13 @@ function AppInner() {
 
           {currentView === 'admin' && (
             <AdminDashboard onBack={goHome} />
+          )}
+
+          {currentView === 'ad_status' && (
+            <AdStatusPage
+              status={new URLSearchParams(window.location.search).get('ad_status')}
+              onClose={goHome}
+            />
           )}
         </main>
       </div>

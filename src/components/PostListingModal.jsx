@@ -77,6 +77,7 @@ export default function PostListingModal({ onClose, onPosted }) {
   const isSublease       = category === 'sublease'
   const isLooking        = category === 'looking_for'
   const isLookingHousing = category === 'looking_housing' || category === 'looking_roommate'
+  const isRoommate       = category === 'looking_roommate'
   const isClothing       = category === 'clothing'
   const isEvents         = category === 'events'
 
@@ -206,7 +207,7 @@ export default function PostListingModal({ onClose, onPosted }) {
         budget:      (isLooking || isLookingHousing) ? (Number(budget) || null) : null,
         beds:            (isHousing || isLookingHousing) ? (Number(beds) || null) : null,
         size:            isHousing ? baths.trim() : isClothing ? clothingSize : null,
-        gender:          isClothing ? gender : null,
+        gender:          isClothing ? gender : (isRoommate ? gender : null),
         avail:           (isHousing || isLookingHousing || isEvents) ? sanitizeText(avail) : null,
         spots_available: isSublease ? (Number(spotsAvailable) || null) : null,
         contact_type: contactType,
@@ -348,6 +349,20 @@ export default function PostListingModal({ onClose, onPosted }) {
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
             />
           </div>
+        )}
+
+        {/* ── Roommate — gender preference ──────────────────────────────────── */}
+        {isRoommate && (
+          <select
+            value={gender} onChange={(e) => setGender(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-school-primary bg-white"
+          >
+            <option value="">Gender preference (optional)</option>
+            <option>Male preferred</option>
+            <option>Female preferred</option>
+            <option>Non-binary preferred</option>
+            <option>No preference</option>
+          </select>
         )}
 
         {/* ── Sublease — spots available ────────────────────────────────────── */}

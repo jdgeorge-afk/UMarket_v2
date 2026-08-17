@@ -3,7 +3,10 @@ import { useState, useRef, useEffect } from 'react'
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
 const GENDERS = ["Men's", "Women's", 'Unisex']
-const BED_OPTIONS = [{ label: '1+', value: 1 }, { label: '2+', value: 2 }, { label: '3+', value: 3 }, { label: '4+', value: 4 }]
+const BED_OPTIONS  = [{ label: '1+', value: 1 }, { label: '2+', value: 2 }, { label: '3+', value: 3 }, { label: '4+', value: 4 }]
+const BATH_OPTIONS = [{ label: '1+', value: 1 }, { label: '1.5+', value: 1.5 }, { label: '2+', value: 2 }, { label: '3+', value: 3 }]
+const SPOT_OPTIONS = [{ label: '1+', value: 1 }, { label: '2+', value: 2 }, { label: '3+', value: 3 }]
+const GENDER_PREFS = ['Male preferred', 'Female preferred', 'Non-binary preferred']
 const LISTED_WITHIN = [{ label: 'Today', value: 'today' }, { label: 'This Week', value: 'week' }, { label: 'This Month', value: 'month' }]
 
 // Build the sort options relevant to the current section.
@@ -36,13 +39,19 @@ export default function FilterBar({
   onMinPrice, onMaxPrice, onToggleCondition,
   clothingSizes, genders, onToggleClothingSize, onToggleGender,
   minBeds, onMinBeds,
+  minBaths, onMinBaths,
+  minSpots, onMinSpots,
+  genderPref, onGenderPref,
   listedWithin, onListedWithin,
   verifiedOnly, onVerifiedOnly,
   hasPhotos, onHasPhotos,
   onClearExtraFilters, hasExtraFilters,
 }) {
-  const isClothing = activeFilter === 'marketplace:clothing'
+  const isClothing       = activeFilter === 'marketplace:clothing'
   const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
+  const isSubleaseSection  = activeFilter === 'housing:sublease'
+  const isRoommateSection  = activeFilter === 'housing:roommates'
+  const showBathFilter     = isHousingSection && !isRoommateSection && activeFilter !== 'housing:looking_for'
   const hasFilter = (activeFilter && activeFilter !== 'all') || hasExtraFilters
   const sortOptions = getSortOptions(activeFilter)
   const [open, setOpen] = useState(false)
@@ -213,6 +222,75 @@ export default function FilterBar({
                       ].join(' ')}
                     >
                       {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Min bathrooms — housing/landlord/sublease only */}
+            {showBathFilter && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Min Bathrooms</p>
+                <div className="flex flex-wrap gap-2">
+                  {BATH_OPTIONS.map((b) => (
+                    <button
+                      key={b.value}
+                      onClick={() => onMinBaths(minBaths === b.value ? null : b.value)}
+                      className={[
+                        'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                        minBaths === b.value
+                          ? 'bg-school-primary text-white border-school-primary'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                      ].join(' ')}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Spots available — sublease only */}
+            {isSubleaseSection && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Spots Available</p>
+                <div className="flex flex-wrap gap-2">
+                  {SPOT_OPTIONS.map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() => onMinSpots(minSpots === s.value ? null : s.value)}
+                      className={[
+                        'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                        minSpots === s.value
+                          ? 'bg-school-primary text-white border-school-primary'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                      ].join(' ')}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Gender preference — roommates only */}
+            {isRoommateSection && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Gender Preference</p>
+                <div className="flex flex-wrap gap-2">
+                  {GENDER_PREFS.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => onGenderPref(genderPref === g ? null : g)}
+                      className={[
+                        'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                        genderPref === g
+                          ? 'bg-school-primary text-white border-school-primary'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                      ].join(' ')}
+                    >
+                      {g}
                     </button>
                   ))}
                 </div>
