@@ -66,7 +66,8 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName]         = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName]   = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   // steps: 'type' | 'school' | 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
@@ -94,8 +95,10 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
     if (mode === 'signup') {
       // Validate sign-up fields (name, email format, password ≥ 6 chars)
+      if (!firstName.trim()) { setError('Please enter your first name.'); return }
+      if (!lastName.trim())  { setError('Please enter your last name.'); return }
       const { valid, firstError } = validate(
-        { name: name.trim(), email: sanitizeEmail(email), password },
+        { name: `${firstName.trim()} ${lastName.trim()}`, email: sanitizeEmail(email), password },
         signUpSchema,
       )
       if (!valid) { setError(firstError); return }
@@ -144,7 +147,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
       const { error: err } = await signUp({
         email: sanitizeEmail(email),
         password,
-        name: name.trim(),
+        name: `${firstName.trim()} ${lastName.trim()}`,
         schoolId: primarySchool,
         userType,
         schoolIds: selectedSchools,
@@ -521,11 +524,18 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         {mode === 'signup' && (
-          <input
-            value={name} onChange={(e) => setName(e.target.value)} required
-            placeholder="Your name"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
-          />
+          <div className="flex gap-2">
+            <input
+              value={firstName} onChange={(e) => setFirstName(e.target.value)} required
+              placeholder="First name *"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+            />
+            <input
+              value={lastName} onChange={(e) => setLastName(e.target.value)} required
+              placeholder="Last name *"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+            />
+          </div>
         )}
         <input
           type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
