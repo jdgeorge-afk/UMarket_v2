@@ -379,7 +379,7 @@ export default function Header({
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
               placeholder="Search…"
-              className="h-9 w-32 pl-8 pr-3 rounded-full bg-gray-100 text-gray-800 placeholder:text-gray-400 text-sm outline-none border border-transparent focus:border-gray-300 focus:bg-white transition-all"
+              className="h-8 w-24 pl-7 pr-2 rounded-full bg-gray-100 text-gray-800 placeholder:text-gray-400 text-xs outline-none border border-transparent focus:border-gray-300 focus:bg-white transition-all"
             />
           </div>
           <button

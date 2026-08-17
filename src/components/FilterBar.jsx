@@ -84,7 +84,7 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="ml-auto flex items-center gap-2 relative" ref={panelRef}>
+      <div className="flex items-center gap-2 relative" ref={panelRef}>
         {/* Filters button */}
         <button
           onClick={() => setOpen((v) => !v)}
