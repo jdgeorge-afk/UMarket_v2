@@ -243,30 +243,15 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
         </div>
       )}
 
-      {/* Title, price, save */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
-          <p className="text-3xl font-extrabold text-school-primary mt-1">{formatPrice()}</p>
-          {/* Bedroom count shown below price for housing/sublease */}
-          {listing.is_housing && listing.beds && (
-            <p className="text-sm text-gray-500 mt-0.5">
-              {listing.beds} bedroom{listing.beds !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={() => onRequireAuth(() => toggleFavorite(listing.id))}
-          aria-label="Save listing"
-          className="shrink-0 w-11 h-11 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-red-300 transition-colors"
-        >
-          <svg
-            className={`w-5 h-5 transition-colors ${isFavorited(listing.id) ? 'text-red-500 fill-red-500' : 'text-gray-300'}`}
-            viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-        </button>
+      {/* Title + price */}
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
+        <p className="text-3xl font-extrabold text-school-primary mt-1">{formatPrice()}</p>
+        {listing.is_housing && listing.beds && (
+          <p className="text-sm text-gray-500 mt-0.5">
+            {listing.beds} bedroom{listing.beds !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
       {/* Chips */}
@@ -337,12 +322,31 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       {/* CTA buttons */}
       {!isOwner ? (
         <>
-          <button
-            onClick={() => onRequireAuth(() => setContactOpen(true))}
-            className="w-full bg-school-primary text-white font-bold py-4 rounded-2xl text-lg hover:opacity-90 transition-opacity shadow-md mb-3"
-          >
-            I'm Interested / Get Contact Info
-          </button>
+          <div className="flex gap-3 mb-3">
+            <button
+              onClick={() => onRequireAuth(() => setContactOpen(true))}
+              className="flex-1 bg-school-primary text-white font-bold py-4 rounded-2xl text-base hover:opacity-90 transition-opacity shadow-md"
+            >
+              I'm Interested
+            </button>
+            <button
+              onClick={() => onRequireAuth(() => toggleFavorite(listing.id))}
+              aria-label={isFavorited(listing.id) ? 'Remove from saved' : 'Save listing'}
+              className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl font-bold text-base border-2 transition-all ${
+                isFavorited(listing.id)
+                  ? 'bg-red-50 border-red-400 text-red-500'
+                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              <svg
+                className={`w-5 h-5 transition-all ${isFavorited(listing.id) ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400'}`}
+                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              {isFavorited(listing.id) ? 'Saved' : 'Save'}
+            </button>
+          </div>
           <button
             onClick={() => onRequireAuth(() => setReportOpen(true))}
             className="w-full text-gray-400 text-sm py-2 hover:text-gray-600 transition-colors"
