@@ -233,8 +233,8 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
       >
         {/* Background image — Wasatch Range / Cottonwood Canyon mountains */}
         <img
-          src="https://images.unsplash.com/photo-1701723993253-aebccb8b4942?w=1920&q=80&auto=format&fit=crop"
-          alt="Big Cottonwood Canyon, Utah"
+          src="https://images.unsplash.com/photo-1674801000825-d43b878ff7e6?w=1920&q=80&auto=format&fit=crop"
+          alt="Mount Olympus, Salt Lake City, Utah"
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
         />
