@@ -231,25 +231,25 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
         className="relative overflow-hidden flex flex-col"
         style={{ height: 'calc(90vh - 4rem)', minHeight: '520px', maxHeight: '900px' }}
       >
-        {/* Background image — U of U Park Building */}
+        {/* Background image — Wasatch Range / Cottonwood Canyon mountains */}
         <img
-          src="https://images.unsplash.com/photo-1754878206904-683b42034067?w=1920&q=80&auto=format&fit=crop"
-          alt="University of Utah campus"
+          src="https://images.unsplash.com/photo-1605238042054-60c4fe1efa0a?w=1920&q=80&auto=format&fit=crop"
+          alt="Wasatch Mountains, Utah"
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
         />
-        {/* Gradient overlay — darker at bottom so text + search bar pop */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/35 to-black/70" />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/45" />
 
-        {/* Content — pushed toward bottom like Zillow */}
-        <div className="relative z-10 flex flex-col justify-end flex-1 px-5 sm:px-10 pb-10 sm:pb-14 text-left max-w-3xl mx-auto w-full">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 drop-shadow-sm">
+        {/* Content — vertically and horizontally centered */}
+        <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-5 sm:px-10 text-center w-full">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-8 drop-shadow-sm">
             Housing. Roommate.<br />
             Sublease. Marketplace.
           </h1>
 
           {/* Search bar */}
-          <div className="flex items-center bg-white rounded-2xl shadow-2xl overflow-hidden w-full">
+          <div className="flex items-center bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-xl">
             <svg
               className="w-5 h-5 text-gray-400 ml-4 shrink-0"
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -271,24 +271,6 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
             >
               Search
             </button>
-          </div>
-
-          {/* Quick-filter pills */}
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {[
-              { label: 'Housing',     value: 'housing'     },
-              { label: 'Roommates',   value: 'housing:roommates' },
-              { label: 'Sublease',    value: 'housing:sublease'  },
-              { label: 'Marketplace', value: 'marketplace'  },
-            ].map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => onFilter(cat.value)}
-                className="px-4 py-1.5 rounded-full text-sm font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-colors"
-              >
-                {cat.label}
-              </button>
-            ))}
           </div>
         </div>
       </section>
