@@ -46,6 +46,48 @@ Respond with valid JSON only, no explanation outside the JSON:
   }
 }
 
+const TIER_FULL: Record<string, number> = { base: 2000, pinned: 3500, premium: 5500 }
+
+// End the trial immediately and set up a 2-phase schedule:
+//   Phase 1 — founding 50%-off rate for 2 weeks
+//   Phase 2 — full rate ongoing
+async function approveAndSchedule(subscriptionId: string, tier: string, targetSchools: string) {
+  const numSchools = targetSchools.split(',').filter((s: string) => s.trim()).length || 1
+  const fullPriceCents = Math.round((TIER_FULL[tier] ?? 2000) * (1 + 0.5 * (numSchools - 1)))
+  const twoWeeksFromNow = Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60
+
+  const sub = await stripe.subscriptions.update(subscriptionId, { trial_end: 'now' })
+  const currentPriceId = sub.items.data[0]?.price?.id
+  if (!currentPriceId) return
+
+  try {
+    const schedule = await stripe.subscriptionSchedules.create({
+      from_subscription: subscriptionId,
+    })
+    await stripe.subscriptionSchedules.update(schedule.id, {
+      end_behavior: 'release',
+      phases: [
+        {
+          items: [{ price: currentPriceId, quantity: 1 }],
+          end_date: twoWeeksFromNow,
+        },
+        {
+          items: [{
+            price_data: {
+              currency:     'usd',
+              unit_amount:  fullPriceCents,
+              recurring:    { interval: 'week' },
+              product_data: { name: 'UMarket Ad — Full Rate' },
+            },
+          }],
+        },
+      ],
+    })
+  } catch (err) {
+    console.error('Schedule creation failed:', err.message)
+  }
+}
+
 async function activateAdRecords(supabase: any, app: any, applicationId: string) {
   const schools = (app.target_schools ?? '').split(',').map((s: string) => s.trim()).filter(Boolean)
   for (const schoolId of schools) {
@@ -149,7 +191,7 @@ Deno.serve(async (req) => {
         const { approved, reason } = await moderateAd(app.company_name, app.industry, app.description)
 
         if (approved) {
-          await stripe.subscriptions.update(subscriptionId, { trial_end: 'now' })
+          await approveAndSchedule(subscriptionId, app.ad_type, app.target_schools ?? '')
           await supabase.from('ad_applications').update({
             status: 'active', ai_flag_reason: reason,
           }).eq('id', applicationId)

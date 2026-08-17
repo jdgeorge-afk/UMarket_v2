@@ -7,6 +7,53 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   httpClient: Stripe.createFetchHttpClient(),
 })
 
+const TIER_FULL: Record<string, number> = { base: 2000, pinned: 3500, premium: 5500 }
+
+// End the trial immediately and create a Stripe Subscription Schedule that
+// automatically transitions from the founding 50%-off rate to full price
+// after exactly 2 billing weeks.
+async function approveAndSchedule(subscriptionId: string, tier: string, targetSchools: string) {
+  const numSchools = targetSchools.split(',').filter((s: string) => s.trim()).length || 1
+  const fullPriceCents = Math.round((TIER_FULL[tier] ?? 2000) * (1 + 0.5 * (numSchools - 1)))
+  const twoWeeksFromNow = Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60
+
+  // End the free-review trial — this creates the first invoice immediately
+  const sub = await stripe.subscriptions.update(subscriptionId, { trial_end: 'now' })
+  const currentPriceId = sub.items.data[0]?.price?.id
+  if (!currentPriceId) return
+
+  // Convert to a subscription schedule with two phases:
+  //   Phase 1 — discounted founding rate for 2 weeks
+  //   Phase 2 — full rate ongoing (schedule releases back to a normal subscription)
+  try {
+    const schedule = await stripe.subscriptionSchedules.create({
+      from_subscription: subscriptionId,
+    })
+    await stripe.subscriptionSchedules.update(schedule.id, {
+      end_behavior: 'release',
+      phases: [
+        {
+          items: [{ price: currentPriceId, quantity: 1 }],
+          end_date: twoWeeksFromNow,
+        },
+        {
+          items: [{
+            price_data: {
+              currency:     'usd',
+              unit_amount:  fullPriceCents,
+              recurring:    { interval: 'week' },
+              product_data: { name: 'UMarket Ad — Full Rate' },
+            },
+          }],
+        },
+      ],
+    })
+  } catch (err) {
+    // Log but don't block approval — ad still goes live at the discounted rate
+    console.error('Subscription schedule creation failed:', err.message)
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -23,7 +70,7 @@ Deno.serve(async (req) => {
     const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
     if (!profile?.is_admin) return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: corsHeaders })
 
-    const { application_id, action } = await req.json() // action: 'approve' | 'reject'
+    const { application_id, action } = await req.json()
 
     const { data: app } = await supabase.from('ad_applications').select('*').eq('id', application_id).single()
     if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: corsHeaders })
@@ -32,11 +79,10 @@ Deno.serve(async (req) => {
 
     if (action === 'approve') {
       if (subscriptionId) {
-        await stripe.subscriptions.update(subscriptionId, { trial_end: 'now' })
+        await approveAndSchedule(subscriptionId, app.ad_type, app.target_schools ?? '')
       }
       await supabase.from('ad_applications').update({ status: 'active' }).eq('id', application_id)
 
-      // Create ad records
       const schools = (app.target_schools ?? '').split(',').map((s: string) => s.trim()).filter(Boolean)
       for (const schoolId of schools) {
         await supabase.from('ads').insert({
