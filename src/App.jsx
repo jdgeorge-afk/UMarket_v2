@@ -326,6 +326,7 @@ function AppInner() {
               onRequireAuth={requireAuth}
               onOpenListing={openListing}
               onAdvertiseOpen={() => setAdModalOpen(true)}
+              onSearch={(q) => { setSearchQuery(q); setCurrentView('feed') }}
             />
           )}
 

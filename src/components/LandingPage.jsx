@@ -166,7 +166,7 @@ function FeatureSection({ flip = false, eyebrow, headline, accentWord, body, cta
 }
 
 // ── Landing page ──────────────────────────────────────────────────────────────
-export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing, onAdvertiseOpen }) {
+export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpenListing, onAdvertiseOpen, onSearch }) {
   const { school } = useSchool()
   const [previews, setPreviews] = useState({ housing: null, marketplace: [], looking: [] })
   // Read once on mount — scoped to current school so other schools' listings never bleed in
@@ -207,6 +207,17 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
     fetchPreviews()
   }, [school?.id])
 
+  const [heroSearch, setHeroSearch] = useState('')
+
+  const handleHeroSearch = () => {
+    const q = heroSearch.trim()
+    if (q) {
+      onSearch?.(q)
+    } else {
+      onFilter('all')
+    }
+  }
+
   return (
     <div className="min-h-screen">
 
@@ -216,53 +227,68 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
       </div>
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-white min-h-screen flex flex-col items-center justify-center px-4 sm:px-8 text-center">
-        {/* Background decoration */}
-        <div className="pointer-events-none absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-3xl opacity-25 bg-school-primary" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full blur-3xl opacity-20 bg-school-primary" />
+      <section
+        className="relative overflow-hidden flex flex-col"
+        style={{ height: 'calc(90vh - 4rem)', minHeight: '520px', maxHeight: '900px' }}
+      >
+        {/* Background image — U of U Park Building */}
+        <img
+          src="https://images.unsplash.com/photo-1754878206904-683b42034067?w=1920&q=80&auto=format&fit=crop"
+          alt="University of Utah campus"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          loading="eager"
+        />
+        {/* Gradient overlay — darker at bottom so text + search bar pop */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/35 to-black/70" />
 
-        <div className="relative">
-          <p className="text-sm font-bold tracking-widest uppercase text-school-primary mb-6">
-            University Marketplace
-          </p>
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-extrabold text-gray-900 leading-[1.0] max-w-5xl mx-auto">
-            Your campus.<br />
-            <span className="text-school-primary">Your marketplace.</span>
+        {/* Content — pushed toward bottom like Zillow */}
+        <div className="relative z-10 flex flex-col justify-end flex-1 px-5 sm:px-10 pb-10 sm:pb-14 text-left max-w-3xl mx-auto w-full">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 drop-shadow-sm">
+            Housing. Roommate.<br />
+            Sublease. Marketplace.
           </h1>
-          <p className="text-gray-400 text-xl sm:text-2xl mt-8 max-w-2xl mx-auto leading-relaxed">
-            Housing, subleases, roommates, and student deals — all in one place.
-          </p>
-          <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
-            <button
-              onClick={() => onFilter('housing')}
-              className="inline-flex items-center gap-2 bg-school-primary text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-md"
-            >
-              Browse Housing →
-            </button>
-            <button
-              onClick={() => onFilter('marketplace')}
-              className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-bold text-sm sm:text-base px-7 py-3.5 rounded-full hover:border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Browse Marketplace
-            </button>
-          </div>
 
-          {/* Stats inline in hero */}
-          <div className="mt-14">
-            <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">
-              We're live at your university now!
-            </p>
-            <div className="max-w-2xl mx-auto">
-              <StatsRow onFilter={onFilter} />
-            </div>
-          </div>
-
-          {/* Scroll nudge */}
-          <div className="mt-12 flex flex-col items-center gap-1 text-gray-300">
-            <span className="text-xs font-semibold tracking-widest uppercase">Explore</span>
-            <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          {/* Search bar */}
+          <div className="flex items-center bg-white rounded-2xl shadow-2xl overflow-hidden w-full">
+            <svg
+              className="w-5 h-5 text-gray-400 ml-4 shrink-0"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
             </svg>
+            <input
+              type="text"
+              value={heroSearch}
+              onChange={(e) => setHeroSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleHeroSearch()}
+              placeholder="Search listings, housing, textbooks…"
+              className="flex-1 px-4 py-4 text-gray-900 text-[15px] outline-none bg-transparent placeholder:text-gray-400"
+            />
+            <button
+              onClick={handleHeroSearch}
+              className="m-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90"
+              style={{ background: school?.primary ?? '#CC0000' }}
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Quick-filter pills */}
+          <div className="flex gap-2 mt-4 flex-wrap">
+            {[
+              { label: 'Housing',     value: 'housing'     },
+              { label: 'Roommates',   value: 'housing:roommates' },
+              { label: 'Sublease',    value: 'housing:sublease'  },
+              { label: 'Marketplace', value: 'marketplace'  },
+            ].map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => onFilter(cat.value)}
+                className="px-4 py-1.5 rounded-full text-sm font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-colors"
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
         </div>
       </section>
