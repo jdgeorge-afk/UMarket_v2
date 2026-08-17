@@ -75,10 +75,18 @@ export default function Header({
         {/* ── Logo ──────────────────────────────────────────────── */}
         <button
           onClick={onGoHome}
-          className="shrink-0 font-extrabold text-2xl tracking-tight leading-none"
-          style={{ color: school?.primary ?? '#CC0000' }}
+          className="shrink-0 flex items-center gap-2 leading-none"
         >
-          UMarket™
+          {/* Icon mark — rounded square with bold U */}
+          <span
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-white font-black text-lg shrink-0"
+            style={{ background: school?.primary ?? '#CC0000' }}
+          >
+            U
+          </span>
+          <span className="font-extrabold text-2xl tracking-tight" style={{ color: school?.primary ?? '#CC0000' }}>
+            Market™
+          </span>
         </button>
 
         {/* ── School switcher ───────────────────────────────────── */}
