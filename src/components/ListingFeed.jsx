@@ -412,7 +412,9 @@ export default function ListingFeed({
   if (!favoritesOnly && !searchQuery && activeFilter === 'events') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        </div>
         <EventsPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -426,7 +428,9 @@ export default function ListingFeed({
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        </div>
         <LookingForPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -440,9 +444,9 @@ export default function ListingFeed({
 
   return (
     <div>
-      {/* ── Section tabs ─────────────────────────────────────────────────────── */}
+      {/* ── Section tabs — mobile only (desktop uses header nav) ──────────────── */}
       {!favoritesOnly && (
-        <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
           <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
         </div>
       )}

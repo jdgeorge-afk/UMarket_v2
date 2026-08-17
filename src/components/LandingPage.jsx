@@ -210,8 +210,8 @@ export default function LandingPage({ onFilter, onPostOpen, onRequireAuth, onOpe
   return (
     <div className="min-h-screen">
 
-      {/* ── Sticky section tabs ─────────────────────────────────────────── */}
-      <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
+      {/* ── Sticky section tabs — mobile only ──────────────────────────────── */}
+      <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
         <SectionTabs activeFilter="all" onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
       </div>
 

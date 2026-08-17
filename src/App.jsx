@@ -310,21 +310,12 @@ function AppInner() {
         onFavorites={openFavorites}
         onOpenProfile={() => user && openProfile(user.id)}
         onAdminOpen={profile?.is_admin ? openAdmin : null}
+        activeFilter={activeFilter}
+        onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
+        onAdvertiseOpen={() => setAdModalOpen(true)}
       />
 
       <div className="flex w-full">
-        {/* Desktop sidebar — only on Housing / Marketplace / Looking For */}
-        {!isLanding && (
-          <aside className="hidden lg:block w-64 shrink-0">
-            <Sidebar
-              activeFilter={activeFilter}
-              onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
-              onPostOpen={openPost}
-              onBoostOpen={openPostAndBoost}
-            />
-          </aside>
-        )}
-
         {/* Main content area */}
         <main className="flex-1 min-w-0 pb-24 lg:pb-8">
           {/* Scrollable landing page — All tab, no search */}

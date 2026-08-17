@@ -35,7 +35,7 @@ export default function Sidebar({ activeFilter, onFilter, onPostOpen, onBoostOpe
   const { school } = useSchool()
 
   return (
-    <div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-3 px-2 flex flex-col gap-0.5">
+    <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto py-3 px-2 flex flex-col gap-0.5">
 
       {/* ── All ────────────────────────────────────────────────────────────── */}
       <NavItem icon="" label="Home"           value="all"          activeFilter={activeFilter} onFilter={onFilter} />

@@ -1,16 +1,54 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSchool } from '../context/SchoolContext'
 import { useAuth } from '../context/AuthContext'
 import { SCHOOLS } from '../constants/schools'
 import { supabase } from '../lib/supabase'
 
-export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile, onAdminOpen }) {
+const NAV = [
+  {
+    label: 'Housing',
+    value: 'housing',
+    subs: [
+      { label: 'All Housing',           value: 'housing'              },
+      { label: 'Housing by Landlord',   value: 'housing:landlord'     },
+      { label: 'Sublease by Tenant',    value: 'housing:sublease'     },
+      { label: 'Looking for Roommates', value: 'housing:roommates'    },
+      { label: 'Looking for Housing',   value: 'housing:looking_for'  },
+    ],
+  },
+  {
+    label: 'Marketplace',
+    value: 'marketplace',
+    subs: [
+      { label: 'All Marketplace', value: 'marketplace'             },
+      { label: 'Textbooks',       value: 'marketplace:textbooks'   },
+      { label: 'Furniture',       value: 'marketplace:furniture'   },
+      { label: 'Electronics',     value: 'marketplace:electronics' },
+      { label: 'Clothing',        value: 'marketplace:clothing'    },
+      { label: 'Sports',          value: 'marketplace:sports'      },
+      { label: 'Events',          value: 'marketplace:events'      },
+      { label: 'Misc',            value: 'marketplace:misc'        },
+    ],
+  },
+  { label: 'Events',      value: 'events',      subs: [] },
+  { label: 'Looking For', value: 'looking_for', subs: [] },
+]
+
+export default function Header({
+  searchQuery, onSearch,
+  onAuthOpen, onPostOpen, onGoHome, onFavorites, onOpenProfile, onAdminOpen,
+  activeFilter, onFilter, onAdvertiseOpen,
+}) {
   const { school, selectSchool, clearSchool } = useSchool()
   const { user, profile, signOut } = useAuth()
+
   const [schoolDropOpen, setSchoolDropOpen] = useState(false)
-  const [schoolSearch, setSchoolSearch] = useState('')
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [unreadNotifs, setUnreadNotifs] = useState(0)
+  const [schoolSearch, setSchoolSearch]     = useState('')
+  const [userMenuOpen, setUserMenuOpen]     = useState(false)
+  const [unreadNotifs, setUnreadNotifs]     = useState(0)
+  const [openNav, setOpenNav]               = useState(null)
+  const [searchFocused, setSearchFocused]   = useState(false)
+  const leaveTimer = useRef(null)
 
   useEffect(() => {
     if (!user) { setUnreadNotifs(0); return }
@@ -19,34 +57,45 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
       .then(({ count }) => setUnreadNotifs(count ?? 0))
   }, [user])
 
-  return (
-    <header className="sticky top-0 z-40 shadow-md" style={{ background: school?.gradient ?? 'var(--school-gradient)' }}>
-      <div className="w-full px-3 sm:px-6 h-16 sm:h-20 flex items-center gap-2 sm:gap-4">
+  const activeTop = activeFilter ? activeFilter.split(':')[0] : 'all'
 
-        {/* Logo */}
+  const enterNav = (val) => {
+    clearTimeout(leaveTimer.current)
+    setOpenNav(val)
+  }
+  const leaveNav = () => {
+    leaveTimer.current = setTimeout(() => setOpenNav(null), 120)
+  }
+  const pick = (val) => { onFilter?.(val); setOpenNav(null) }
+
+  return (
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <div className="w-full px-4 sm:px-6 h-16 flex items-center gap-3">
+
+        {/* ── Logo ──────────────────────────────────────────────── */}
         <button
           onClick={onGoHome}
-          className="flex items-center gap-2 shrink-0 text-white font-extrabold text-3xl sm:text-4xl leading-none tracking-tight"
+          className="shrink-0 font-extrabold text-2xl tracking-tight leading-none"
+          style={{ color: school?.primary ?? '#CC0000' }}
         >
           UMarket™
         </button>
 
-        {/* School switcher pill */}
+        {/* ── School switcher ───────────────────────────────────── */}
         <div className="relative shrink-0">
           <button
             onClick={() => setSchoolDropOpen((p) => !p)}
-            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-2.5 py-1 rounded-full transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
           >
-            <span className="w-2 h-2 rounded-full bg-white/80 inline-block" />
-            {school?.shortName ?? 'Select School'}
-            <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: school?.primary ?? '#CC0000' }} />
+            {school?.shortName ?? 'School'}
+            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
           {schoolDropOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[220px] z-50 flex flex-col max-h-72">
-              {/* Search — fixed at top */}
+            <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[230px] z-50 flex flex-col max-h-72">
               <div className="px-2 pt-1 pb-1 shrink-0">
                 <input
                   autoFocus
@@ -57,13 +106,12 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                   className="w-full text-sm px-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:border-school-primary text-gray-700 placeholder:text-gray-400"
                 />
               </div>
-              {/* Scrollable school list */}
               <div className="overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {SCHOOLS.filter((s) => s.live && (
-                  !schoolSearch ||
-                  s.name.toLowerCase().includes(schoolSearch.toLowerCase()) ||
-                  s.shortName.toLowerCase().includes(schoolSearch.toLowerCase())
-                )).map((s) => (
+                {SCHOOLS.filter((s) =>
+                  s.live && (!schoolSearch ||
+                    s.name.toLowerCase().includes(schoolSearch.toLowerCase()) ||
+                    s.shortName.toLowerCase().includes(schoolSearch.toLowerCase()))
+                ).map((s) => (
                   <button
                     key={s.id}
                     onClick={() => { selectSchool(s.id); setSchoolDropOpen(false); setSchoolSearch('') }}
@@ -77,7 +125,6 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
                   </button>
                 ))}
               </div>
-              {/* Switch school — fixed at bottom */}
               <div className="border-t border-gray-100 pt-1 shrink-0">
                 <button
                   onClick={() => { clearSchool(); setSchoolDropOpen(false) }}
@@ -93,78 +140,157 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           )}
         </div>
 
-        {/* Search bar — fixed width, left-anchored */}
-        <div className="relative w-64 sm:w-80">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        {/* ── Desktop center nav ────────────────────────────────── */}
+        <nav className="hidden lg:flex items-center gap-0.5 mx-auto">
+          {/* Home */}
+          <button
+            onClick={() => pick('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              activeTop === 'all'
+                ? 'bg-school-primary/10 text-school-primary'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder={`Search listings, housing, textbooks...`}
-            className="w-full h-10 pl-9 pr-3 rounded-full bg-white/20 text-white placeholder:text-white/60 text-sm outline-none focus:bg-white/30 transition-colors"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-base"
-            >
-              ×
-            </button>
-          )}
-        </div>
+            Home
+          </button>
 
-        {/* Desktop auth / post actions */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0 ml-auto">
+          {NAV.map((item) => {
+            const isActive = activeTop === item.value
+            return (
+              <div
+                key={item.value}
+                className="relative"
+                onMouseEnter={() => enterNav(item.value)}
+                onMouseLeave={leaveNav}
+              >
+                <button
+                  onClick={() => item.subs.length ? setOpenNav(openNav === item.value ? null : item.value) : pick(item.value)}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    isActive
+                      ? 'bg-school-primary/10 text-school-primary'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  {item.label}
+                  {item.subs.length > 0 && (
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-150 ${openNav === item.value ? 'rotate-180' : ''}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+
+                {item.subs.length > 0 && openNav === item.value && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[210px] z-50"
+                    onMouseEnter={() => enterNav(item.value)}
+                    onMouseLeave={leaveNav}
+                  >
+                    {item.subs.map((sub) => (
+                      <button
+                        key={sub.value}
+                        onClick={() => pick(sub.value)}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                          activeFilter === sub.value
+                            ? 'text-school-primary font-semibold bg-school-primary/5'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Advertise */}
+          <button
+            onClick={onAdvertiseOpen}
+            className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-school-primary hover:bg-school-primary/10"
+          >
+            Advertise
+          </button>
+        </nav>
+
+        {/* ── Desktop right actions ─────────────────────────────── */}
+        <div className="hidden sm:flex items-center gap-2 shrink-0 ml-auto lg:ml-0">
+          {/* Search */}
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearch(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              placeholder="Search…"
+              className={`h-9 pl-9 pr-3 rounded-full bg-gray-100 text-gray-800 placeholder:text-gray-400 text-sm outline-none transition-all border ${
+                searchFocused ? 'w-56 border-gray-300 bg-white' : 'w-36 border-transparent'
+              }`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => onSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-base"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
           {user ? (
             <>
-              {/* Saved */}
               <button
                 onClick={onFavorites}
-                className="text-white/80 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Saved
               </button>
 
-              {/* Notification bell */}
               <button
                 onClick={onOpenProfile}
-                className="relative text-white/80 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                className="relative text-gray-500 hover:text-gray-900 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                 aria-label="Notifications"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadNotifs > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-school-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {unreadNotifs > 9 ? '9+' : unreadNotifs}
                   </span>
                 )}
               </button>
 
-              {/* Post button */}
               <button
                 onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-5 py-2 rounded-full hover:bg-white/90 transition-colors shadow-sm"
+                className="flex items-center gap-1 font-bold text-sm px-4 py-2 rounded-full transition-colors text-white"
+                style={{ background: school?.primary ?? '#CC0000' }}
               >
                 + Post
               </button>
 
-              {/* User avatar + dropdown */}
+              {/* Avatar + dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((p) => !p)}
-                  className="w-8 h-8 rounded-full bg-white/25 hover:bg-white/35 text-white font-bold text-sm flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-full text-white font-bold text-sm flex items-center justify-center transition-colors"
+                  style={{ background: school?.primary ?? '#CC0000' }}
                 >
                   {profile?.name?.[0]?.toUpperCase() ?? 'U'}
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[160px] z-50">
+                  <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[160px] z-50">
                     <div className="px-3 py-2 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-900">{profile?.name ?? 'Account'}</p>
                       <p className="text-xs text-gray-400 truncate">{profile?.grade ?? ''}</p>
@@ -203,19 +329,21 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
             <>
               <button
                 onClick={() => onAuthOpen('signin')}
-                className="text-white font-semibold text-sm px-5 py-2 rounded-full border-2 border-white hover:bg-white/10 transition-colors"
+                className="text-sm font-semibold px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors"
               >
                 Log In
               </button>
               <button
                 onClick={() => onAuthOpen('signup')}
-                className="text-school-primary font-semibold text-sm px-5 py-2 rounded-full bg-white hover:bg-white/90 transition-colors shadow-sm"
+                className="text-sm font-semibold px-4 py-2 rounded-full text-white transition-colors"
+                style={{ background: school?.primary ?? '#CC0000' }}
               >
                 Sign Up
               </button>
               <button
                 onClick={onPostOpen}
-                className="flex items-center gap-1 bg-white text-school-primary font-bold text-sm px-5 py-2 rounded-full hover:bg-white/90 transition-colors shadow-sm"
+                className="flex items-center gap-1 font-bold text-sm px-4 py-2 rounded-full text-white transition-colors"
+                style={{ background: school?.primary ?? '#CC0000' }}
               >
                 + Post
               </button>
@@ -223,16 +351,34 @@ export default function Header({ searchQuery, onSearch, onAuthOpen, onPostOpen, 
           )}
         </div>
 
-        {/* Mobile post button */}
-        <button
-          onClick={onPostOpen}
-          className="sm:hidden bg-white text-school-primary font-bold text-sm px-4 py-2 rounded-full shrink-0 ml-auto shadow-sm"
-        >
-          + Post
-        </button>
+        {/* ── Mobile: search + post ─────────────────────────────── */}
+        <div className="sm:hidden flex items-center gap-2 ml-auto shrink-0">
+          <div className="relative">
+            <svg
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder="Search…"
+              className="h-9 w-32 pl-8 pr-3 rounded-full bg-gray-100 text-gray-800 placeholder:text-gray-400 text-sm outline-none border border-transparent focus:border-gray-300 focus:bg-white transition-all"
+            />
+          </div>
+          <button
+            onClick={onPostOpen}
+            className="font-bold text-sm px-3 py-2 rounded-full text-white shrink-0"
+            style={{ background: school?.primary ?? '#CC0000' }}
+          >
+            + Post
+          </button>
+        </div>
       </div>
 
-      {/* Close dropdowns when clicking outside */}
+      {/* Backdrop to close open dropdowns */}
       {(schoolDropOpen || userMenuOpen) && (
         <div
           className="fixed inset-0 z-30"
