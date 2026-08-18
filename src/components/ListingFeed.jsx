@@ -9,8 +9,9 @@ import AdCard from './AdCard'
 import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
 import { useAds } from '../hooks/useAds'
+import { FAKE_ADS } from '../constants/fakeSponsoredAds'
 
-const AD_INTERVAL = 8
+const AD_INTERVAL = 6
 
 /**
  * Translate the encoded activeFilter into useListings params.
@@ -375,7 +376,9 @@ export default function ListingFeed({
   }
   const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || minBaths !== null || minSpots !== null || genderPref !== null || listedWithin !== null || verifiedOnly || hasPhotos
 
-  const { baseAds, pinnedAd, premiumAd } = useAds()
+  const { baseAds: realAds, pinnedAd, premiumAd } = useAds()
+  // Fall back to fake ski brand ads when no real ads are running
+  const baseAds = realAds.length > 0 ? realAds : FAKE_ADS
 
   // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
