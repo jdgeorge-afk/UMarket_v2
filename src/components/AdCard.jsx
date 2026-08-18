@@ -1,8 +1,5 @@
-import { useState } from 'react'
-
 export default function AdCard({ ad }) {
   if (!ad) return null
-  const [logoErr, setLogoErr] = useState(false)
 
   const gradient = ad.gradient ?? 'linear-gradient(145deg, #1e1e2e, #2d2d44)'
   const cta = ad.cta ?? 'Learn More'
@@ -17,7 +14,7 @@ export default function AdCard({ ad }) {
     >
       <div className="flex flex-col h-full px-4 py-4 gap-2">
 
-        {/* Top row: Sponsored + brand name */}
+        {/* Sponsored + brand name at top */}
         <div>
           <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1">
             Sponsored
@@ -27,22 +24,21 @@ export default function AdCard({ ad }) {
           </p>
         </div>
 
-        {/* Logo — centered, white rounded background */}
-        <div className="flex-1 flex items-center justify-center">
-          {ad.logo_url && !logoErr ? (
-            <div className="bg-white rounded-2xl p-3 shadow-lg flex items-center justify-center" style={{ width: 100, height: 100 }}>
-              <img
-                src={ad.logo_url}
-                alt={ad.company_name}
-                onError={() => setLogoErr(true)}
-                className="w-full h-full object-contain"
+        {/* Logo — white chip centered */}
+        <div className="flex-1 flex items-center justify-center py-1">
+          <div className="bg-white rounded-xl px-4 py-3 flex items-center justify-center w-full" style={{ maxHeight: 90 }}>
+            {ad.logoSvg ? (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ maxHeight: 70 }}
+                dangerouslySetInnerHTML={{ __html: ad.logoSvg }}
               />
-            </div>
-          ) : (
-            <p className="text-3xl font-black text-white tracking-tight text-center leading-tight px-2">
-              {ad.company_name}
-            </p>
-          )}
+            ) : (
+              <p className="text-lg font-black text-gray-900 text-center leading-tight">
+                {ad.company_name}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Tagline */}
@@ -51,7 +47,7 @@ export default function AdCard({ ad }) {
         </p>
 
         {/* CTA */}
-        <div className="w-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors text-center">
+        <div className="w-full bg-white/15 text-white text-xs font-bold px-4 py-2.5 rounded-xl text-center">
           {cta} →
         </div>
       </div>
