@@ -22,7 +22,12 @@ export default function AdCard({ ad }) {
           Sponsored
         </p>
 
-        {/* Logo */}
+        {/* Company name */}
+        <p className="w-full text-xs font-extrabold text-white uppercase tracking-wide">
+          {ad.company_name}
+        </p>
+
+        {/* Logo — centered */}
         <div className="flex-1 flex items-center justify-center w-full">
           {ad.logo_url && !logoErr ? (
             <img
@@ -39,15 +44,10 @@ export default function AdCard({ ad }) {
           )}
         </div>
 
-        {/* Company name + tagline */}
-        <div className="w-full space-y-1">
-          <p className="text-xs font-extrabold text-white uppercase tracking-wide">
-            {ad.company_name}
-          </p>
-          <p className="text-[11px] text-white/70 leading-snug">
-            {ad.tagline}
-          </p>
-        </div>
+        {/* Tagline */}
+        <p className="w-full text-[11px] text-white/70 leading-snug">
+          {ad.tagline}
+        </p>
 
         {/* CTA */}
         <div className="w-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors">
