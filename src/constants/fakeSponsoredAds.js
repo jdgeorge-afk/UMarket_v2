@@ -1,5 +1,4 @@
 // Placeholder sponsored ads — shown when no real ads exist in the database.
-// Rotate through ski / outdoor brands relevant to Utah students.
 export const FAKE_ADS = [
   {
     id: 'fake-burton',
@@ -7,7 +6,7 @@ export const FAKE_ADS = [
     tagline: '20% off for students — shop now.',
     website_url: 'https://www.burton.com',
     cta: 'Shop the Deal',
-    logo_url: 'https://logo.clearbit.com/burton.com',
+    logo_url: 'https://www.burton.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #0f0f0f 0%, #1c1c2e 100%)',
   },
   {
@@ -16,7 +15,7 @@ export const FAKE_ADS = [
     tagline: 'End-of-season gear — up to 50% off.',
     website_url: 'https://www.salomon.com',
     cta: 'Check Out This Deal',
-    logo_url: 'https://logo.clearbit.com/salomon.com',
+    logo_url: 'https://www.salomon.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #111827 0%, #1f2d1e 100%)',
   },
   {
@@ -25,7 +24,7 @@ export const FAKE_ADS = [
     tagline: 'Student season passes from $649. Ride more.',
     website_url: 'https://www.snowbird.com',
     cta: 'Get Your Pass',
-    logo_url: 'https://logo.clearbit.com/snowbird.com',
+    logo_url: 'https://www.snowbird.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #7f1d1d 0%, #991b1b 100%)',
   },
   {
@@ -34,7 +33,7 @@ export const FAKE_ADS = [
     tagline: 'New ChromaPop goggles — see every line.',
     website_url: 'https://www.smithoptics.com',
     cta: 'Shop Goggles',
-    logo_url: 'https://logo.clearbit.com/smithoptics.com',
+    logo_url: 'https://www.smithoptics.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #92400e 0%, #b45309 100%)',
   },
   {
@@ -43,7 +42,7 @@ export const FAKE_ADS = [
     tagline: '500+ inches of powder. Come get some.',
     website_url: 'https://www.alta.com',
     cta: 'Buy Lift Tickets',
-    logo_url: 'https://logo.clearbit.com/alta.com',
+    logo_url: 'https://www.alta.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #1e3a5f 0%, #1d4ed8 100%)',
   },
   {
@@ -52,7 +51,7 @@ export const FAKE_ADS = [
     tagline: 'Free shipping on orders over $50.',
     website_url: 'https://www.dakine.com',
     cta: 'Shop Dakine',
-    logo_url: 'https://logo.clearbit.com/dakine.com',
+    logo_url: 'https://www.dakine.com/apple-touch-icon.png',
     gradient: 'linear-gradient(145deg, #0c4a6e 0%, #0369a1 100%)',
   },
 ]

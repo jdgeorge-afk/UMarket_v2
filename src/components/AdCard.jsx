@@ -15,42 +15,43 @@ export default function AdCard({ ad }) {
       className="rounded-2xl overflow-hidden flex flex-col no-underline hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-md"
       style={{ background: gradient, minHeight: 220 }}
     >
-      <div className="flex flex-col items-center justify-between h-full px-4 py-5 gap-3 text-center">
+      <div className="flex flex-col h-full px-4 py-4 gap-2">
 
-        {/* Sponsored label */}
-        <p className="self-start text-[9px] font-bold text-white/40 uppercase tracking-widest">
-          Sponsored
-        </p>
+        {/* Top row: Sponsored + brand name */}
+        <div>
+          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1">
+            Sponsored
+          </p>
+          <p className="text-xs font-extrabold text-white uppercase tracking-wide leading-tight">
+            {ad.company_name}
+          </p>
+        </div>
 
-        {/* Company name */}
-        <p className="w-full text-xs font-extrabold text-white uppercase tracking-wide">
-          {ad.company_name}
-        </p>
-
-        {/* Logo — centered */}
-        <div className="flex-1 flex items-center justify-center w-full">
+        {/* Logo — centered, white rounded background */}
+        <div className="flex-1 flex items-center justify-center">
           {ad.logo_url && !logoErr ? (
-            <img
-              src={ad.logo_url}
-              alt={ad.company_name}
-              onError={() => setLogoErr(true)}
-              className="max-h-14 max-w-[80%] object-contain drop-shadow-lg"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
+            <div className="bg-white rounded-2xl p-3 shadow-lg flex items-center justify-center" style={{ width: 100, height: 100 }}>
+              <img
+                src={ad.logo_url}
+                alt={ad.company_name}
+                onError={() => setLogoErr(true)}
+                className="w-full h-full object-contain"
+              />
+            </div>
           ) : (
-            <p className="text-2xl font-black text-white tracking-tight leading-tight">
+            <p className="text-3xl font-black text-white tracking-tight text-center leading-tight px-2">
               {ad.company_name}
             </p>
           )}
         </div>
 
         {/* Tagline */}
-        <p className="w-full text-[11px] text-white/70 leading-snug">
+        <p className="text-[11px] text-white/75 leading-snug text-center">
           {ad.tagline}
         </p>
 
         {/* CTA */}
-        <div className="w-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors">
+        <div className="w-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors text-center">
           {cta} →
         </div>
       </div>
