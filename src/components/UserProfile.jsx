@@ -792,9 +792,10 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
           ) : notifItems.length > 0 ? (
             <div className="space-y-2">
               {notifItems.map((n) => {
-                const isInterest = n.type === 'interest' || n.type === 'contact'
-                const isSaved    = n.type === 'saved'
-                const isReport   = n.type === 'report'
+                const isInterest   = n.type === 'interest' || n.type === 'contact'
+                const isSaved      = n.type === 'saved'
+                const isReport     = n.type === 'report'
+                const isSellPrompt = n.type === 'sell_prompt'
 
                 // Buyer contact — always from metadata snapshot (not live profile)
                 const buyerName   = n.metadata?.buyer_name || n.buyer?.name || 'Someone'
@@ -811,7 +812,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                   : ctType === 'snapchat'  ? `https://snapchat.com/add/${ctValue}`
                   : null
                 const listingTitle = n.listing?.title ?? 'your listing'
-                const avatarBg     = isSaved ? 'bg-red-400' : isReport ? 'bg-orange-400' : 'bg-school-primary'
+                const avatarBg     = isSaved ? 'bg-red-400' : isReport ? 'bg-orange-400' : isSellPrompt ? 'bg-green-500' : 'bg-school-primary'
 
                 return (
                   <div key={n.id} className={`rounded-2xl border overflow-hidden ${n.read ? 'border-gray-100 bg-white' : 'border-school-primary/20 bg-school-primary/5'}`}>
@@ -822,7 +823,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                           ? (n.buyer?.avatar_url
                               ? <img src={n.buyer.avatar_url} className="w-full h-full object-cover" alt="" />
                               : buyerName[0]?.toUpperCase() ?? '?')
-                          : isSaved ? '♥' : '!'}
+                          : isSaved ? '♥' : isSellPrompt ? '$' : '!'}
                       </div>
 
                       {/* Body */}
@@ -867,6 +868,40 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                           <p className="text-sm text-gray-900">
                             <span className="font-semibold">{listingTitle}</span> was flagged for review
                           </p>
+                        )}
+                        {isSellPrompt && (
+                          <div>
+                            <p className="text-sm text-gray-900 leading-snug">
+                              <span className="font-semibold">{listingTitle}</span> has had{' '}
+                              <span className="font-semibold">{n.metadata?.contact_count ?? 'several'} people</span>{' '}
+                              reach out. Did it sell?
+                            </p>
+                            <div className="flex gap-2 mt-2.5">
+                              <button
+                                onClick={async () => {
+                                  if (!n.listing_id) return
+                                  await supabase.from('listings')
+                                    .update({ sold: true, sold_at: new Date().toISOString() })
+                                    .eq('id', n.listing_id).eq('seller_id', user.id)
+                                  const delta = 1
+                                  const newCount = Math.max(0, (profile?.sold_count ?? 0) + delta)
+                                  await supabase.from('profiles').update({ sold_count: newCount }).eq('id', user.id)
+                                  setProfile((p) => ({ ...p, sold_count: newCount }))
+                                  setListings((prev) => prev.map((l) => l.id === n.listing_id ? { ...l, sold: true } : l))
+                                  handleDeleteNotif(n.id)
+                                }}
+                                className="flex-1 bg-green-500 text-white text-xs font-bold py-2 rounded-xl hover:bg-green-600 active:scale-95 transition-all"
+                              >
+                                Yes, sold it!
+                              </button>
+                              <button
+                                onClick={() => handleDeleteNotif(n.id)}
+                                className="flex-1 border border-gray-200 text-gray-500 text-xs font-semibold py-2 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+                              >
+                                Not yet
+                              </button>
+                            </div>
+                          </div>
                         )}
                         <p className="text-xs text-gray-400 mt-1.5">{new Date(n.created_at).toLocaleDateString()}</p>
                       </div>

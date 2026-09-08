@@ -14,24 +14,7 @@ import ListingCard from './ListingCard'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
 import { SCHOOLS } from '../constants/schools'
-
-const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
-
-async function geocodeLocation(address, locationHint = '') {
-  if (!address?.trim() || !MAPS_KEY) return null
-  try {
-    const full = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(full)}&key=${MAPS_KEY}`
-    )
-    if (res.ok) {
-      const data = await res.json()
-      const loc = data?.results?.[0]?.geometry?.location
-      if (loc) return { lat: loc.lat, lng: loc.lng }
-    }
-  } catch {}
-  return null
-}
+import { geocode } from '../lib/geocode'
 
 function formatPrice(listing) {
   if (listing.is_looking) return listing.budget ? `Budget: $${Number(listing.budget).toLocaleString()}` : 'No budget listed'
@@ -149,7 +132,7 @@ export default function ListingDetail({ listing, onBack, onOpenListing, onOpenPr
   useEffect(() => {
     if (!listing.is_housing || coords || !listing.location) return
     const hint = SCHOOLS.find((s) => s.id === listing.school_id)?.location ?? ''
-    geocodeLocation(listing.location, hint).then((result) => {
+    geocode(listing.location, hint).then((result) => {
       if (!result) return
       setCoords(result)
       supabase.from('listings').update({ lat: result.lat, lng: result.lng })

@@ -9,6 +9,14 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId) => {
+    // Show cached profile instantly — eliminates the visible delay on every page load
+    const cacheKey = `umarket_profile_${userId}`
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) setProfile(JSON.parse(cached))
+    } catch {}
+
+    // Fetch fresh from network in the background
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -16,16 +24,21 @@ export function AuthProvider({ children }) {
       .single()
     if (data) {
       setProfile(data)
+      try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch {}
       return
     }
-    // Profile missing — trigger may have failed silently on sign-up.
-    // Upsert to ensure the FK target exists before any listing inserts.
+    // Profile missing — upsert to ensure FK target exists before any listing inserts
     const { data: created } = await supabase
       .from('profiles')
       .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true })
       .select()
       .single()
-    setProfile(created ?? null)
+    if (created) {
+      setProfile(created)
+      try { localStorage.setItem(cacheKey, JSON.stringify(created)) } catch {}
+    } else {
+      setProfile(null)
+    }
   }, [])
 
   useEffect(() => {
@@ -83,6 +96,9 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
+    if (user) {
+      try { localStorage.removeItem(`umarket_profile_${user.id}`) } catch {}
+    }
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
@@ -106,7 +122,10 @@ export function AuthProvider({ children }) {
       .eq('id', user.id)
       .select()
       .single()
-    if (!error && data) setProfile(data)
+    if (!error && data) {
+      setProfile(data)
+      try { localStorage.setItem(`umarket_profile_${user.id}`, JSON.stringify(data)) } catch {}
+    }
     return { data, error }
   }
 

@@ -8,24 +8,7 @@ import { validate, validateImageFile, sanitizeText, listingSchema } from '../lib
 import { compressImage } from '../lib/compressImage'
 import MapPreview from './MapPreview'
 import { clearListingsCache } from '../hooks/useListings'
-
-const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
-
-async function geocode(address, locationHint = '') {
-  if (!address?.trim() || !MAPS_KEY) return null
-  try {
-    const full = locationHint ? `${address.trim()}, ${locationHint}` : address.trim()
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(full)}&key=${MAPS_KEY}`
-    )
-    if (res.ok) {
-      const data = await res.json()
-      const loc = data?.results?.[0]?.geometry?.location
-      if (loc) return { lat: loc.lat, lng: loc.lng }
-    }
-  } catch {}
-  return null
-}
+import { geocode } from '../lib/geocode'
 
 const MAX_IMAGES = 6
 

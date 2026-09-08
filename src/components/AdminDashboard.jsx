@@ -2,6 +2,166 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { SCHOOLS } from '../constants/schools'
+import { getCategoryLabel } from '../constants/categories'
+
+// ── Category colour palette ───────────────────────────────────────────────────
+const CAT_COLORS = {
+  housing:         '#3b82f6',
+  sublease:        '#8b5cf6',
+  looking_housing: '#a78bfa',
+  looking_roommate:'#c4b5fd',
+  looking_for:     '#ddd6fe',
+  textbooks:       '#22c55e',
+  furniture:       '#f97316',
+  electronics:     '#06b6d4',
+  clothing:        '#ec4899',
+  sports:          '#eab308',
+  events:          '#14b8a6',
+  misc:            '#94a3b8',
+}
+function catColor(id) { return CAT_COLORS[id] ?? '#94a3b8' }
+
+// ── Trends helpers ────────────────────────────────────────────────────────────
+function buildTrends(soldListings) {
+  // Returns { months: ['2025-01', ...], series: [{ id, label, counts: [n,...] }] }
+  const now = new Date()
+  const months = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+
+  const countMap = {} // { category: { 'YYYY-MM': n } }
+  for (const l of soldListings) {
+    const m = l.sold_at?.slice(0, 7)
+    if (!m || !months.includes(m)) continue
+    const cat = l.category ?? 'misc'
+    if (!countMap[cat]) countMap[cat] = {}
+    countMap[cat][m] = (countMap[cat][m] ?? 0) + 1
+  }
+
+  const series = Object.entries(countMap)
+    .map(([id, mmap]) => ({
+      id,
+      label: getCategoryLabel(id),
+      total: Object.values(mmap).reduce((a, b) => a + b, 0),
+      counts: months.map((m) => mmap[m] ?? 0),
+    }))
+    .sort((a, b) => b.total - a.total)
+
+  return { months, series }
+}
+
+function monthLabel(yyyymm) {
+  const [y, m] = yyyymm.split('-')
+  return new Date(Number(y), Number(m) - 1, 1)
+    .toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+}
+
+// ── Trends chart (stacked bar) ────────────────────────────────────────────────
+function TrendsChart({ months, series }) {
+  const [hovered, setHovered] = useState(null) // { mi, si, x, y, value, label }
+
+  const totals = months.map((_, mi) =>
+    series.reduce((sum, s) => sum + s.counts[mi], 0)
+  )
+  const maxTotal = Math.max(...totals, 1)
+  const W = 640
+  const H = 200
+  const PAD_L = 28
+  const PAD_R = 8
+  const PAD_T = 10
+  const PAD_B = 36
+  const barW   = (W - PAD_L - PAD_R) / months.length
+  const barGap = barW * 0.18
+
+  return (
+    <div className="relative">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full"
+        style={{ overflow: 'visible' }}
+        onMouseLeave={() => setHovered(null)}
+      >
+        {/* Y-axis gridlines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+          const y = PAD_T + (1 - frac) * (H - PAD_T - PAD_B)
+          return (
+            <g key={frac}>
+              <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+              <text x={PAD_L - 4} y={y + 4} textAnchor="end" fontSize="9" fill="#94a3b8">
+                {Math.round(frac * maxTotal)}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Stacked bars */}
+        {months.map((m, mi) => {
+          const x = PAD_L + mi * barW + barGap / 2
+          const bw = barW - barGap
+          let yBase = H - PAD_B
+
+          return (
+            <g key={m}>
+              {series.map((s, si) => {
+                const count = s.counts[mi]
+                if (!count) return null
+                const barH = (count / maxTotal) * (H - PAD_T - PAD_B)
+                const barY = yBase - barH
+                yBase -= barH
+                return (
+                  <rect
+                    key={si}
+                    x={x} y={barY} width={bw} height={barH}
+                    fill={catColor(s.id)}
+                    opacity={hovered && hovered.si !== si ? 0.45 : 1}
+                    rx={si === series.length - 1 || yBase <= PAD_T ? 2 : 0}
+                    onMouseEnter={(e) => setHovered({ mi, si, value: count, label: s.label, month: m })}
+                    style={{ cursor: 'default', transition: 'opacity 0.15s' }}
+                  />
+                )
+              })}
+              {/* X-axis label */}
+              <text
+                x={x + bw / 2} y={H - PAD_B + 14}
+                textAnchor="middle" fontSize="9" fill="#94a3b8"
+              >
+                {monthLabel(m)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Hover tooltip */}
+      {hovered && (
+        <div
+          className="absolute bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 pointer-events-none shadow-lg whitespace-nowrap z-10"
+          style={{ top: 8, right: 8 }}
+        >
+          <span className="font-bold">{hovered.label}</span>
+          <span className="text-gray-300"> · {monthLabel(hovered.month)} · </span>
+          <span className="font-bold">{hovered.value} sold</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Legend ────────────────────────────────────────────────────────────────────
+function Legend({ series }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+      {series.map((s) => (
+        <div key={s.id} className="flex items-center gap-1.5 text-xs text-gray-600">
+          <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: catColor(s.id) }} />
+          {s.label} <span className="text-gray-400">({s.total})</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function timeAgo(dateStr) {
   if (!dateStr) return '—'
@@ -437,11 +597,12 @@ function AdAppRow({ app, onApprove, onReject, onContact, onGenerateLink, onActiv
 export default function AdminDashboard({ onBack }) {
   const { profile } = useAuth()
 
-  const [tab, setTab] = useState('ads') // 'ads' | 'advertisers' | 'users' | 'boosts' | 'reports' | 'stats'
+  const [tab, setTab] = useState('ads') // 'ads' | 'advertisers' | 'users' | 'boosts' | 'reports' | 'trends' | 'stats'
   const [boosts, setBoosts]   = useState([])
   const [reports, setReports] = useState([])
   const [adApps, setAdApps]   = useState([])
   const [users, setUsers]     = useState([])
+  const [soldListings, setSoldListings] = useState([])
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId]     = useState(null)
@@ -466,7 +627,10 @@ export default function AdminDashboard({ onBack }) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const fetchAll = useCallback(async () => {
     setLoading(true)
-    const [boostRes, reportRes, adRes, userRes, listingCount] = await Promise.all([
+    const twelveMonthsAgo = new Date()
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+
+    const [boostRes, reportRes, adRes, userRes, listingCount, userCountRes, soldRes] = await Promise.all([
       supabase
         .from('boosts')
         .select('*, listings(id, title, images, school_id), profiles(id, name)')
@@ -486,15 +650,23 @@ export default function AdminDashboard({ onBack }) {
         .order('created_at', { ascending: false })
         .limit(500),
       supabase.from('listings').select('id', { count: 'exact', head: true }),
+      supabase.rpc('get_auth_user_count'),
+      supabase
+        .from('listings')
+        .select('category, sold_at, school_id')
+        .eq('sold', true)
+        .not('sold_at', 'is', null)
+        .gte('sold_at', twelveMonthsAgo.toISOString()),
     ])
     setBoosts(boostRes.data ?? [])
     setReports(reportRes.data ?? [])
     setAdApps(adRes.data ?? [])
     setUsers(userRes.data ?? [])
+    setSoldListings(soldRes.data ?? [])
     const ads = adRes.data ?? []
     setStats({
       listings:   listingCount.count ?? 0,
-      users:      (userRes.data ?? []).length,
+      users:      userCountRes.data ?? 0,
       students:   (userRes.data ?? []).filter((u) => !u.account_type || u.account_type === 'student').length,
       landlords:  (userRes.data ?? []).filter((u) => u.account_type === 'landlord').length,
       businesses: (userRes.data ?? []).filter((u) => u.account_type === 'business').length,
@@ -676,6 +848,7 @@ export default function AdminDashboard({ onBack }) {
           { id: 'users',       label: `Users (${users.length})` },
           { id: 'boosts',      label: `Boosts${pendingCount ? ` (${pendingCount})` : ''}` },
           { id: 'reports',     label: `Reports${reports.length ? ` (${reports.length})` : ''}` },
+          { id: 'trends',      label: 'Trends' },
           { id: 'stats',       label: 'Stats' },
         ].map((t) => (
           <button
@@ -972,6 +1145,78 @@ export default function AdminDashboard({ onBack }) {
           )}
         </>
       )}
+
+      {/* ── Trends tab ────────────────────────────────────────────────────── */}
+      {!loading && tab === 'trends' && (() => {
+        const { months, series } = buildTrends(soldListings)
+        const totalSold = soldListings.length
+
+        // Best month
+        const totals = months.map((_, mi) =>
+          series.reduce((sum, s) => sum + s.counts[mi], 0)
+        )
+        const bestMi    = totals.indexOf(Math.max(...totals))
+        const bestMonth = months[bestMi]
+
+        // Best category overall
+        const bestCat = series[0]
+
+        // Contact prompt stats
+        return (
+          <div className="space-y-5">
+            {/* Summary KPIs */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Sold (12mo)',   value: totalSold },
+                { label: 'Best Month',    value: bestMonth ? monthLabel(bestMonth) : '—' },
+                { label: 'Top Category', value: bestCat?.label ?? '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
+                  <p className="text-xl font-extrabold text-gray-900 leading-tight">{value}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Chart */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+              <p className="text-sm font-bold text-gray-700 mb-3">Sold Listings by Category — Last 12 Months</p>
+              {series.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">No sold listings yet</p>
+              ) : (
+                <>
+                  <TrendsChart months={months} series={series} />
+                  <Legend series={series} />
+                </>
+              )}
+            </div>
+
+            {/* Category breakdown table */}
+            {series.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-bold text-gray-700">Category Breakdown</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {series.map((s) => (
+                    <div key={s.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: catColor(s.id) }} />
+                      <span className="flex-1 text-sm text-gray-700">{s.label}</span>
+                      <span className="text-sm font-bold text-gray-900">{s.total}</span>
+                      <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${(s.total / (series[0]?.total || 1)) * 100}%`, background: catColor(s.id) }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── Stats tab ─────────────────────────────────────────────────────── */}
       {!loading && tab === 'stats' && stats && (

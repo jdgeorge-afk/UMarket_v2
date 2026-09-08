@@ -1,0 +1,48 @@
+[
+  {
+    "external_id": "zillow-123456789",
+    "title": "2BR/1BA near U of U — great location",
+    "category": "housing",
+    "description": "Spacious 2-bedroom apartment one block from campus. Hardwood floors, in-unit laundry, pet-friendly. Available August 1.",
+    "location": "450 S 1300 E, Salt Lake City, UT 84102",
+    "price": 1450,
+    "beds": 2,
+    "baths": "1",
+    "available": "August 1, 2025",
+    "images": [
+      "https://photos.zillowstatic.com/fp/abc123.jpg",
+      "https://photos.zillowstatic.com/fp/def456.jpg"
+    ],
+    "contact_type": "email",
+    "contact_value": "landlord@example.com",
+    "url": "https://www.zillow.com/homedetails/12345"
+  },
+  {
+    "external_id": "craigslist-slc-abc123",
+    "title": "MacBook Pro 2022 — excellent condition",
+    "category": "electronics",
+    "description": "M2 MacBook Pro 13\", 16GB RAM, 512GB SSD. Barely used, comes with original charger and box.",
+    "location": "Sugar House, SLC",
+    "price": 1100,
+    "condition": "Like New",
+    "images": [
+      "https://images.craigslist.org/abc.jpg"
+    ],
+    "contact_type": "phone",
+    "contact_value": "8015551234",
+    "url": "https://saltlakecity.craigslist.org/ele/abc123"
+  },
+  {
+    "external_id": "fb-marketplace-xyz789",
+    "title": "Sublease available May–August — 1 spot left",
+    "category": "sublease",
+    "description": "Looking for someone to take over my lease from May to August. Furnished room in 4BR house, 5 min walk to campus.",
+    "location": "1234 Wasatch Dr, Salt Lake City, UT",
+    "price": 650,
+    "spots_available": 1,
+    "beds": 4,
+    "available": "May 2025",
+    "contact_type": "phone",
+    "contact_value": "8015559876"
+  }
+]

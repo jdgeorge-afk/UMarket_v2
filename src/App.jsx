@@ -201,11 +201,18 @@ function AppInner() {
       return
     }
 
+    // Admin view doesn't need a school — restore it immediately
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('view') === 'admin') {
+      urlRestoredRef.current = true
+      setCurrentView('admin')
+      return
+    }
+
     // All other URL params require school to already be set
     if (!school) return
     urlRestoredRef.current = true
 
-    const p = new URLSearchParams(window.location.search)
     if (p.has('listing')) {
       supabase.from('listings').select(LISTING_SELECT).eq('id', p.get('listing')).single()
         .then(({ data }) => {
