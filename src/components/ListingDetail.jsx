@@ -10,6 +10,8 @@ import SoldSurveyModal from './SoldSurveyModal'
 import MapPreview from './MapPreview'
 import { getCategoryLabel } from '../constants/categories'
 import { APP_URL } from '../constants/config'
+import { SCHOOLS } from '../constants/schools'
+import { geocode } from '../lib/geocode'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -46,6 +48,25 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
 
   const images = listing.images ?? []
   const isOwner = user?.id === listing.seller_id
+
+  // If a housing listing is missing coordinates, try to geocode and patch the DB
+  const [mapCoords, setMapCoords] = useState(
+    listing.lat && listing.lng ? { lat: listing.lat, lng: listing.lng } : null
+  )
+  useEffect(() => {
+    if (mapCoords || !listing.is_housing || !listing.location) return
+    const hint = SCHOOLS.find((s) => s.id === listing.school_id)?.location ?? ''
+    geocode(listing.location, hint).then((coords) => {
+      if (!coords) return
+      setMapCoords(coords)
+      // Patch DB so it won't need re-geocoding next time
+      supabase
+        .from('listings')
+        .update({ lat: coords.lat, lng: coords.lng })
+        .eq('id', listing.id)
+        .then(() => {})
+    })
+  }, [listing.id]) // eslint-disable-line
 
   useEffect(() => {
     if (!seller || !seller.contact) {
@@ -246,10 +267,10 @@ export default function ListingDetail({ listing, onBack, onOpenProfile, onRequir
       </div>
 
       {/* Map preview — housing listings with coordinates */}
-      {listing.is_housing && listing.lat && listing.lng && (
+      {listing.is_housing && mapCoords && (
         <div className="mb-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Location</p>
-          <MapPreview lat={listing.lat} lng={listing.lng} />
+          <MapPreview lat={mapCoords.lat} lng={mapCoords.lng} />
         </div>
       )}
 
