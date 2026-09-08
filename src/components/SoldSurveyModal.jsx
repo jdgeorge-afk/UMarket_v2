@@ -4,7 +4,7 @@ export default function SoldSurveyModal({ action, onAnswer }) {
   const isSold = action === 'sold'
 
   return (
-    <Modal onClose={() => onAnswer(null)}>
+    <Modal onClose={() => {}}>
       <div className="text-center mb-6">
         <span className="text-4xl">{isSold ? '🎉' : '🗑️'}</span>
         <h2 className="text-xl font-bold text-gray-900 mt-3">
@@ -39,12 +39,6 @@ export default function SoldSurveyModal({ action, onAnswer }) {
         </button>
       </div>
 
-      <button
-        onClick={() => onAnswer(null)}
-        className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600 transition-colors py-1"
-      >
-        Skip
-      </button>
     </Modal>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import { useListings } from '../hooks/useListings'
@@ -6,9 +6,12 @@ import CategoryStrip from './CategoryStrip'
 import FilterBar from './FilterBar'
 import ListingCard from './ListingCard'
 import AdCard from './AdCard'
+import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
+import { useAds } from '../hooks/useAds'
+import { FAKE_ADS } from '../constants/fakeSponsoredAds'
 
-const AD_INTERVAL = 8
+const AD_INTERVAL = 6
 
 /**
  * Translate the encoded activeFilter into useListings params.
@@ -88,13 +91,17 @@ function EventsBanner() {
   )
 }
 
-function injectAds(listings) {
+function injectAds(listings, baseAds, premiumAd) {
   const result = []
   let adCount = 0
   listings.forEach((listing, i) => {
     result.push({ type: 'listing', data: listing, key: listing.id })
-    if ((i + 1) % AD_INTERVAL === 0) {
-      result.push({ type: 'ad', adIndex: adCount++, key: `ad-${adCount}` })
+    if (i === 5 && premiumAd) {
+      result.push({ type: 'premium', data: premiumAd, key: 'premium-ad' })
+    }
+    if (baseAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
+      result.push({ type: 'ad', data: baseAds[adCount % baseAds.length], key: `ad-${adCount}` })
+      adCount++
     }
   })
   return result
@@ -316,14 +323,44 @@ export default function ListingFeed({
   onOpenListing,
   onRequireAuth,
   onPostOpen,
+  onAdvertiseOpen,
 }) {
   const { user } = useAuth()
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [conditions, setConditions] = useState([])
-  const [clothingSizes, setClothingSizes] = useState([])
-  const [genders, setGenders] = useState([])
-  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
+  // Initialize filter state from URL params so shareable links work
+  const [minPrice, setMinPrice]       = useState(() => new URLSearchParams(window.location.search).get('min') ?? '')
+  const [maxPrice, setMaxPrice]       = useState(() => new URLSearchParams(window.location.search).get('max') ?? '')
+  const [conditions, setConditions]   = useState(() => { const v = new URLSearchParams(window.location.search).get('cond'); return v ? v.split(',') : [] })
+  const [clothingSizes, setClothingSizes] = useState(() => { const v = new URLSearchParams(window.location.search).get('sizes'); return v ? v.split(',') : [] })
+  const [genders, setGenders]         = useState(() => { const v = new URLSearchParams(window.location.search).get('cg'); return v ? v.split(',') : [] })
+  const [minBeds, setMinBeds]         = useState(() => { const v = new URLSearchParams(window.location.search).get('beds'); return v ? Number(v) : null })
+  const [minBaths, setMinBaths]       = useState(() => { const v = new URLSearchParams(window.location.search).get('baths'); return v ? Number(v) : null })
+  const [minSpots, setMinSpots]       = useState(() => { const v = new URLSearchParams(window.location.search).get('spots'); return v ? Number(v) : null })
+  const [genderPref, setGenderPref]   = useState(() => new URLSearchParams(window.location.search).get('gender') ?? null)
+  const [listedWithin, setListedWithin] = useState(() => new URLSearchParams(window.location.search).get('within') ?? null)
+  const [verifiedOnly, setVerifiedOnly] = useState(() => new URLSearchParams(window.location.search).get('verified') === '1')
+  const [hasPhotos, setHasPhotos]     = useState(() => new URLSearchParams(window.location.search).get('photos') === '1')
+
+  // Sync filter state → URL so filters are shareable and survive refresh
+  const FILTER_PARAMS = ['min', 'max', 'beds', 'baths', 'spots', 'within', 'gender', 'photos', 'verified', 'cond', 'sizes', 'cg']
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    FILTER_PARAMS.forEach((k) => p.delete(k))
+    if (minPrice !== '') p.set('min', minPrice)
+    if (maxPrice !== '') p.set('max', maxPrice)
+    if (minBeds !== null) p.set('beds', String(minBeds))
+    if (minBaths !== null) p.set('baths', String(minBaths))
+    if (minSpots !== null) p.set('spots', String(minSpots))
+    if (listedWithin) p.set('within', listedWithin)
+    if (genderPref) p.set('gender', genderPref)
+    if (hasPhotos) p.set('photos', '1')
+    if (verifiedOnly) p.set('verified', '1')
+    if (conditions.length > 0) p.set('cond', conditions.join(','))
+    if (clothingSizes.length > 0) p.set('sizes', clothingSizes.join(','))
+    if (genders.length > 0) p.set('cg', genders.join(','))
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minPrice, maxPrice, minBeds, minBaths, minSpots, listedWithin, genderPref, hasPhotos, verifiedOnly, conditions.join(','), clothingSizes.join(','), genders.join(',')])
 
   const toggleCondition = (c) =>
     setConditions((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
@@ -332,12 +369,20 @@ export default function ListingFeed({
   const toggleGender = (g) =>
     setGenders((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])
 
-  const clearExtraFilters = () => { setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([]) }
-  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0
+  const clearExtraFilters = () => {
+    setMinPrice(''); setMaxPrice(''); setConditions([]); setClothingSizes([]); setGenders([])
+    setMinBeds(null); setMinBaths(null); setMinSpots(null); setGenderPref(null)
+    setListedWithin(null); setVerifiedOnly(false); setHasPhotos(false)
+  }
+  const hasExtraFilters = minPrice !== '' || maxPrice !== '' || conditions.length > 0 || clothingSizes.length > 0 || genders.length > 0 || minBeds !== null || minBaths !== null || minSpots !== null || genderPref !== null || listedWithin !== null || verifiedOnly || hasPhotos
+
+  const { baseAds: realAds, pinnedAd, premiumAd } = useAds()
+  // Fall back to fake ski brand ads when no real ads are running
+  const baseAds = realAds.length > 0 ? realAds : FAKE_ADS
 
   // useListings must be called unconditionally (Rules of Hooks) — before any early returns
   const listingFilter = resolveListingFilter(activeFilter)
-  const { listings, loading, error } = useListings({
+  const { listings: rawListings, loading, error } = useListings({
     ...listingFilter,
     sortBy,
     searchQuery,
@@ -348,14 +393,31 @@ export default function ListingFeed({
     conditions: conditions.length > 0 ? conditions : null,
     clothingSizes: clothingSizes.length > 0 ? clothingSizes : null,
     genders: genders.length > 0 ? genders : null,
+    minBeds,
+    minSpots,
+    listedWithin,
     userType: null,
+  })
+
+  // Client-side filters
+  const listings = rawListings.filter((l) => {
+    if (verifiedOnly && !l.profiles?.verified) return false
+    if (hasPhotos && (!l.images || l.images.length === 0)) return false
+    if (minBaths !== null) {
+      const b = parseFloat(l.size)
+      if (isNaN(b) || b < minBaths) return false
+    }
+    if (genderPref !== null && l.gender !== genderPref) return false
+    return true
   })
 
   // Events tab gets its own full-page component
   if (!favoritesOnly && !searchQuery && activeFilter === 'events') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        </div>
         <EventsPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -369,7 +431,9 @@ export default function ListingFeed({
   if (!favoritesOnly && !searchQuery && activeFilter === 'looking_for') {
     return (
       <>
-        <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
+        </div>
         <LookingForPage
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
@@ -379,14 +443,14 @@ export default function ListingFeed({
     )
   }
 
-  const items = injectAds(listings)
+  const items = injectAds(listings, baseAds, premiumAd)
 
   return (
     <div>
-      {/* ── Section tabs ─────────────────────────────────────────────────────── */}
+      {/* ── Section tabs — mobile only (desktop uses header nav) ──────────────── */}
       {!favoritesOnly && (
-        <div className="sticky top-14 z-30 bg-white border-b border-gray-100 shadow-sm">
-          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} />
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+          <SectionTabs activeFilter={activeFilter} onFilter={onFilter} onAdvertiseOpen={onAdvertiseOpen} />
         </div>
       )}
 
@@ -425,6 +489,20 @@ export default function ListingFeed({
         genders={genders}
         onToggleClothingSize={toggleClothingSize}
         onToggleGender={toggleGender}
+        minBeds={minBeds}
+        onMinBeds={setMinBeds}
+        minBaths={minBaths}
+        onMinBaths={setMinBaths}
+        minSpots={minSpots}
+        onMinSpots={setMinSpots}
+        genderPref={genderPref}
+        onGenderPref={setGenderPref}
+        listedWithin={listedWithin}
+        onListedWithin={setListedWithin}
+        verifiedOnly={verifiedOnly}
+        onVerifiedOnly={setVerifiedOnly}
+        hasPhotos={hasPhotos}
+        onHasPhotos={setHasPhotos}
         onClearExtraFilters={clearExtraFilters}
         hasExtraFilters={hasExtraFilters}
       />
@@ -464,9 +542,12 @@ export default function ListingFeed({
 
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
+          {pinnedAd && <AdCard ad={pinnedAd} />}
           {items.map((item) =>
-            item.type === 'ad' ? (
-              <AdCard key={item.key} index={item.adIndex} />
+            item.type === 'premium' ? (
+              <PremiumAdBlock key={item.key} ad={item.data} />
+            ) : item.type === 'ad' ? (
+              <AdCard key={item.key} ad={item.data} />
             ) : (
               <ListingCard
                 key={item.key}

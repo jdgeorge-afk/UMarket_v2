@@ -67,7 +67,7 @@ export default function CategoryStrip({ activeFilter, onFilter }) {
   return (
     <div
       className={[
-        'relative lg:hidden overflow-hidden transition-all duration-200 ease-in-out',
+        'relative hidden lg:hidden overflow-hidden transition-all duration-200 ease-in-out',
         hasSubs ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0',
       ].join(' ')}
       aria-hidden={!hasSubs}

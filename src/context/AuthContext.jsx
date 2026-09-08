@@ -57,12 +57,12 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [fetchProfile])
 
-  const signUp = async ({ email, password, name, schoolId, userType = 'student', schoolIds = [] }) => {
+  const signUp = async ({ email, password, name, schoolId, userType = 'student', schoolIds = [], companyName = '', companyWebsite = '' }) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, school_id: schoolId, user_type: userType, school_ids: schoolIds },
+        data: { name, school_id: schoolId, user_type: userType, school_ids: schoolIds, company_name: companyName, company_website: companyWebsite },
         emailRedirectTo: window.location.origin,
       },
     })

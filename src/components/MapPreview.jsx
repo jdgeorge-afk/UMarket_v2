@@ -1,79 +1,57 @@
 import { useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 
-// Custom pin using a DivIcon — avoids Vite asset-bundling issues with default marker images
-const PIN_ICON = L.divIcon({
-  className: '',
-  html: `
-    <div style="
-      width: 28px; height: 28px;
-      background: #ef4444;
-      border: 3px solid white;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-    "></div>
-  `,
-  iconSize:   [28, 28],
-  iconAnchor: [14, 28], // tip of the pin points at the location
-})
+const KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
 
-/**
- * Renders an OpenStreetMap tile map centered on [lat, lng] with a red pin.
- * No API key required.
- */
+// Load the Google Maps JS API once, return a promise that resolves when ready
+let _loadPromise = null
+function loadGoogleMaps() {
+  if (window.google?.maps) return Promise.resolve()
+  if (_loadPromise) return _loadPromise
+  _loadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}`
+    script.async = true
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+  return _loadPromise
+}
+
 export default function MapPreview({ lat, lng, className = '' }) {
   const containerRef = useRef(null)
-  const mapRef       = useRef(null)
-  const markerRef    = useRef(null)
+  const mapRef = useRef(null)
 
   useEffect(() => {
-    if (!containerRef.current || !lat || !lng) return
-
-    if (mapRef.current) {
-      // Already mounted — move view and pin
-      mapRef.current.setView([lat, lng], 15)
-      markerRef.current?.setLatLng([lat, lng])
-      return
-    }
-
-    const map = L.map(containerRef.current, {
-      center: [lat, lng],
-      zoom: 15,
-      zoomControl: true,
-      scrollWheelZoom: false,
-    })
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19,
-    }).addTo(map)
-
-    markerRef.current = L.marker([lat, lng], { icon: PIN_ICON }).addTo(map)
-    mapRef.current    = map
-
-    // Recalculate size after paint — fixes blank map in modals / flex containers
-    setTimeout(() => map.invalidateSize(), 50)
+    if (!lat || !lng || !KEY) return
+    loadGoogleMaps().then(() => {
+      if (!containerRef.current) return
+      if (!mapRef.current) {
+        mapRef.current = new window.google.maps.Map(containerRef.current, {
+          center: { lat, lng },
+          zoom: 15,
+          disableDefaultUI: false,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: true,
+        })
+        new window.google.maps.Marker({
+          position: { lat, lng },
+          map: mapRef.current,
+        })
+      } else {
+        mapRef.current.setCenter({ lat, lng })
+      }
+    }).catch(() => {})
   }, [lat, lng])
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      mapRef.current?.remove()
-      mapRef.current    = null
-      markerRef.current = null
-    }
-  }, [])
-
-  if (!lat || !lng) return null
+  if (!lat || !lng || !KEY) return null
 
   return (
     <div
       ref={containerRef}
       className={`w-full rounded-xl overflow-hidden border border-gray-200 ${className}`}
-      style={{ height: 200 }}
+      style={{ height: 220 }}
     />
   )
 }

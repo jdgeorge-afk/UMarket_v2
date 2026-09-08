@@ -22,6 +22,8 @@ import AdminDashboard from './components/AdminDashboard'
 import AuthModal from './components/AuthModal'
 import PostListingModal from './components/PostListingModal'
 import BoostModal from './components/BoostModal'
+import AdApplicationModal from './components/AdApplicationModal'
+import AdStatusPage from './components/AdStatusPage'
 
 // ── Fetch a listing by ID with full seller profile join ──────────────────────
 const LISTING_SELECT = '*, profiles!seller_id(name, score, verified, grade, contact, contact_type, sold_count, avatar_url)'
@@ -81,6 +83,7 @@ function AppInner() {
   const [postModalOpen, setPostModalOpen] = useState(false)
   const [boostAfterPost, setBoostAfterPost] = useState(false)
   const [boostListing, setBoostListing] = useState(null)
+  const [adModalOpen, setAdModalOpen] = useState(false)
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const pushNav = (newView, listing = null, userId = null) => {
@@ -216,10 +219,13 @@ function AppInner() {
       setCurrentView('favorites')
     } else if (p.get('view') === 'admin') {
       setCurrentView('admin')
-    } else if (p.has('filter')) {
-      setActiveFilter(p.get('filter'))
-    } else if (p.has('search')) {
-      setSearchQuery(p.get('search'))
+    } else if (p.has('ad_status')) {
+      setCurrentView('ad_status')
+    } else {
+      // Feed view — restore tab, search, and sort simultaneously
+      if (p.has('filter')) setActiveFilter(p.get('filter'))
+      if (p.has('search')) setSearchQuery(p.get('search'))
+      if (p.has('sort')) setSortBy(p.get('sort'))
     }
   }, [mounted, school]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -266,13 +272,19 @@ function AppInner() {
     } else if (currentView === 'admin') {
       window.history.replaceState(null, '', '?view=admin')
     } else if (currentView === 'feed') {
-      const p = new URLSearchParams()
+      // Start from current URL so ListingFeed's filter params (min, max, beds, etc.) are preserved
+      const p = new URLSearchParams(window.location.search)
+      p.delete('listing'); p.delete('profile'); p.delete('view')
       if (activeFilter && activeFilter !== 'all') p.set('filter', activeFilter)
+      else p.delete('filter')
       if (searchQuery) p.set('search', searchQuery)
+      else p.delete('search')
+      if (sortBy && sortBy !== 'newest') p.set('sort', sortBy)
+      else p.delete('sort')
       const qs = p.toString()
       window.history.replaceState(null, '', qs ? `?${qs}` : '/')
     }
-  }, [mounted, school, currentView, selectedListing, listingNotFound, viewedUserId, activeFilter, searchQuery])
+  }, [mounted, school, currentView, selectedListing, listingNotFound, viewedUserId, activeFilter, searchQuery, sortBy])
 
   // Landing page: All tab, no search, not in favorites/detail/profile
   const isLanding = currentView === 'feed' && activeFilter === 'all' && !searchQuery
@@ -298,21 +310,12 @@ function AppInner() {
         onFavorites={openFavorites}
         onOpenProfile={() => user && openProfile(user.id)}
         onAdminOpen={profile?.is_admin ? openAdmin : null}
+        activeFilter={activeFilter}
+        onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
+        onAdvertiseOpen={() => setAdModalOpen(true)}
       />
 
       <div className="flex w-full">
-        {/* Desktop sidebar — only on Housing / Marketplace / Looking For */}
-        {!isLanding && (
-          <aside className="hidden lg:block w-64 shrink-0">
-            <Sidebar
-              activeFilter={activeFilter}
-              onFilter={(filter) => { setActiveFilter(filter); setCurrentView('feed') }}
-              onPostOpen={openPost}
-              onBoostOpen={openPostAndBoost}
-            />
-          </aside>
-        )}
-
         {/* Main content area */}
         <main className="flex-1 min-w-0 pb-24 lg:pb-8">
           {/* Scrollable landing page — All tab, no search */}
@@ -322,6 +325,8 @@ function AppInner() {
               onPostOpen={openPost}
               onRequireAuth={requireAuth}
               onOpenListing={openListing}
+              onAdvertiseOpen={() => setAdModalOpen(true)}
+              onSearch={(q) => { setSearchQuery(q); setCurrentView('feed') }}
             />
           )}
 
@@ -334,6 +339,7 @@ function AppInner() {
               onSort={setSortBy}
               searchQuery={searchQuery}
               onOpenListing={openListing}
+              onAdvertiseOpen={() => setAdModalOpen(true)}
               onRequireAuth={requireAuth}
               onPostOpen={openPost}
             />
@@ -343,8 +349,10 @@ function AppInner() {
             <ListingDetail
               listing={selectedListing}
               onBack={goBack}
+              onOpenListing={openListing}
               onOpenProfile={openProfile}
               onRequireAuth={requireAuth}
+              onAdminDelete={goHome}
             />
           )}
 
@@ -364,6 +372,13 @@ function AppInner() {
 
           {currentView === 'admin' && (
             <AdminDashboard onBack={goHome} />
+          )}
+
+          {currentView === 'ad_status' && (
+            <AdStatusPage
+              status={new URLSearchParams(window.location.search).get('ad_status')}
+              onClose={goHome}
+            />
           )}
         </main>
       </div>
@@ -417,6 +432,10 @@ function AppInner() {
 
       {boostListing && (
         <BoostModal listing={boostListing} onClose={() => setBoostListing(null)} />
+      )}
+
+      {adModalOpen && (
+        <AdApplicationModal onClose={() => setAdModalOpen(false)} />
       )}
     </div>
   )

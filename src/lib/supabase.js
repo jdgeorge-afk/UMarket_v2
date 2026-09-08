@@ -11,5 +11,12 @@ if (!url || !key) {
 
 export const supabase = createClient(
   url || 'https://placeholder.supabase.co',
-  key || 'placeholder-anon-key'
+  key || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
 )

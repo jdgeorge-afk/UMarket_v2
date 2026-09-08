@@ -1,47 +1,56 @@
-const ADS = [
-  {
-    id: 'ad_lemonade',
-    headline: 'Need Renters Insurance?',
-    body: "Lemonade covers your stuff from $5/mo. Perfect for off-campus living.",
-    cta: 'Get a Quote →',
-    url: 'https://lemonade.com',
-    bg: 'linear-gradient(135deg, #f953c6, #b91d73)',
-    emoji: '',
-  },
-  {
-    id: 'ad_chime',
-    headline: 'Student Checking. No Fees.',
-    body: "No monthly fees, no minimums. Just your money working for you.",
-    cta: 'Open Account →',
-    url: 'https://chime.com',
-    bg: 'linear-gradient(135deg, #11998e, #38ef7d)',
-    emoji: '',
-  },
-]
+export default function AdCard({ ad }) {
+  if (!ad) return null
 
-export default function AdCard({ index }) {
-  const ad = ADS[index % ADS.length]
+  const gradient = ad.gradient ?? 'linear-gradient(145deg, #1e1e2e, #2d2d44)'
+  const cta = ad.cta ?? 'Learn More'
+
   return (
-    <div
-      className="rounded-2xl p-4 flex flex-col justify-between text-white overflow-hidden"
-      style={{ background: ad.bg, minHeight: '200px' }}
+    <a
+      href={ad.website_url ?? '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="rounded-2xl overflow-hidden flex flex-col no-underline hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-md"
+      style={{ background: gradient, minHeight: 220 }}
     >
-      <div>
-        <p className="text-[10px] font-semibold text-white/60 uppercase tracking-widest mb-1">
-          Sponsored
+      <div className="flex flex-col h-full px-4 py-4 gap-2">
+
+        {/* Sponsored + brand name at top */}
+        <div>
+          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-1">
+            Sponsored
+          </p>
+          <p className="text-xs font-extrabold text-white uppercase tracking-wide leading-tight">
+            {ad.company_name}
+          </p>
+        </div>
+
+        {/* Logo — white chip centered */}
+        <div className="flex-1 flex items-center justify-center py-1">
+          <div className="bg-white rounded-xl px-4 py-3 flex items-center justify-center w-full" style={{ maxHeight: 90 }}>
+            {ad.logoSvg ? (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ maxHeight: 70 }}
+                dangerouslySetInnerHTML={{ __html: ad.logoSvg }}
+              />
+            ) : (
+              <p className="text-lg font-black text-gray-900 text-center leading-tight">
+                {ad.company_name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Tagline */}
+        <p className="text-[11px] text-white/75 leading-snug text-center">
+          {ad.tagline}
         </p>
-        <p className="text-lg font-bold leading-tight">{ad.emoji} {ad.headline}</p>
-        <p className="text-xs text-white/75 mt-1.5 leading-relaxed">{ad.body}</p>
+
+        {/* CTA */}
+        <div className="w-full bg-white/15 text-white text-xs font-bold px-4 py-2.5 rounded-xl text-center">
+          {cta} →
+        </div>
       </div>
-      <a
-        href={ad.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="mt-4 block text-center bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
-      >
-        {ad.cta}
-      </a>
-    </div>
+    </a>
   )
 }

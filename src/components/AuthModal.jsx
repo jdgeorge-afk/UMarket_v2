@@ -66,7 +66,8 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName]         = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName]   = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   // steps: 'type' | 'school' | 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
@@ -74,8 +75,10 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const [termsFromSignup, setTermsFromSignup] = useState(false)
 
   // New signup state
-  const [userType, setUserType]             = useState('') // 'student' | 'landlord'
+  const [userType, setUserType]             = useState('') // 'student' | 'landlord' | 'business'
   const [selectedSchools, setSelectedSchools] = useState([]) // array of school IDs
+  const [companyName, setCompanyName]       = useState('')
+  const [companyWebsite, setCompanyWebsite] = useState('')
 
   const isEdu = email.toLowerCase().endsWith('.edu')
 
@@ -94,8 +97,10 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
     if (mode === 'signup') {
       // Validate sign-up fields (name, email format, password ≥ 6 chars)
+      if (!firstName.trim()) { setError('Please enter your first name.'); return }
+      if (!lastName.trim())  { setError('Please enter your last name.'); return }
       const { valid, firstError } = validate(
-        { name: name.trim(), email: sanitizeEmail(email), password },
+        { name: `${firstName.trim()} ${lastName.trim()}`, email: sanitizeEmail(email), password },
         signUpSchema,
       )
       if (!valid) { setError(firstError); return }
@@ -144,10 +149,12 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
       const { error: err } = await signUp({
         email: sanitizeEmail(email),
         password,
-        name: name.trim(),
+        name: `${firstName.trim()} ${lastName.trim()}`,
         schoolId: primarySchool,
         userType,
         schoolIds: selectedSchools,
+        companyName: companyName.trim(),
+        companyWebsite: companyWebsite.trim(),
       })
       if (err) {
         // err.message can be undefined, empty, or a raw JSON string like "{}"
@@ -362,12 +369,21 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
               icon: '🎒',
               label: 'Student',
               desc: 'Buy, sell & find housing at your campus.',
+              next: 'school',
             },
             {
               id: 'landlord',
               icon: '🏠',
               label: 'Landlord',
               desc: 'Post housing near one or more campuses.',
+              next: 'school',
+            },
+            {
+              id: 'business',
+              icon: '🏢',
+              label: 'Business',
+              desc: 'Advertise your brand to college students.',
+              next: 'form',
             },
           ].map((type) => (
             <button
@@ -376,9 +392,12 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
               onClick={() => {
                 setUserType(type.id)
                 setSelectedSchools([])
-                setStep('school')
+                setStep(type.next)
               }}
-              className="flex flex-col items-center text-center gap-2 border-2 border-gray-200 rounded-2xl px-4 py-5 hover:border-school-primary hover:bg-school-primary/5 transition-all"
+              className={[
+                'flex flex-col items-center text-center gap-2 border-2 border-gray-200 rounded-2xl px-4 py-5 hover:border-school-primary hover:bg-school-primary/5 transition-all',
+                type.id === 'business' ? 'col-span-2' : '',
+              ].join(' ')}
             >
               <span className="text-3xl">{type.icon}</span>
               <span className="font-bold text-gray-900 text-sm">{type.label}</span>
@@ -491,7 +510,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
       {mode === 'signup' && userType && (
         <button
           type="button"
-          onClick={() => setStep('school')}
+          onClick={() => setStep(userType === 'business' ? 'type' : 'school')}
           className="text-sm text-gray-400 mb-2 flex items-center gap-1 hover:text-gray-600"
         >
           ← Back
@@ -521,11 +540,34 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         {mode === 'signup' && (
-          <input
-            value={name} onChange={(e) => setName(e.target.value)} required
-            placeholder="Your name"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
-          />
+          <>
+            <div className="flex gap-2">
+              <input
+                value={firstName} onChange={(e) => setFirstName(e.target.value)} required
+                placeholder="First name *"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+              />
+              <input
+                value={lastName} onChange={(e) => setLastName(e.target.value)} required
+                placeholder="Last name *"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+              />
+            </div>
+            {userType === 'business' && (
+              <>
+                <input
+                  value={companyName} onChange={(e) => setCompanyName(e.target.value)} required
+                  placeholder="Company / Brand name *"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+                />
+                <input
+                  value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)}
+                  placeholder="Website (https://yoursite.com)"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
+                />
+              </>
+            )}
+          </>
         )}
         <input
           type="email" value={email} onChange={(e) => setEmail(e.target.value)} required

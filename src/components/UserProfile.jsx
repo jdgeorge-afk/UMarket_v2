@@ -384,6 +384,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
       action: 'deleted',
       listing,
       onConfirm: async (soldViaUmarket) => {
+        if (soldViaUmarket === null || soldViaUmarket === undefined) return // must pick an option
         setSurvey(null)
         await recordOutcome(listing, 'deleted', soldViaUmarket)
         await doDelete(listing)
