@@ -155,6 +155,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [editGrade, setEditGrade]   = useState('')
   const [editContact, setEditContact]       = useState('')
   const [editContactType, setEditContactType] = useState('phone')
+  const [editEduEmail, setEditEduEmail] = useState('')
   const [saving, setSaving]         = useState(false)
   const [saveError, setSaveError]   = useState('')
 
@@ -254,6 +255,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     setEditGrade(profile?.grade ?? '')
     setEditContact(profile?.contact ?? '')
     setEditContactType(profile?.contact_type ?? 'phone')
+    setEditEduEmail(profile?.edu_email ?? '')
     setSaveError('')
     setEditing(true)
   }
@@ -294,16 +296,25 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
     )
     if (!valid) { setSaveError(firstError); return }
 
+    const trimmedEdu = editEduEmail.trim().toLowerCase()
+    if (trimmedEdu && !/^[^\s@]+@[^\s@]+\.edu$/.test(trimmedEdu)) {
+      setSaveError('University email must end in .edu')
+      return
+    }
+
     setSaving(true)
     setSaveError('')
-    const { error } = await updateProfile({
+    const updates = {
       name:         sanitizeText(editName),
       grade:        editGrade,
       contact:      sanitizeText(editContact),
       contact_type: editContactType,
-    })
+      edu_email:    trimmedEdu || null,
+      verified:     trimmedEdu.length > 0,
+    }
+    const { error } = await updateProfile(updates)
     if (error) { setSaveError(error.message); setSaving(false); return }
-    setProfile((p) => ({ ...p, name: editName.trim(), grade: editGrade, contact: editContact.trim(), contact_type: editContactType }))
+    setProfile((p) => ({ ...p, ...updates, name: editName.trim(), contact: editContact.trim() }))
     setSaving(false)
     setEditing(false)
   }
@@ -568,6 +579,29 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
                 }
                 className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-school-primary"
               />
+            </div>
+            {/* University email verification */}
+            <div className="border border-gray-100 rounded-xl p-3 bg-gray-50 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <p className="text-xs font-semibold text-gray-700">University Verification</p>
+              </div>
+              <p className="text-xs text-gray-400 leading-snug">Add your .edu email to get a blue checkmark on your profile.</p>
+              <input
+                type="email"
+                value={editEduEmail}
+                onChange={(e) => setEditEduEmail(e.target.value)}
+                placeholder="you@university.edu"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+              {editEduEmail.trim() && /^[^\s@]+@[^\s@]+\.edu$/.test(editEduEmail.trim()) && (
+                <p className="text-xs text-blue-500 font-medium flex items-center gap-1">
+                  <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l3-3z" clipRule="evenodd"/></svg>
+                  Looks good — saving will verify your account
+                </p>
+              )}
             </div>
             {saveError && <p className="text-red-500 text-sm">{saveError}</p>}
             <div className="flex gap-2">
