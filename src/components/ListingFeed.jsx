@@ -558,7 +558,7 @@ export default function ListingFeed({
 
       {/* ── Housing list/map toggle ──────────────────────────────────────────── */}
       {isHousingSection && !favoritesOnly && !searchQuery && (
-        <div className="flex items-center gap-1.5 px-4 pb-2">
+        <div className="flex items-center gap-2 px-4 pb-2">
           <button
             onClick={() => setHousingView('list')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
@@ -571,12 +571,12 @@ export default function ListingFeed({
           </button>
           <button
             onClick={() => setHousingView('map')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'map' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'map' ? 'bg-gray-900 text-white' : 'bg-school-primary text-white hover:opacity-90'}`}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
-            Map
+            Map View
           </button>
         </div>
       )}
