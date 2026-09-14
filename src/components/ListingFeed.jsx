@@ -462,9 +462,14 @@ export default function ListingFeed({
 
   const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
   const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
-  const [housingView, setHousingView] = useState(
-    () => new URLSearchParams(window.location.search).get('view') === 'map' ? 'map' : 'list'
-  )
+  const [housingView, setHousingView] = useState(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'map') return 'map'
+    if (sessionStorage.getItem('fromHousingMap')) {
+      sessionStorage.removeItem('fromHousingMap')
+      return 'map'
+    }
+    return 'list'
+  })
 
   // Sync housingView ↔ URL so back button restores map view
   useEffect(() => {

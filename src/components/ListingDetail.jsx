@@ -99,6 +99,7 @@ function Meta({ icon, children }) {
 }
 
 export default function ListingDetail({ listing, onBack, onOpenListing, onOpenProfile, onRequireAuth, onAdminDelete }) {
+  const fromMap = !!sessionStorage.getItem('fromHousingMap')
   const { user, profile } = useAuth()
   const { school } = useSchool()
   const { isFavorited, toggleFavorite } = useFavorites()
@@ -333,7 +334,7 @@ export default function ListingDetail({ listing, onBack, onOpenListing, onOpenPr
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        Back to Listings
+        {fromMap ? 'Back to Map' : 'Back to Listings'}
       </button>
 
       {/* Photo grid */}
