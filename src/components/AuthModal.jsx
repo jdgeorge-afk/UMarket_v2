@@ -33,7 +33,7 @@ const TERMS_SECTIONS = [
   { title: '10. Governing Law', body: 'These Terms are governed by the laws of the State of Utah. Disputes shall be resolved in the courts of Salt Lake County, Utah.' },
 ]
 
-export default function AuthModal({ mode, onModeChange, onClose }) {
+export default function AuthModal({ mode, onModeChange, onClose, termsOnly = false, onTermsAccepted }) {
   const { signIn, signInWithGoogle, signUp, resetPassword } = useAuth()
   const { school } = useSchool()
 
@@ -44,8 +44,8 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   // steps: 'type' | 'school' | 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
-  const [step, setStep]         = useState('form')
-  const [termsFromSignup, setTermsFromSignup] = useState(false)
+  const [step, setStep]         = useState(termsOnly ? 'terms' : 'form')
+  const [termsFromSignup, setTermsFromSignup] = useState(!termsOnly)
   const [termsChecked, setTermsChecked] = useState(false)
   const termsEndRef = useRef(null)
 
@@ -114,6 +114,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   }
 
   const handleAcceptTerms = async () => {
+    if (termsOnly) { onTermsAccepted?.(); return }
     // Rate limit sign-up attempts (3 per hour per device)
     const rl = checkRateLimit('sign_up')
     if (!rl.allowed) { setError(rateLimitMessage('sign_up', rl.retryAfterMs)); return }
@@ -236,17 +237,19 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
                 disabled={loading || !termsChecked}
                 className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
               >
-                {loading ? 'Creating account…' : 'I Agree — Create My Account'}
+                {loading ? 'Creating account…' : termsOnly ? 'I Agree — Continue' : 'I Agree — Create My Account'}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setStep('form')}
-              disabled={loading}
-              className="w-full text-gray-400 text-sm py-1"
-            >
-              ← Go Back
-            </button>
+            {!termsOnly && (
+              <button
+                type="button"
+                onClick={() => setStep('form')}
+                disabled={loading}
+                className="w-full text-gray-400 text-sm py-1"
+              >
+                ← Go Back
+              </button>
+            )}
           </div>
         }
       >

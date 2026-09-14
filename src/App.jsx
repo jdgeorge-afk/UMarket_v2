@@ -84,6 +84,7 @@ function AppInner() {
   const [boostAfterPost, setBoostAfterPost] = useState(false)
   const [boostListing, setBoostListing] = useState(null)
   const [adModalOpen, setAdModalOpen] = useState(false)
+  const [googleTermsOpen, setGoogleTermsOpen] = useState(false)
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const pushNav = (newView, listing = null, userId = null) => {
@@ -151,6 +152,14 @@ function AppInner() {
   const openPost         = () => requireAuth(() => { setBoostAfterPost(false); setPostModalOpen(true) })
   const openPostAndBoost = () => requireAuth(() => { setBoostAfterPost(true);  setPostModalOpen(true) })
   const openAdmin        = () => { if (profile?.is_admin) setCurrentView('admin') }
+
+  // Detect new Google OAuth users who haven't agreed to terms yet
+  useEffect(() => {
+    if (!user || !profile) return
+    const isGoogle = user.app_metadata?.provider === 'google'
+    const hasAgreed = !!localStorage.getItem(`umarket_terms_${user.id}`)
+    if (isGoogle && !hasAgreed) setGoogleTermsOpen(true)
+  }, [user, profile])
 
   // Scroll to top on every view or category change (not on modal open)
   useEffect(() => {
@@ -427,6 +436,19 @@ function AppInner() {
           mode={authMode}
           onModeChange={setAuthMode}
           onClose={() => setAuthModalOpen(false)}
+        />
+      )}
+
+      {googleTermsOpen && (
+        <AuthModal
+          mode="signup"
+          onModeChange={() => {}}
+          termsOnly
+          onTermsAccepted={() => {
+            try { localStorage.setItem(`umarket_terms_${user.id}`, Date.now()) } catch {}
+            setGoogleTermsOpen(false)
+          }}
+          onClose={() => {}}
         />
       )}
 
