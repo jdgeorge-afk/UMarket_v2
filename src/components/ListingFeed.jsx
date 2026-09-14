@@ -97,22 +97,23 @@ const BANNER_POSITION = 5 // inject banner after the 5th listing (fills one full
 function injectAds(listings, baseAds, premiumAd, bannerAd) {
   const result = []
   let adCount = 0
-  // If there are fewer listings than BANNER_POSITION, inject at the end
   const bannerAt = Math.min(BANNER_POSITION - 1, listings.length - 1)
+  // When a banner is present, keep one full row (5 slots) clear on each side
+  const BANNER_CLEAR = bannerAd ? 5 : 0
   listings.forEach((listing, i) => {
     result.push({ type: 'listing', data: listing, key: listing.id })
     if (i === bannerAt && bannerAd) {
       result.push({ type: 'banner', data: bannerAd, key: 'banner-ad' })
     }
-    if (i === 5 && premiumAd) {
+    const nearBanner = Math.abs(i - bannerAt) < BANNER_CLEAR
+    if (!nearBanner && i === 5 && premiumAd) {
       result.push({ type: 'premium', data: premiumAd, key: 'premium-ad' })
     }
-    if (baseAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
+    if (!nearBanner && baseAds.length > 0 && (i + 1) % AD_INTERVAL === 0) {
       result.push({ type: 'ad', data: baseAds[adCount % baseAds.length], key: `ad-${adCount}` })
       adCount++
     }
   })
-  // No listings yet but we have a banner — show it anyway
   if (listings.length === 0 && bannerAd) {
     result.push({ type: 'banner', data: bannerAd, key: 'banner-ad' })
   }
