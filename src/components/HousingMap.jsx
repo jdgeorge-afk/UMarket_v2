@@ -119,7 +119,10 @@ export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds,
   useEffect(() => {
     window.__housingMapOpen = (id) => {
       const listing = listings.find(l => l.id === id)
-      if (listing) onOpenListing?.(listing)
+      if (listing) {
+        sessionStorage.setItem('fromHousingMap', '1')
+        onOpenListing?.(listing)
+      }
     }
     return () => { delete window.__housingMapOpen }
   }, [listings, onOpenListing])
