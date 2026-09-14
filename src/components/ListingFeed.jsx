@@ -560,27 +560,33 @@ export default function ListingFeed({
         </div>
       )}
 
-      {!loading && items.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
-          {pinnedAd && <AdCard ad={pinnedAd} />}
-          {items.map((item) =>
-            item.type === 'banner' ? (
-              <BannerAd key={item.key} ad={item.data} />
-            ) : item.type === 'premium' ? (
-              <PremiumAdBlock key={item.key} ad={item.data} />
-            ) : item.type === 'ad' ? (
-              <AdCard key={item.key} ad={item.data} />
-            ) : (
-              <ListingCard
-                key={item.key}
-                listing={item.data}
-                onOpen={onOpenListing}
-                onRequireAuth={onRequireAuth}
-              />
-            )
-          )}
-        </div>
-      )}
+      {!loading && items.length > 0 && (() => {
+        const bannerIdx = items.findIndex(i => i.type === 'banner')
+        const beforeBanner = bannerIdx >= 0 ? items.slice(0, bannerIdx) : items
+        const bannerItem  = bannerIdx >= 0 ? items[bannerIdx] : null
+        const afterBanner = bannerIdx >= 0 ? items.slice(bannerIdx + 1) : []
+        const gridCls = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'
+        const renderItem = (item) =>
+          item.type === 'premium' ? <PremiumAdBlock key={item.key} ad={item.data} /> :
+          item.type === 'ad'     ? <AdCard key={item.key} ad={item.data} /> :
+          <ListingCard key={item.key} listing={item.data} onOpen={onOpenListing} onRequireAuth={onRequireAuth} />
+        return (
+          <div className="flex flex-col gap-3 p-4">
+            {(beforeBanner.length > 0 || pinnedAd) && (
+              <div className={gridCls}>
+                {pinnedAd && <AdCard ad={pinnedAd} />}
+                {beforeBanner.map(renderItem)}
+              </div>
+            )}
+            {bannerItem && <BannerAd ad={bannerItem.data} />}
+            {afterBanner.length > 0 && (
+              <div className={gridCls}>
+                {afterBanner.map(renderItem)}
+              </div>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }

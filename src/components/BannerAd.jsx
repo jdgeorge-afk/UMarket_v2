@@ -6,7 +6,7 @@ export default function BannerAd({ ad }) {
       href={ad.website_url ?? '#'}
       target="_blank"
       rel="noopener noreferrer"
-      className="col-span-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 no-underline flex"
+      className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 no-underline flex"
       style={{ minHeight: 220 }}
     >
       {/* Left — visual panel */}
