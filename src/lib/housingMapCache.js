@@ -30,7 +30,7 @@ export async function preloadHousingListings(supabase, schoolId) {
 
   const { data } = await supabase
     .from('listings')
-    .select('id, title, price, location, lat, lng, images, beds, is_housing, profiles!seller_id(name, verified)')
+    .select('id, title, price, location, lat, lng, images, beds, baths, category, is_housing, profiles!seller_id(name, verified)')
     .eq('school_id', schoolId)
     .eq('is_housing', true)
     .eq('sold', false)

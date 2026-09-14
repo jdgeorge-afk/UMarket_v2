@@ -583,7 +583,16 @@ export default function ListingFeed({
 
       {/* ── Map view ─────────────────────────────────────────────────────────── */}
       {isHousingSection && housingView === 'map' && (
-        <HousingMap onOpenListing={onOpenListing} />
+        <HousingMap
+          onOpenListing={onOpenListing}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          minBeds={minBeds}
+          minBaths={minBaths}
+          verifiedOnly={verifiedOnly}
+          hasPhotos={hasPhotos}
+          activeFilter={activeFilter}
+        />
       )}
 
       {/* ── Feed content ─────────────────────────────────────────────────────── */}

@@ -8,7 +8,30 @@ function priceLabel(l) {
   return `$${Number(l.price).toLocaleString()}/mo`
 }
 
-export default function HousingMap({ onOpenListing }) {
+// Map activeFilter sub-category to listing category values
+function categoryForFilter(activeFilter) {
+  if (activeFilter === 'housing:sublease')    return 'sublease'
+  if (activeFilter === 'housing:landlord')    return 'housing'
+  if (activeFilter === 'housing:roommates')   return 'looking_roommate'
+  if (activeFilter === 'housing:looking_for') return 'looking_housing'
+  return null // 'housing' (all)
+}
+
+function applyFilters(listings, { minPrice, maxPrice, minBeds, minBaths, verifiedOnly, hasPhotos, activeFilter }) {
+  const cat = categoryForFilter(activeFilter)
+  return listings.filter(l => {
+    if (cat && l.category !== cat) return false
+    if (minPrice !== '' && minPrice != null && Number(l.price) < Number(minPrice)) return false
+    if (maxPrice !== '' && maxPrice != null && Number(l.price) > Number(maxPrice)) return false
+    if (minBeds  != null && (l.beds  == null || Number(l.beds)  < Number(minBeds)))  return false
+    if (minBaths != null && (l.baths == null || Number(l.baths) < Number(minBaths))) return false
+    if (verifiedOnly && !l.profiles?.verified) return false
+    if (hasPhotos && (!l.images || l.images.length === 0)) return false
+    return true
+  })
+}
+
+export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds, minBaths, verifiedOnly, hasPhotos, activeFilter }) {
   const { school } = useSchool()
   const containerRef = useRef(null)
   const mapRef = useRef(null)
@@ -30,18 +53,21 @@ export default function HousingMap({ onOpenListing }) {
   }, [school?.id])
 
   useEffect(() => {
-    if (loading || listings.length === 0 || !containerRef.current) return
+    if (loading || !containerRef.current) return
     const KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
     if (!KEY) { setNoKey(true); return }
+
+    const visible = applyFilters(listings, { minPrice, maxPrice, minBeds, minBaths, verifiedOnly, hasPhotos, activeFilter })
 
     preloadGoogleMaps().then(() => {
       const G = window.google.maps
       const bounds = new G.LatLngBounds()
 
       if (!mapRef.current) {
+        const center = visible[0] ? { lat: visible[0].lat, lng: visible[0].lng } : { lat: 40.7608, lng: -111.8910 }
         mapRef.current = new G.Map(containerRef.current, {
           zoom: 13,
-          center: { lat: listings[0].lat, lng: listings[0].lng },
+          center,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
@@ -53,7 +79,7 @@ export default function HousingMap({ onOpenListing }) {
       if (infoWindowRef.current) infoWindowRef.current.close()
       infoWindowRef.current = new G.InfoWindow()
 
-      listings.forEach(l => {
+      visible.forEach(l => {
         const pos = { lat: l.lat, lng: l.lng }
         bounds.extend(pos)
 
@@ -82,9 +108,9 @@ export default function HousingMap({ onOpenListing }) {
         })
       })
 
-      mapRef.current.fitBounds(bounds)
+      if (!bounds.isEmpty()) mapRef.current.fitBounds(bounds)
     }).catch(() => setNoKey(true))
-  }, [listings, loading])
+  }, [listings, loading, minPrice, maxPrice, minBeds, minBaths, verifiedOnly, hasPhotos, activeFilter])
 
   useEffect(() => {
     window.__housingMapOpen = (id) => {

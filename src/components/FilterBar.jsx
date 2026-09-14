@@ -129,8 +129,8 @@ export default function FilterBar({
               </div>
             </div>
 
-            {/* Condition */}
-            <div>
+            {/* Condition — not shown for housing */}
+            {!isHousingSection && <div>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Condition</p>
               <div className="flex flex-wrap gap-2">
                 {CONDITIONS.map((c) => {
@@ -151,7 +151,7 @@ export default function FilterBar({
                   )
                 })}
               </div>
-            </div>
+            </div>}
 
             {/* Clothing size */}
             {isClothing && (
@@ -297,26 +297,28 @@ export default function FilterBar({
               </div>
             )}
 
-            {/* Listed within */}
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Listed Within</p>
-              <div className="flex flex-wrap gap-2">
-                {LISTED_WITHIN.map((t) => (
-                  <button
-                    key={t.value}
-                    onClick={() => onListedWithin(listedWithin === t.value ? null : t.value)}
-                    className={[
-                      'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
-                      listedWithin === t.value
-                        ? 'bg-school-primary text-white border-school-primary'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
-                    ].join(' ')}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+            {/* Listed within — not shown for housing */}
+            {!isHousingSection && (
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Listed Within</p>
+                <div className="flex flex-wrap gap-2">
+                  {LISTED_WITHIN.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => onListedWithin(listedWithin === t.value ? null : t.value)}
+                      className={[
+                        'px-3 py-1 rounded-full text-xs font-semibold border transition-colors',
+                        listedWithin === t.value
+                          ? 'bg-school-primary text-white border-school-primary'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300',
+                      ].join(' ')}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Toggles row */}
             <div className="flex gap-3">
