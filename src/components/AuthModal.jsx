@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
 import Modal from './Modal'
@@ -9,55 +9,28 @@ import { SCHOOLS } from '../constants/schools'
 
 const LIVE_SCHOOLS = SCHOOLS.filter((s) => s.live)
 
+const PRIVACY_SECTIONS = [
+  { title: '1. Who We Are', body: 'UMarket operates an online marketplace and housing platform for college students. This Privacy Policy explains what information we collect when you use UMarket, how we use it, and when we share it with others.' },
+  { title: '2. Information We Collect', body: 'We collect information you provide directly (name, email, profile info, listing content, payment details processed by our payment provider) and information collected automatically (browsing and search behavior, categories viewed, listings clicked, price range preferences, device type, browser, IP address, approximate location, and feature usage patterns). If you verify with a .edu email, we use it solely to confirm student status and do not sell or share it.' },
+  { title: '3. How We Use Your Information', body: 'We use your information to operate and improve the platform, personalize your experience, send transactional emails (password resets, verification, listing alerts), process payments, detect fraud, generate anonymized insights, and serve advertising.' },
+  { title: '4. Information We Share and Sell', body: 'We may share or sell behavioral and interest data, non-institutional email addresses, demographic inferences, and aggregated usage statistics with advertising partners and third-party data buyers. We do not sell .edu email addresses, phone numbers, government IDs, payment card details, or private messages.' },
+  { title: '5. Cookies and Tracking', body: 'We use cookies to keep you logged in, remember preferences, and analyze platform use. Third-party analytics tools may set their own cookies. You can control cookies in your browser settings.' },
+  { title: '6. Your Rights', body: 'Depending on your state, you may have the right to access, delete, or correct your data, and to opt out of data sales. Contact privacy@u-market.app to exercise these rights. We respond within 45 days.' },
+  { title: '7. Data Retention', body: 'We retain data while your account is active. Deleting your account results in removal or anonymization of personal data within 90 days, except where law requires retention.' },
+  { title: '8. Changes', body: 'We may update this policy with at least 14 days notice before material changes take effect.' },
+]
+
 const TERMS_SECTIONS = [
-  {
-    title: '1. About UMarket',
-    body: 'UMarket is an independent, student-to-student online marketplace platform. UMarket is not affiliated with, endorsed by, sponsored by, or officially connected to any university, college, or educational institution referenced on this Platform, including but not limited to the University of Utah and Texas Christian University. All university names are used solely to help students identify their campus community.',
-  },
-  {
-    title: '2. Eligibility',
-    body: 'You must be at least 13 years of age to use this Platform. By creating an account, you confirm that you meet this requirement. Users under 18 must have parental or guardian consent.',
-  },
-  {
-    title: '3. No Involvement in Transactions',
-    body: 'UMarket is not a party to any transaction between users. All purchases, sales, rentals, subleases, and exchanges are solely between the individual users involved. UMarket does not verify the accuracy, legality, quality, or safety of any listing. You transact entirely at your own risk.',
-  },
-  {
-    title: '4. Your Responsibilities',
-    body: 'You agree that all listings you post are accurate, lawful, and your own to sell or transfer. You agree not to post fraudulent, misleading, stolen, illegal, prohibited, or dangerous items or services. You are solely responsible for any listing you create and any transaction you enter into through this Platform.',
-  },
-  {
-    title: '5. Prohibited Content',
-    body: 'You may not post listings involving: illegal goods or substances, weapons or firearms, counterfeit items, stolen property, adult content, personal information of others, or any content that violates applicable law. UMarket reserves the right to remove any listing and suspend or terminate any account at its sole discretion, with or without notice, for any reason.',
-  },
-  {
-    title: '6. No Safety Guarantee',
-    body: 'UMarket does not screen, verify, or background-check any user. We do not guarantee the identity, trustworthiness, or conduct of any person you meet through this Platform. Always meet in public places. Never send payment before receiving an item. UMarket is not responsible for any harm, loss, injury, fraud, or dispute arising from interactions between users.',
-  },
-  {
-    title: '7. Limitation of Liability',
-    body: 'To the fullest extent permitted by law, UMarket, its founders, employees, and affiliates shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising out of or related to your use of this Platform, including but not limited to losses from fraudulent listings, failed transactions, personal injury, or property damage. Your sole remedy for dissatisfaction with this Platform is to stop using it.',
-  },
-  {
-    title: '8. Intellectual Property',
-    body: "All UMarket branding, logos, and original Platform content are the property of UMarket. You retain ownership of content you post but grant UMarket a non-exclusive, royalty-free license to display that content on the Platform. You may not use UMarket's name, logo, or branding without written permission.",
-  },
-  {
-    title: '9. Privacy',
-    body: 'By creating an account, you consent to the collection and use of your information as described in our Privacy Policy. We do not sell your personal data to third parties.',
-  },
-  {
-    title: '10. Dispute Resolution',
-    body: 'Any dispute arising from your use of this Platform shall be resolved through binding individual arbitration under the rules of the American Arbitration Association, governed by the laws of the State of Utah. You waive your right to participate in any class action lawsuit against UMarket.',
-  },
-  {
-    title: '11. Changes to These Terms',
-    body: 'UMarket may update these Terms at any time. Continued use of the Platform after changes are posted constitutes your acceptance of the updated Terms.',
-  },
-  {
-    title: '12. Contact',
-    body: 'For questions about these Terms, contact us through the Platform.',
-  },
+  { title: '1. Acceptance', body: 'By creating an account or using UMarket, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the platform.' },
+  { title: '2. Eligibility', body: 'You must be at least 18 years old. By registering you confirm this is true. Verified accounts (confirmed .edu email) receive reduced ad rates and discounted subscription pricing.' },
+  { title: '3. Your Account', body: 'You are responsible for all activity under your account. Do not create multiple accounts, impersonate others, or transfer your account.' },
+  { title: '4. Listings and Content', body: 'You may post listings for items or housing you have the right to list. UMarket is not a party to any transaction — all deals are directly between users. You may not post illegal items, counterfeit goods, fraudulent content, or content that violates others\' rights.' },
+  { title: '5. Paid Services', body: 'Advertisers may purchase ad placements at rates set by UMarket. Verified student accounts receive preferential rates. The Housing Application Subscription grants unlimited applications for a recurring monthly fee set by UMarket. Subscriptions renew automatically until cancelled; no refunds for the current period.' },
+  { title: '6. Data and Privacy', body: 'By using UMarket you agree to the collection, use, and sharing of your data as described in the Privacy Policy above, including the sale of certain behavioral and contact data to third-party advertising partners. You may opt out at privacy@u-market.app.' },
+  { title: '7. Prohibited Conduct', body: 'You agree not to use the platform for unlawful purposes, harass or defraud users, scrape data without permission, interfere with infrastructure, circumvent security, post spam, or manipulate listings. Violations may result in account termination without refund.' },
+  { title: '8. Disclaimer', body: 'UMarket is provided "as is" without warranties of any kind. We do not endorse or verify any listing, user, or transaction.' },
+  { title: '9. Limitation of Liability', body: 'UMarket is not liable for indirect, incidental, or consequential damages. Our total liability shall not exceed the greater of $100 or fees you paid to UMarket in the prior 12 months.' },
+  { title: '10. Governing Law', body: 'These Terms are governed by the laws of the State of Utah. Disputes shall be resolved in the courts of Salt Lake County, Utah.' },
 ]
 
 export default function AuthModal({ mode, onModeChange, onClose }) {
@@ -73,6 +46,8 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
   // steps: 'type' | 'school' | 'form' | 'terms' | 'contact' | 'verify' | 'reset' | 'forgot'
   const [step, setStep]         = useState('form')
   const [termsFromSignup, setTermsFromSignup] = useState(false)
+  const [termsChecked, setTermsChecked] = useState(false)
+  const termsEndRef = useRef(null)
 
   // New signup state
   const [userType, setUserType]             = useState('') // 'student' | 'landlord' | 'business'
@@ -107,6 +82,7 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
 
       // Show Terms of Use before creating the account
       setTermsFromSignup(true)
+      setTermsChecked(false)
       setStep('terms')
     } else {
       // Rate limit sign-in attempts (5 per 15 minutes per device)
@@ -238,18 +214,29 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
     return (
       <Modal
         onClose={onClose}
-        title="Terms of Use"
+        title="Privacy Policy & Terms"
         fullHeight
         footer={
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={termsChecked}
+                onChange={e => setTermsChecked(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-school-primary flex-shrink-0"
+              />
+              <span className="text-xs text-gray-500 leading-relaxed">
+                I have read and agree to the <strong className="text-gray-700">Privacy Policy</strong> and <strong className="text-gray-700">Terms of Service</strong>.
+              </span>
+            </label>
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             {termsFromSignup && (
               <button
                 onClick={handleAcceptTerms}
-                disabled={loading}
+                disabled={loading || !termsChecked}
                 className="w-full bg-school-primary text-white font-bold py-3.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity text-base"
               >
-                {loading ? 'Creating account…' : 'I Accept — Create My Account'}
+                {loading ? 'Creating account…' : 'I Agree — Create My Account'}
               </button>
             )}
             <button
@@ -264,25 +251,45 @@ export default function AuthModal({ mode, onModeChange, onClose }) {
         }
       >
         <div>
-          <p className="text-xs text-gray-400 mb-1">Last updated: March 2026</p>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Terms of Use</h2>
-          <p className="text-sm text-gray-600 mb-5 leading-relaxed">
-            By creating an account on UMarket ("Platform"), you agree to the following Terms of Use.
-            Please read them carefully. If you do not agree, do not create an account.
-          </p>
+          {/* Skip to bottom */}
+          <button
+            type="button"
+            onClick={() => termsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })}
+            className="w-full mb-4 text-xs text-school-primary font-semibold border border-school-primary/30 rounded-lg py-2 hover:bg-school-primary/5 transition-colors"
+          >
+            Skip to bottom ↓
+          </button>
 
-          <div className="space-y-5">
-            {TERMS_SECTIONS.map((section) => (
-              <div key={section.title}>
-                <h3 className="font-semibold text-gray-900 text-sm mb-1">{section.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{section.body}</p>
+          {/* Privacy Policy */}
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Privacy Policy</p>
+          <p className="text-xs text-gray-400 mb-4">Last updated: September 14, 2026</p>
+          <div className="space-y-4 mb-8">
+            {PRIVACY_SECTIONS.map((s) => (
+              <div key={s.title}>
+                <h3 className="font-semibold text-gray-900 text-sm mb-0.5">{s.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{s.body}</p>
               </div>
             ))}
           </div>
 
-          <p className="text-xs text-gray-400 mt-6 text-center">
-            Scroll up to review all terms before accepting.
-          </p>
+          {/* Divider */}
+          <div className="border-t-2 border-dashed border-gray-200 my-6" />
+
+          {/* Terms of Service */}
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Terms of Service</p>
+          <p className="text-xs text-gray-400 mb-4">Last updated: September 14, 2026</p>
+          <div className="space-y-4">
+            {TERMS_SECTIONS.map((s) => (
+              <div key={s.title}>
+                <h3 className="font-semibold text-gray-900 text-sm mb-0.5">{s.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{s.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div ref={termsEndRef} className="mt-6 text-center text-xs text-gray-400">
+            You've reached the end — check the box below to continue.
+          </div>
         </div>
       </Modal>
     )
