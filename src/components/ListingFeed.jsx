@@ -6,10 +6,11 @@ import CategoryStrip from './CategoryStrip'
 import FilterBar from './FilterBar'
 import ListingCard from './ListingCard'
 import AdCard from './AdCard'
+import BannerAd from './BannerAd'
 import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
 import { useAds } from '../hooks/useAds'
-import { FAKE_ADS } from '../constants/fakeSponsoredAds'
+import { FAKE_ADS, FAKE_HOUSING_BANNER, FAKE_MARKETPLACE_BANNER } from '../constants/fakeSponsoredAds'
 
 const AD_INTERVAL = 6
 
@@ -91,11 +92,18 @@ function EventsBanner() {
   )
 }
 
-function injectAds(listings, baseAds, premiumAd) {
+const BANNER_POSITION = 4 // inject banner after the 4th listing
+
+function injectAds(listings, baseAds, premiumAd, bannerAd) {
   const result = []
   let adCount = 0
+  // If there are fewer listings than BANNER_POSITION, inject at the end
+  const bannerAt = Math.min(BANNER_POSITION - 1, listings.length - 1)
   listings.forEach((listing, i) => {
     result.push({ type: 'listing', data: listing, key: listing.id })
+    if (i === bannerAt && bannerAd) {
+      result.push({ type: 'banner', data: bannerAd, key: 'banner-ad' })
+    }
     if (i === 5 && premiumAd) {
       result.push({ type: 'premium', data: premiumAd, key: 'premium-ad' })
     }
@@ -104,6 +112,10 @@ function injectAds(listings, baseAds, premiumAd) {
       adCount++
     }
   })
+  // No listings yet but we have a banner — show it anyway
+  if (listings.length === 0 && bannerAd) {
+    result.push({ type: 'banner', data: bannerAd, key: 'banner-ad' })
+  }
   return result
 }
 
@@ -443,7 +455,15 @@ export default function ListingFeed({
     )
   }
 
-  const items = injectAds(listings, baseAds, premiumAd)
+  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
+  const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
+  const bannerAd = isHousingSection
+    ? FAKE_HOUSING_BANNER
+    : isMarketplaceSection
+    ? FAKE_MARKETPLACE_BANNER
+    : null
+
+  const items = injectAds(listings, baseAds, premiumAd, bannerAd)
 
   return (
     <div>
@@ -544,7 +564,9 @@ export default function ListingFeed({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
           {pinnedAd && <AdCard ad={pinnedAd} />}
           {items.map((item) =>
-            item.type === 'premium' ? (
+            item.type === 'banner' ? (
+              <BannerAd key={item.key} ad={item.data} />
+            ) : item.type === 'premium' ? (
               <PremiumAdBlock key={item.key} ad={item.data} />
             ) : item.type === 'ad' ? (
               <AdCard key={item.key} ad={item.data} />
