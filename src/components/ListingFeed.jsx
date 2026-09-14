@@ -92,7 +92,7 @@ function EventsBanner() {
   )
 }
 
-const BANNER_POSITION = 4 // inject banner after the 4th listing
+const BANNER_POSITION = 5 // inject banner after the 5th listing (fills one full xl row)
 
 function injectAds(listings, baseAds, premiumAd, bannerAd) {
   const result = []
