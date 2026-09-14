@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSchool } from '../context/SchoolContext'
+import { supabase } from '../lib/supabase'
 import { useListings } from '../hooks/useListings'
 import CategoryStrip from './CategoryStrip'
 import FilterBar from './FilterBar'
@@ -10,6 +11,7 @@ import BannerAd from './BannerAd'
 import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
 import HousingMap from './HousingMap'
+import { preloadGoogleMaps, preloadHousingListings } from '../lib/housingMapCache'
 import { useAds } from '../hooks/useAds'
 import { FAKE_ADS, FAKE_HOUSING_BANNER, FAKE_MARKETPLACE_BANNER } from '../constants/fakeSponsoredAds'
 
@@ -340,6 +342,7 @@ export default function ListingFeed({
   onAdvertiseOpen,
 }) {
   const { user } = useAuth()
+  const { school } = useSchool()
   // Initialize filter state from URL params so shareable links work
   const [minPrice, setMinPrice]       = useState(() => new URLSearchParams(window.location.search).get('min') ?? '')
   const [maxPrice, setMaxPrice]       = useState(() => new URLSearchParams(window.location.search).get('max') ?? '')
@@ -460,6 +463,13 @@ export default function ListingFeed({
   const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
   const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
   const [housingView, setHousingView] = useState('list') // 'list' | 'map'
+
+  // Preload Maps script + listings data as soon as housing section is visible
+  useEffect(() => {
+    if (!isHousingSection) return
+    preloadGoogleMaps()
+    preloadHousingListings(supabase, school?.id)
+  }, [isHousingSection, school?.id])
   const bannerAd = isHousingSection
     ? FAKE_HOUSING_BANNER
     : isMarketplaceSection

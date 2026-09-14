@@ -1,23 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSchool } from '../context/SchoolContext'
-
-const KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
-
-let _loadPromise = null
-function loadGoogleMaps() {
-  if (window.google?.maps) return Promise.resolve()
-  if (_loadPromise) return _loadPromise
-  _loadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}`
-    script.async = true
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-  return _loadPromise
-}
+import { preloadGoogleMaps, preloadHousingListings, getCachedListings } from '../lib/housingMapCache'
 
 function priceLabel(l) {
   if (!l.price || Number(l.price) === 0) return 'Free'
@@ -30,32 +14,27 @@ export default function HousingMap({ onOpenListing }) {
   const mapRef = useRef(null)
   const markersRef = useRef([])
   const infoWindowRef = useRef(null)
-  const [listings, setListings] = useState([])
-  const [loading, setLoading] = useState(true)
+
+  // Start from cache if already preloaded, otherwise show spinner
+  const [listings, setListings] = useState(() => getCachedListings(school?.id) ?? [])
+  const [loading, setLoading] = useState(!getCachedListings(school?.id))
   const [noKey, setNoKey] = useState(false)
 
   useEffect(() => {
     if (!school?.id) return
-    supabase
-      .from('listings')
-      .select('id, title, price, location, lat, lng, images, beds, is_housing, profiles!seller_id(name, verified)')
-      .eq('school_id', school.id)
-      .eq('is_housing', true)
-      .eq('sold', false)
-      .not('lat', 'is', null)
-      .not('lng', 'is', null)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setListings(data ?? [])
-        setLoading(false)
-      })
+    if (getCachedListings(school.id)) return // already have data
+    preloadHousingListings(supabase, school.id).then(data => {
+      setListings(data)
+      setLoading(false)
+    })
   }, [school?.id])
 
   useEffect(() => {
     if (loading || listings.length === 0 || !containerRef.current) return
+    const KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY
     if (!KEY) { setNoKey(true); return }
 
-    loadGoogleMaps().then(() => {
+    preloadGoogleMaps().then(() => {
       const G = window.google.maps
       const bounds = new G.LatLngBounds()
 
@@ -69,7 +48,6 @@ export default function HousingMap({ onOpenListing }) {
         })
       }
 
-      // Clear old markers
       markersRef.current.forEach(m => m.setMap(null))
       markersRef.current = []
       if (infoWindowRef.current) infoWindowRef.current.close()
@@ -108,7 +86,6 @@ export default function HousingMap({ onOpenListing }) {
     }).catch(() => setNoKey(true))
   }, [listings, loading])
 
-  // Bridge for the InfoWindow button (can't pass React handler into raw HTML)
   useEffect(() => {
     window.__housingMapOpen = (id) => {
       const listing = listings.find(l => l.id === id)
