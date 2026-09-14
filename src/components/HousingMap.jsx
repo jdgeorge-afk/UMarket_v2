@@ -24,7 +24,7 @@ function applyFilters(listings, { minPrice, maxPrice, minBeds, minBaths, verifie
     if (minPrice !== '' && minPrice != null && Number(l.price) < Number(minPrice)) return false
     if (maxPrice !== '' && maxPrice != null && Number(l.price) > Number(maxPrice)) return false
     if (minBeds  != null && (l.beds  == null || Number(l.beds)  < Number(minBeds)))  return false
-    if (minBaths != null && (l.baths == null || Number(l.baths) < Number(minBaths))) return false
+    // baths column not in listings table — skip bath filter on map
     if (verifiedOnly && !l.profiles?.verified) return false
     if (hasPhotos && (!l.images || l.images.length === 0)) return false
     return true
