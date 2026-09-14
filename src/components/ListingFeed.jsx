@@ -9,6 +9,7 @@ import AdCard from './AdCard'
 import BannerAd from './BannerAd'
 import PremiumAdBlock from './PremiumAdBlock'
 import SectionTabs from './SectionTabs'
+import HousingMap from './HousingMap'
 import { useAds } from '../hooks/useAds'
 import { FAKE_ADS, FAKE_HOUSING_BANNER, FAKE_MARKETPLACE_BANNER } from '../constants/fakeSponsoredAds'
 
@@ -458,6 +459,7 @@ export default function ListingFeed({
 
   const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
   const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
+  const [housingView, setHousingView] = useState('list') // 'list' | 'map'
   const bannerAd = isHousingSection
     ? FAKE_HOUSING_BANNER
     : isMarketplaceSection
@@ -528,17 +530,47 @@ export default function ListingFeed({
         hasExtraFilters={hasExtraFilters}
       />
 
-      {/* ── Feed content ─────────────────────────────────────────────────────── */}
-      {loading && <FeedSkeleton />}
+      {/* ── Housing list/map toggle ──────────────────────────────────────────── */}
+      {isHousingSection && !favoritesOnly && !searchQuery && (
+        <div className="flex items-center gap-1.5 px-4 pb-2">
+          <button
+            onClick={() => setHousingView('list')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            List
+          </button>
+          <button
+            onClick={() => setHousingView('map')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'map' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            Map
+          </button>
+        </div>
+      )}
 
-      {error && (
+      {/* ── Map view ─────────────────────────────────────────────────────────── */}
+      {isHousingSection && housingView === 'map' && (
+        <HousingMap onOpenListing={onOpenListing} />
+      )}
+
+      {/* ── Feed content ─────────────────────────────────────────────────────── */}
+      {(housingView !== 'map') && loading && <FeedSkeleton />}
+
+      {housingView !== 'map' && error && (
         <div className="text-center py-16 text-red-400">
           <p className="font-medium">Failed to load listings</p>
           <p className="text-sm mt-1 opacity-70">{error}</p>
         </div>
       )}
 
-      {!loading && !error && listings.length === 0 && (
+      {housingView !== 'map' && !loading && !error && listings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-5xl mb-3">
             {''}
@@ -561,7 +593,7 @@ export default function ListingFeed({
         </div>
       )}
 
-      {!loading && items.length > 0 && (() => {
+      {housingView !== 'map' && !loading && items.length > 0 && (() => {
         const bannerIdx = items.findIndex(i => i.type === 'banner')
         const beforeBanner = bannerIdx >= 0 ? items.slice(0, bannerIdx) : items
         const bannerItem  = bannerIdx >= 0 ? items[bannerIdx] : null
