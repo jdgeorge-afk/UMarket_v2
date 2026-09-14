@@ -358,7 +358,7 @@ export default function ListingFeed({
   const [hasPhotos, setHasPhotos]     = useState(() => new URLSearchParams(window.location.search).get('photos') === '1')
 
   // Sync filter state → URL so filters are shareable and survive refresh
-  const FILTER_PARAMS = ['min', 'max', 'beds', 'baths', 'spots', 'within', 'gender', 'photos', 'verified', 'cond', 'sizes', 'cg']
+  const FILTER_PARAMS = ['min', 'max', 'beds', 'baths', 'spots', 'within', 'gender', 'photos', 'verified', 'cond', 'sizes', 'cg', 'view']
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     FILTER_PARAMS.forEach((k) => p.delete(k))
@@ -462,7 +462,23 @@ export default function ListingFeed({
 
   const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
   const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
-  const [housingView, setHousingView] = useState('list') // 'list' | 'map'
+  const [housingView, setHousingView] = useState(
+    () => new URLSearchParams(window.location.search).get('view') === 'map' ? 'map' : 'list'
+  )
+
+  // Sync housingView ↔ URL so back button restores map view
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (housingView === 'map') p.set('view', 'map')
+    else p.delete('view')
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
+  }, [housingView])
+
+  // Reset map view when leaving housing section
+  useEffect(() => {
+    if (!isHousingSection) setHousingView('list')
+  }, [isHousingSection])
 
   // Preload Maps script + listings data as soon as housing section is visible
   useEffect(() => {
