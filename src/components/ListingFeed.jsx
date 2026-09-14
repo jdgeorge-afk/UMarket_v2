@@ -478,7 +478,7 @@ export default function ListingFeed({
       )}
 
       {/* ── Section hero (Housing / Marketplace) ─────────────────────────────── */}
-      {!favoritesOnly && !searchQuery && (
+      {!favoritesOnly && !searchQuery && housingView !== 'map' && (
         <SectionHero
           activeFilter={activeFilter}
           onPostOpen={onPostOpen}
