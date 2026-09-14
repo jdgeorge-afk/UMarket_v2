@@ -38,14 +38,18 @@ export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds,
   const markersRef = useRef([])
   const infoWindowRef = useRef(null)
 
-  // Start from cache if already preloaded, otherwise show spinner
-  const [listings, setListings] = useState(() => getCachedListings(school?.id) ?? [])
-  const [loading, setLoading] = useState(!getCachedListings(school?.id))
+  const [listings, setListings] = useState([])
+  const [loading, setLoading] = useState(true)
   const [noKey, setNoKey] = useState(false)
 
   useEffect(() => {
     if (!school?.id) return
-    if (getCachedListings(school.id)) return // already have data
+    const cached = getCachedListings(school.id)
+    if (cached) {
+      setListings(cached)
+      setLoading(false)
+      return
+    }
     preloadHousingListings(supabase, school.id).then(data => {
       setListings(data)
       setLoading(false)
