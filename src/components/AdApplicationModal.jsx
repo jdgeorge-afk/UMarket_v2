@@ -370,6 +370,15 @@ export default function AdApplicationModal({ onClose }) {
           <p className="text-sm text-gray-500 mt-0.5">Upload at least one photo — we'll rotate extras automatically. Images are optimized on upload.</p>
         </div>
 
+        {adTier === 'premium' && (
+          <div className="mx-4 mb-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-3">
+            <span className="text-lg mt-0.5">💡</span>
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">Recommended for Premium:</span> upload a logo and a flyer — we can split the banner 50/50 with your logo on one side and your flyer on the other for a clean, professional look.
+            </p>
+          </div>
+        )}
+
         <div className="px-4 space-y-4 pb-8">
           {[0, 1, 2].map((idx) => {
             const isPremiumBanner = adTier === 'premium'
