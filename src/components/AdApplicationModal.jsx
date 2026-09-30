@@ -118,6 +118,8 @@ export default function AdApplicationModal({ onClose }) {
     if (!adTier) { setError('Please select an ad placement.'); return }
     if (targetSchools.length === 0) { setError('Select at least one school.'); return }
     if (!description.trim()) { setError('Describe what you want to promote.'); return }
+    if (!creatives[0]) { setError('Upload at least one photo or flyer for your ad.'); return }
+    if (!slogans[0].trim()) { setError('Add a slogan for your ad.'); return }
 
     setSaving(true)
     setError('')
@@ -364,7 +366,7 @@ export default function AdApplicationModal({ onClose }) {
         <div className="px-4 space-y-4 pb-8">
           {[0, 1, 2].map((idx) => (
             <div key={idx} className="bg-gray-50 rounded-2xl p-4 space-y-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Creative {idx + 1}{idx === 0 ? ' (main)' : ' (optional)'}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Creative {idx + 1}{idx === 0 ? ' — required' : ' (optional — rotated in)'}</p>
 
               {/* Image upload area */}
               {creativePreviews[idx] ? (
@@ -410,7 +412,7 @@ export default function AdApplicationModal({ onClose }) {
               <input
                 className={INPUT}
                 type="text"
-                placeholder={idx === 0 ? 'Slogan — e.g. "Best tacos near campus"' : 'Slogan (optional)'}
+                placeholder={idx === 0 ? 'Slogan — e.g. "Best tacos near campus" (required)' : 'Slogan (optional — rotated in with extra creatives)'}
                 value={slogans[idx]}
                 onChange={(e) => {
                   const updated = [...slogans]; updated[idx] = e.target.value; setSlogans(updated)
