@@ -140,7 +140,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [savedListings, setSavedListings] = useState([])
   const [loading, setLoading]       = useState(true)
   const [loadingSaved, setLoadingSaved] = useState(false)
-  const [activeTab, setActiveTab]   = useState('listings') // 'listings' | 'saved' | 'contacted' | 'notifications'
+  const [activeTab, setActiveTab]   = useState('listings') // 'listings' | 'saved' | 'contacted' | 'notifications' | 'ads'
 
   // contactedItems: array of { listing, createdAt } — listing includes seller's contact_type/contact_value
   const [contactedItems, setContactedItems]       = useState([])
@@ -158,6 +158,10 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
   const [editEduEmail, setEditEduEmail] = useState('')
   const [saving, setSaving]         = useState(false)
   const [saveError, setSaveError]   = useState('')
+
+  const [adApplications, setAdApplications]   = useState([])
+  const [loadingAds, setLoadingAds]           = useState(false)
+  const [cancellingAdId, setCancellingAdId]   = useState(null)
 
   const [deletingAccount, setDeletingAccount] = useState(false)
 
@@ -249,6 +253,38 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
         }
       })
   }, [isOwn, activeTab, user, notifsVersion])
+
+  // Fetch ad applications when own profile switches to ads tab
+  useEffect(() => {
+    if (!isOwn || activeTab !== 'ads' || !user) return
+    setLoadingAds(true)
+    supabase
+      .from('ad_applications')
+      .select('id, company_name, ad_type, status, target_schools, description, stripe_subscription_id, created_at')
+      .eq('email', user.email)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setAdApplications(data ?? [])
+        setLoadingAds(false)
+      })
+  }, [isOwn, activeTab, user])
+
+  const handleCancelAd = async (app) => {
+    if (!window.confirm(`Cancel your "${app.company_name}" ad?\n\nIt will keep running until the end of the current billing week, then stop.`)) return
+    setCancellingAdId(app.id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await supabase.functions.invoke('cancel-ad-subscription', {
+        body: { subscription_id: app.stripe_subscription_id, application_id: app.id },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      })
+      if (res.error) throw new Error(res.error.message)
+      setAdApplications((prev) => prev.map((a) => a.id === app.id ? { ...a, status: 'cancelling' } : a))
+    } catch (err) {
+      alert('Could not cancel: ' + err.message)
+    }
+    setCancellingAdId(null)
+  }
 
   const startEdit = () => {
     setEditName(profile?.name ?? '')
@@ -627,6 +663,7 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
               { id: 'saved',         label: 'Saved' },
               { id: 'contacted',     label: 'Contacted' },
               { id: 'notifications', label: unreadCount > 0 ? `Notifs (${unreadCount})` : 'Notifs' },
+              { id: 'ads',           label: 'My Ads' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -961,6 +998,70 @@ export default function UserProfile({ userId, onBack, onOpenListing, onRequireAu
               <p className="text-4xl mb-3"></p>
               <p className="font-semibold">No notifications yet</p>
               <p className="text-sm mt-1">You'll be notified when someone contacts you.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Ads tab ─────────────────────────────────────────────────────── */}
+      {isOwn && activeTab === 'ads' && (
+        <>
+          <h2 className="font-bold text-gray-900 mb-3">My Ads</h2>
+          {loadingAds ? (
+            <div className="space-y-3">
+              {[...Array(2)].map((_, i) => <div key={i} className="bg-gray-200 rounded-2xl h-28 animate-pulse" />)}
+            </div>
+          ) : adApplications.length > 0 ? (
+            <div className="space-y-3">
+              {adApplications.map((app) => {
+                const statusConfig = {
+                  active:       { label: 'Active',     color: 'bg-green-100 text-green-700' },
+                  reviewing:    { label: 'In Review',  color: 'bg-yellow-100 text-yellow-700' },
+                  needs_review: { label: 'In Review',  color: 'bg-yellow-100 text-yellow-700' },
+                  cancelling:   { label: 'Cancelling', color: 'bg-orange-100 text-orange-700' },
+                  cancelled:    { label: 'Cancelled',  color: 'bg-gray-100 text-gray-500' },
+                  paid:         { label: 'Paid',       color: 'bg-blue-100 text-blue-700' },
+                }
+                const { label: statusLabel, color: statusColor } = statusConfig[app.status] ?? { label: app.status, color: 'bg-gray-100 text-gray-500' }
+                const tierLabel = { base: 'Base', pinned: 'Pinned', premium: 'Premium' }[app.ad_type] ?? app.ad_type
+                const canCancel = ['active', 'reviewing', 'needs_review', 'paid'].includes(app.status)
+
+                return (
+                  <div key={app.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 truncate">{app.company_name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{tierLabel} · {app.target_schools}</p>
+                      </div>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${statusColor}`}>{statusLabel}</span>
+                    </div>
+                    {app.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-3">{app.description}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-400">{new Date(app.created_at).toLocaleDateString()}</p>
+                      {app.status === 'cancelling' && (
+                        <p className="text-xs text-orange-500 font-medium">Runs through end of billing week</p>
+                      )}
+                      {canCancel && (
+                        <button
+                          onClick={() => handleCancelAd(app)}
+                          disabled={cancellingAdId === app.id}
+                          className="text-xs font-semibold text-red-400 border border-red-100 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40"
+                        >
+                          {cancellingAdId === app.id ? 'Cancelling…' : 'Cancel Ad'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-gray-400">
+              <p className="text-4xl mb-3">📢</p>
+              <p className="font-semibold">No ads yet</p>
+              <p className="text-sm mt-1">Run an ad to reach students on UMarket.</p>
             </div>
           )}
         </>
