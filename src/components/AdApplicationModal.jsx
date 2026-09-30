@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { sanitizeText } from '../lib/validation'
@@ -58,6 +58,11 @@ export default function AdApplicationModal({ onClose }) {
   const [targetSchools, setTargetSchools] = useState([])
   const [notes, setNotes]             = useState('')
 
+  const [slogans, setSlogans]         = useState(['', '', ''])
+  const [creatives, setCreatives]     = useState([null, null, null]) // File objects
+  const [creativePreviews, setCreativePreviews] = useState([null, null, null]) // data URLs
+  const fileInputRefs = [useRef(null), useRef(null), useRef(null)]
+
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
 
@@ -69,6 +74,40 @@ export default function AdApplicationModal({ onClose }) {
   const numSchools  = Math.max(1, targetSchools.length)
   const weeklyPrice = useMemo(() => adTier ? calcPrice(adTier, numSchools) : 0, [adTier, numSchools])
   const fullPrice   = useMemo(() => adTier ? calcFull(adTier, numSchools)  : 0, [adTier, numSchools])
+
+  const handleCreativeSelect = (idx, file) => {
+    if (!file) return
+    const updated = [...creatives]; updated[idx] = file; setCreatives(updated)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const prev = [...creativePreviews]; prev[idx] = e.target.result; setCreativePreviews(prev)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeCreative = (idx) => {
+    const c = [...creatives]; c[idx] = null; setCreatives(c)
+    const p = [...creativePreviews]; p[idx] = null; setCreativePreviews(p)
+    if (fileInputRefs[idx].current) fileInputRefs[idx].current.value = ''
+  }
+
+  const uploadCreatives = async () => {
+    const urls = []
+    for (let i = 0; i < creatives.length; i++) {
+      const file = creatives[i]
+      if (!file) continue
+      const ext  = file.name.split('.').pop() || 'jpg'
+      const path = `ad-creatives/${Date.now()}-${i}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('listing-images')
+        .upload(path, file, { cacheControl: '31536000', upsert: false })
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage.from('listing-images').getPublicUrl(path)
+        urls.push({ url: publicUrl, slogan: slogans[i]?.trim() || '' })
+      }
+    }
+    return urls
+  }
 
   const handleCheckout = async (e) => {
     e.preventDefault()
@@ -83,6 +122,7 @@ export default function AdApplicationModal({ onClose }) {
     setSaving(true)
     setError('')
     try {
+      const creativeAssets = await uploadCreatives()
       const res = await supabase.functions.invoke('advertiser-checkout', {
         body: {
           contact_name:   sanitizeText(contactName),
@@ -96,6 +136,7 @@ export default function AdApplicationModal({ onClose }) {
           target_schools: targetSchools,
           notes:          sanitizeText(notes),
           account_type:   profile?.account_type ?? 'other',
+          creatives:      creativeAssets,
         },
       })
       if (res.error) throw new Error(res.error.message ?? 'Checkout failed')
@@ -312,6 +353,75 @@ export default function AdApplicationModal({ onClose }) {
             rows={3}
             maxLength={500}
           />
+        </div>
+
+        {/* ── CREATIVE ASSETS ──────────────────────────────────── */}
+        <div className="border-t border-gray-100 px-4 pt-5 pb-2">
+          <h2 className="text-xl font-bold text-gray-900">Creative assets</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Upload up to 3 photos or flyers — we'll rotate them in your ad. Add a short slogan for each one.</p>
+        </div>
+
+        <div className="px-4 space-y-4 pb-8">
+          {[0, 1, 2].map((idx) => (
+            <div key={idx} className="bg-gray-50 rounded-2xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Creative {idx + 1}{idx === 0 ? ' (main)' : ' (optional)'}</p>
+
+              {/* Image upload area */}
+              {creativePreviews[idx] ? (
+                <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/7' }}>
+                  <img
+                    src={creativePreviews[idx]}
+                    alt={`Creative ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeCreative(idx)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRefs[idx].current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 py-7 text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors"
+                  style={{ minHeight: '100px' }}
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-sm font-medium">Add photo or flyer</span>
+                  <span className="text-xs">JPG, PNG, PDF</span>
+                </button>
+              )}
+              <input
+                ref={fileInputRefs[idx]}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => handleCreativeSelect(idx, e.target.files?.[0])}
+              />
+
+              {/* Slogan input */}
+              <input
+                className={INPUT}
+                type="text"
+                placeholder={idx === 0 ? 'Slogan — e.g. "Best tacos near campus"' : 'Slogan (optional)'}
+                value={slogans[idx]}
+                onChange={(e) => {
+                  const updated = [...slogans]; updated[idx] = e.target.value; setSlogans(updated)
+                }}
+                maxLength={80}
+              />
+              {slogans[idx] && (
+                <p className="text-xs text-gray-400 text-right">{slogans[idx].length}/80</p>
+              )}
+            </div>
+          ))}
         </div>
       </form>
 
