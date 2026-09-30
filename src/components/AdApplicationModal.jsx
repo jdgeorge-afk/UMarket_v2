@@ -24,6 +24,7 @@ const INDUSTRIES = [
 
 const TIER_PRICES = { base: 1000, pinned: 1750, premium: 2750 }
 const TIER_FULL   = { base: 2000, pinned: 3500, premium: 5500 }
+const VERIFIED_DISCOUNT = 0.80 // 20% off for verified .edu students
 
 const AD_TIERS = [
   { id: 'base',    label: 'Base',    sub: 'Rotates in the feed every 8 posts' },
@@ -31,9 +32,10 @@ const AD_TIERS = [
   { id: 'premium', label: 'Premium', sub: 'Full-width banner after the 6th listing' },
 ]
 
-function calcPrice(tierId, numSchools) {
+function calcPrice(tierId, numSchools, verified = false) {
   const base = TIER_PRICES[tierId] ?? 0
-  return Math.round(base * (1 + 0.5 * (numSchools - 1)))
+  const price = Math.round(base * (1 + 0.5 * (numSchools - 1)))
+  return verified ? Math.round(price * VERIFIED_DISCOUNT) : price
 }
 function calcFull(tierId, numSchools) {
   return Math.round((TIER_FULL[tierId] ?? 0) * (1 + 0.5 * (numSchools - 1)))
@@ -72,8 +74,9 @@ export default function AdApplicationModal({ onClose }) {
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     )
 
+  const isVerified  = !!profile?.verified
   const numSchools  = Math.max(1, targetSchools.length)
-  const weeklyPrice = useMemo(() => adTier ? calcPrice(adTier, numSchools) : 0, [adTier, numSchools])
+  const weeklyPrice = useMemo(() => adTier ? calcPrice(adTier, numSchools, isVerified) : 0, [adTier, numSchools, isVerified])
   const fullPrice   = useMemo(() => adTier ? calcFull(adTier, numSchools)  : 0, [adTier, numSchools])
 
   const handleCreativeSelect = async (idx, file) => {
@@ -145,6 +148,7 @@ export default function AdApplicationModal({ onClose }) {
           target_schools: targetSchools,
           notes:          sanitizeText(notes),
           account_type:   profile?.account_type ?? 'other',
+          is_verified:    isVerified,
           creatives:      creativeAssets,
         },
       })
@@ -193,6 +197,19 @@ export default function AdApplicationModal({ onClose }) {
             <p className="text-xs text-yellow-600">Limited time offer for early advertisers</p>
           </div>
         </div>
+
+        {/* Verified student discount banner */}
+        {isVerified && (
+          <div className="mx-4 mb-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <svg className="w-5 h-5 text-blue-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-blue-800">Verified student rate — extra 20% off</p>
+              <p className="text-xs text-blue-600">Applied automatically to your .edu verified account</p>
+            </div>
+          </div>
+        )}
 
         {/* ── REQUIRED ─────────────────────────────────────────── */}
         <div className="px-4 pt-5 pb-2">
@@ -246,7 +263,7 @@ export default function AdApplicationModal({ onClose }) {
 
         <div className="px-4 space-y-2 pb-4">
           {AD_TIERS.map((tier) => {
-            const price = calcPrice(tier.id, numSchools)
+            const price = calcPrice(tier.id, numSchools, isVerified)
             const full  = calcFull(tier.id, numSchools)
             const selected = adTier === tier.id
             return (
@@ -276,6 +293,7 @@ export default function AdApplicationModal({ onClose }) {
                   <div className="text-right shrink-0 ml-3">
                     <p className="font-bold text-gray-900 text-sm">{fmt(price)}<span className="text-xs font-normal text-gray-400">/wk</span></p>
                     <p className="text-xs text-gray-400 line-through">{fmt(full)}/wk</p>
+                    {isVerified && <p className="text-[10px] text-blue-500 font-semibold">student rate</p>}
                   </div>
                 </div>
               </button>

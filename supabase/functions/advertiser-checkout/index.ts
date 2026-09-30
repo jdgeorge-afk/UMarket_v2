@@ -9,10 +9,12 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
 
 const TIER_PRICES: Record<string, number> = { base: 1000, pinned: 1750, premium: 2750 }
 const TIER_LABELS: Record<string, string> = { base: 'Base Rotating', pinned: 'Pinned Top', premium: 'Premium Full-Width' }
+const VERIFIED_DISCOUNT = 0.80 // 20% off for .edu verified students
 
-function calcPrice(tier: string, numSchools: number): number {
+function calcPrice(tier: string, numSchools: number, isVerified = false): number {
   const base = TIER_PRICES[tier] ?? 1000
-  return Math.round(base * (1 + 0.5 * (numSchools - 1)))
+  const price = Math.round(base * (1 + 0.5 * (numSchools - 1)))
+  return isVerified ? Math.round(price * VERIFIED_DISCOUNT) : price
 }
 
 Deno.serve(async (req) => {
@@ -22,7 +24,7 @@ Deno.serve(async (req) => {
     const body = await req.json()
     const {
       contact_name, company_name, email, phone, website,
-      industry, tier, description, target_schools, notes, account_type,
+      industry, tier, description, target_schools, notes, account_type, is_verified,
     } = body
 
     if (!tier || !description || !target_schools?.length || !email || !company_name) {
@@ -32,7 +34,7 @@ Deno.serve(async (req) => {
     }
 
     const numSchools  = target_schools.length
-    const weeklyPrice = calcPrice(tier, numSchools)
+    const weeklyPrice = calcPrice(tier, numSchools, !!is_verified)
     const schoolStr   = Array.isArray(target_schools) ? target_schools.join(', ') : String(target_schools)
 
     // All form data stored in Stripe metadata — the DB record is created in the
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
           recurring:   { interval: 'week' },
           product_data: {
             name:        `UMarket ${TIER_LABELS[tier] ?? tier} Ad`,
-            description: `${numSchools} school${numSchools > 1 ? 's' : ''} · Founding advertiser rate`,
+            description: `${numSchools} school${numSchools > 1 ? 's' : ''} · Founding advertiser rate${is_verified ? ' · Verified student discount' : ''}`,
           },
         },
         quantity: 1,
