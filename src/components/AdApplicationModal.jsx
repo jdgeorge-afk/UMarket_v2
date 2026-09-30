@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { sanitizeText } from '../lib/validation'
 import { SCHOOLS } from '../constants/schools'
+import { compressImage } from '../lib/compressImage'
 
 const AD_SCHOOLS = SCHOOLS.filter((s) => s.id === 'utah')
 
@@ -75,14 +76,20 @@ export default function AdApplicationModal({ onClose }) {
   const weeklyPrice = useMemo(() => adTier ? calcPrice(adTier, numSchools) : 0, [adTier, numSchools])
   const fullPrice   = useMemo(() => adTier ? calcFull(adTier, numSchools)  : 0, [adTier, numSchools])
 
-  const handleCreativeSelect = (idx, file) => {
+  const handleCreativeSelect = async (idx, file) => {
     if (!file) return
-    const updated = [...creatives]; updated[idx] = file; setCreatives(updated)
+    if (file.size > 15 * 1024 * 1024) { setError('File too large — please use an image under 15 MB.'); return }
+    setError('')
+    const isPremium = adTier === 'premium'
+    const maxPx   = isPremium ? 2000 : 1400
+    const quality = isPremium ? 0.92 : 0.90
+    const compressed = await compressImage(file, maxPx, quality)
+    const updated = [...creatives]; updated[idx] = compressed; setCreatives(updated)
     const reader = new FileReader()
-    reader.onload = (e) => {
-      const prev = [...creativePreviews]; prev[idx] = e.target.result; setCreativePreviews(prev)
+    reader.onload = (ev) => {
+      const prev = [...creativePreviews]; prev[idx] = ev.target.result; setCreativePreviews(prev)
     }
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(compressed)
   }
 
   const removeCreative = (idx) => {
@@ -360,17 +367,23 @@ export default function AdApplicationModal({ onClose }) {
         {/* ── CREATIVE ASSETS ──────────────────────────────────── */}
         <div className="border-t border-gray-100 px-4 pt-5 pb-2">
           <h2 className="text-xl font-bold text-gray-900">Creative assets</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Upload up to 3 photos or flyers — we'll rotate them in your ad. Add a short slogan for each one.</p>
+          <p className="text-sm text-gray-500 mt-0.5">Upload at least one photo — we'll rotate extras automatically. Images are optimized on upload.</p>
         </div>
 
         <div className="px-4 space-y-4 pb-8">
-          {[0, 1, 2].map((idx) => (
+          {[0, 1, 2].map((idx) => {
+            const isPremiumBanner = adTier === 'premium'
+            const previewRatio = isPremiumBanner ? '16/5' : '4/3'
+            const hint = isPremiumBanner
+              ? 'Wide banner — best at 3:1 or wider (e.g. 1200×400)'
+              : 'Best at 4:3 or square (e.g. 1200×900 or 1000×1000)'
+            return (
             <div key={idx} className="bg-gray-50 rounded-2xl p-4 space-y-3">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Creative {idx + 1}{idx === 0 ? ' — required' : ' (optional — rotated in)'}</p>
 
               {/* Image upload area */}
               {creativePreviews[idx] ? (
-                <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/7' }}>
+                <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: previewRatio }}>
                   <img
                     src={creativePreviews[idx]}
                     alt={`Creative ${idx + 1}`}
@@ -391,22 +404,23 @@ export default function AdApplicationModal({ onClose }) {
                   type="button"
                   onClick={() => fileInputRefs[idx].current?.click()}
                   className="w-full border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 py-7 text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors"
-                  style={{ minHeight: '100px' }}
+                  style={{ aspectRatio: previewRatio }}
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="text-sm font-medium">Add photo or flyer</span>
-                  <span className="text-xs">JPG, PNG, PDF</span>
+                  <span className="text-sm font-medium">Add photo or image</span>
+                  <span className="text-xs">JPG, PNG, HEIC · max 15 MB</span>
                 </button>
               )}
               <input
                 ref={fileInputRefs[idx]}
                 type="file"
-                accept="image/*,application/pdf"
+                accept="image/*"
                 className="hidden"
                 onChange={(e) => handleCreativeSelect(idx, e.target.files?.[0])}
               />
+              <p className="text-xs text-gray-400">{hint}</p>
 
               {/* Slogan input */}
               <input
@@ -423,7 +437,8 @@ export default function AdApplicationModal({ onClose }) {
                 <p className="text-xs text-gray-400 text-right">{slogans[idx].length}/80</p>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       </form>
 
