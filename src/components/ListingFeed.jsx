@@ -328,8 +328,9 @@ function SectionHero({ activeFilter, onPostOpen, onRequireAuth, onMapView }) {
           <button
             onClick={onMapView}
             className="inline-flex items-center gap-2 bg-white border-2 border-school-primary text-school-primary font-bold text-sm px-6 py-3 rounded-full hover:bg-school-primary hover:text-white transition-colors shadow-sm"
+            style={{ minWidth: 0 }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
             Map View
@@ -578,30 +579,6 @@ export default function ListingFeed({
         hasExtraFilters={hasExtraFilters}
       />
 
-      {/* ── Housing list/map toggle ──────────────────────────────────────────── */}
-      {isHousingSection && !favoritesOnly && !searchQuery && (
-        <div className="flex items-center gap-2 px-4 pb-2">
-          <button
-            onClick={() => setHousingView('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            List
-          </button>
-          <button
-            onClick={() => setHousingView('map')}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${housingView === 'map' ? 'bg-gray-900 text-white' : 'bg-school-primary text-white hover:opacity-90'}`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-            </svg>
-            Map View
-          </button>
-        </div>
-      )}
 
       {/* ── Map view ─────────────────────────────────────────────────────────── */}
       {isHousingSection && housingView === 'map' && (
