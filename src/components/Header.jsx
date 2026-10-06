@@ -90,7 +90,7 @@ export default function Header({
             </g>
             <text x="50" y="76" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="66" fill="white" textAnchor="middle">U</text>
           </svg>
-          <span className="hidden sm:inline font-extrabold text-2xl tracking-tight" style={{ color: school?.primary ?? '#CC0000' }}>
+          <span className="font-extrabold text-2xl tracking-tight" style={{ color: school?.primary ?? '#CC0000' }}>
             UMarket™
           </span>
         </button>
@@ -330,56 +330,29 @@ export default function Header({
           )}
         </div>
 
-        {/* ── Mobile: actions ──────────────────────────────────── */}
-        <div className="sm:hidden flex items-center gap-1.5 ml-auto shrink-0">
-          {user ? (
-            <>
+        {/* ── Mobile: search ───────────────────────────────────── */}
+        <div className="sm:hidden flex items-center gap-2 ml-auto shrink-0">
+          <div className="relative">
+            <svg
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder="Search…"
+              className="h-8 w-28 pl-7 pr-2 rounded-full bg-gray-100 text-gray-800 placeholder:text-gray-400 text-xs outline-none border border-transparent focus:border-gray-300 focus:bg-white focus:w-36 transition-all"
+            />
+            {searchQuery && (
               <button
-                onClick={onOpenProfile}
-                className="relative text-gray-500 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="Notifications"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {unreadNotifs > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-school-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {unreadNotifs > 9 ? '9+' : unreadNotifs}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={onPostOpen}
-                className="font-bold text-sm px-3 py-1.5 rounded-full text-white shrink-0"
-                style={{ background: school?.primary ?? '#CC0000' }}
-              >
-                + Post
-              </button>
-              <button
-                onClick={() => setUserMenuOpen((p) => !p)}
-                className="w-8 h-8 rounded-full text-white font-bold text-sm flex items-center justify-center shrink-0"
-                style={{ background: school?.primary ?? '#CC0000' }}
-              >
-                {profile?.name?.[0]?.toUpperCase() ?? 'U'}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => onAuthOpen('signin')}
-                className="text-sm font-semibold px-3 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Log In
-              </button>
-              <button
-                onClick={() => onAuthOpen('signup')}
-                className="text-sm font-semibold px-3 py-1.5 rounded-full text-white transition-colors"
-                style={{ background: school?.primary ?? '#CC0000' }}
-              >
-                Sign Up
-              </button>
-            </>
-          )}
+                onClick={() => onSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-base"
+              >×</button>
+            )}
+          </div>
         </div>
       </div>
 
