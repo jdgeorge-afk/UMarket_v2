@@ -293,7 +293,7 @@ export default function Header({
                 + Post
               </button>
 
-              {/* Avatar + dropdown */}
+              {/* Avatar button */}
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((p) => !p)}
@@ -302,41 +302,6 @@ export default function Header({
                 >
                   {profile?.name?.[0]?.toUpperCase() ?? 'U'}
                 </button>
-
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[160px] z-50">
-                    <div className="px-3 py-2 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900">{profile?.name ?? 'Account'}</p>
-                      <p className="text-xs text-gray-400 truncate">{profile?.grade ?? ''}</p>
-                    </div>
-                    <button
-                      onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }}
-                      className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                    >
-                      My Profile
-                    </button>
-                    <button
-                      onClick={() => { setUserMenuOpen(false); onFavorites() }}
-                      className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                    >
-                      Saved Listings
-                    </button>
-                    {onAdminOpen && (
-                      <button
-                        onClick={() => { setUserMenuOpen(false); onAdminOpen() }}
-                        className="w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-50 text-left font-semibold"
-                      >
-                        Admin Dashboard
-                      </button>
-                    )}
-                    <button
-                      onClick={() => { setUserMenuOpen(false); signOut() }}
-                      className="w-full px-3 py-2 text-sm text-red-500 hover:bg-gray-50 text-left"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
               </div>
             </>
           ) : (
@@ -424,6 +389,42 @@ export default function Header({
           className="fixed inset-0 z-30"
           onClick={() => { setSchoolDropOpen(false); setSchoolSearch(''); setUserMenuOpen(false) }}
         />
+      )}
+
+      {/* ── User menu dropdown — rendered outside mobile/desktop containers so it works on both ── */}
+      {userMenuOpen && user && (
+        <div className="fixed right-4 top-[60px] bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[160px] z-50">
+          <div className="px-3 py-2 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-900">{profile?.name ?? 'Account'}</p>
+            <p className="text-xs text-gray-400 truncate">{profile?.grade ?? ''}</p>
+          </div>
+          <button
+            onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }}
+            className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+          >
+            My Profile
+          </button>
+          <button
+            onClick={() => { setUserMenuOpen(false); onFavorites() }}
+            className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+          >
+            Saved Listings
+          </button>
+          {onAdminOpen && (
+            <button
+              onClick={() => { setUserMenuOpen(false); onAdminOpen() }}
+              className="w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-50 text-left font-semibold"
+            >
+              Admin Dashboard
+            </button>
+          )}
+          <button
+            onClick={() => { setUserMenuOpen(false); signOut() }}
+            className="w-full px-3 py-2 text-sm text-red-500 hover:bg-gray-50 text-left"
+          >
+            Sign Out
+          </button>
+        </div>
       )}
     </header>
   )
