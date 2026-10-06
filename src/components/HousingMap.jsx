@@ -96,6 +96,20 @@ export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds,
             : ''
           const beds = l.beds ? `<p style="color:#6b7280;font-size:12px;">${l.beds} bed</p>` : ''
           const addr = l.location ? `<p style="color:#9ca3af;font-size:11px;margin-top:2px;line-height:1.3;">${l.location}</p>` : ''
+          const contact = l.profiles?.contact
+          const contactType = l.profiles?.contact_type
+          const contactHref = contactType === 'phone'
+            ? `tel:${contact}`
+            : contactType === 'email'
+            ? `mailto:${contact}`
+            : null
+          const contactBtn = contact
+            ? `<a
+                href="${contactHref ?? '#'}"
+                ${contactHref ? '' : `onclick="window.__housingMapContact('${l.id}');return false;"`}
+                style="display:block;margin-top:6px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:6px 0;font-size:12px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;box-sizing:border-box;"
+              >Contact Seller</a>`
+            : ''
           infoWindowRef.current.setContent(`
             <div style="width:200px;font-family:system-ui,sans-serif;">
               ${img}
@@ -106,6 +120,7 @@ export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds,
                 onclick="window.__housingMapOpen('${l.id}')"
                 style="margin-top:8px;width:100%;background:#cc0000;color:#fff;border:none;border-radius:8px;padding:6px 0;font-size:12px;font-weight:600;cursor:pointer;"
               >View Listing</button>
+              ${contactBtn}
             </div>
           `)
           infoWindowRef.current.open(mapRef.current, marker)
@@ -124,7 +139,17 @@ export default function HousingMap({ onOpenListing, minPrice, maxPrice, minBeds,
         onOpenListing?.(listing)
       }
     }
-    return () => { delete window.__housingMapOpen }
+    window.__housingMapContact = (id) => {
+      const listing = listings.find(l => l.id === id)
+      if (listing?.profiles?.contact) {
+        navigator.clipboard?.writeText(listing.profiles.contact).catch(() => {})
+        alert(`Contact: ${listing.profiles.contact}`)
+      }
+    }
+    return () => {
+      delete window.__housingMapOpen
+      delete window.__housingMapContact
+    }
   }, [listings, onOpenListing])
 
   if (loading) {
