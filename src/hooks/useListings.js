@@ -68,6 +68,14 @@ export function useListings({
 
     const cacheKey = JSON.stringify([school?.id, category, categoryIn, noHousing, noLooking, sortBy, searchQuery, favoritesOnly, userId, sellerId, minPrice, maxPrice, conditions, clothingSizes, genders, minBeds, minSpots, listedWithin, userType])
 
+    // Immediately show skeleton when switching to an uncached filter — prevents a
+    // stale loading=false + empty listings flash that looks like a blank screen.
+    const cached = cacheGet(cacheKey)
+    if (!cached) {
+      setLoading(true)
+      setListings([])
+    }
+
     const delay = searchQuery ? 300 : 0
     clearTimeout(searchTimer.current)
     searchTimer.current = setTimeout(() => {

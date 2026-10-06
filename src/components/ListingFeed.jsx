@@ -140,9 +140,8 @@ function FeedSkeleton() {
 }
 
 // ── Events page ───────────────────────────────────────────────────────────────
-function EventsPage({ onOpenListing, onRequireAuth, onPostOpen }) {
+function EventsPage({ onOpenListing, onRequireAuth, onPostOpen, listings, loading, error }) {
   const { school } = useSchool()
-  const { listings, loading, error } = useListings({ category: 'events' })
 
   return (
     <div>
@@ -439,6 +438,9 @@ export default function ListingFeed({
           onOpenListing={onOpenListing}
           onRequireAuth={onRequireAuth}
           onPostOpen={onPostOpen}
+          listings={listings}
+          loading={loading}
+          error={error}
         />
       </>
     )
