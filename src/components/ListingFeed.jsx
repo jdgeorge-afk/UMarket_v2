@@ -427,6 +427,39 @@ export default function ListingFeed({
     return true
   })
 
+  // All hooks must be called unconditionally before any early returns (Rules of Hooks)
+  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
+  const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
+  const [housingView, setHousingView] = useState(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'map') return 'map'
+    if (sessionStorage.getItem('fromHousingMap')) {
+      sessionStorage.removeItem('fromHousingMap')
+      return 'map'
+    }
+    return 'list'
+  })
+
+  // Sync housingView ↔ URL so back button restores map view
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (housingView === 'map') p.set('view', 'map')
+    else p.delete('view')
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
+  }, [housingView])
+
+  // Reset map view when leaving housing section
+  useEffect(() => {
+    if (!isHousingSection) setHousingView('list')
+  }, [isHousingSection])
+
+  // Preload Maps script + listings data as soon as housing section is visible
+  useEffect(() => {
+    if (!isHousingSection) return
+    preloadGoogleMaps()
+    preloadHousingListings(supabase, school?.id)
+  }, [isHousingSection, school?.id])
+
   // Events tab gets its own full-page component
   if (!favoritesOnly && !searchQuery && activeFilter === 'events') {
     return (
@@ -461,38 +494,6 @@ export default function ListingFeed({
       </>
     )
   }
-
-  const isHousingSection = activeFilter === 'housing' || activeFilter?.startsWith('housing:')
-  const isMarketplaceSection = activeFilter === 'marketplace' || activeFilter?.startsWith('marketplace:')
-  const [housingView, setHousingView] = useState(() => {
-    if (new URLSearchParams(window.location.search).get('view') === 'map') return 'map'
-    if (sessionStorage.getItem('fromHousingMap')) {
-      sessionStorage.removeItem('fromHousingMap')
-      return 'map'
-    }
-    return 'list'
-  })
-
-  // Sync housingView ↔ URL so back button restores map view
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search)
-    if (housingView === 'map') p.set('view', 'map')
-    else p.delete('view')
-    const qs = p.toString()
-    window.history.replaceState(null, '', qs ? `?${qs}` : '/')
-  }, [housingView])
-
-  // Reset map view when leaving housing section
-  useEffect(() => {
-    if (!isHousingSection) setHousingView('list')
-  }, [isHousingSection])
-
-  // Preload Maps script + listings data as soon as housing section is visible
-  useEffect(() => {
-    if (!isHousingSection) return
-    preloadGoogleMaps()
-    preloadHousingListings(supabase, school?.id)
-  }, [isHousingSection, school?.id])
   const bannerAd = isHousingSection
     ? FAKE_HOUSING_BANNER
     : isMarketplaceSection
